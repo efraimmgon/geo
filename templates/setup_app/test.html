@@ -1,0 +1,49 @@
+{% extends "setup_app/base.html" %}
+
+{% block body %}
+
+{% if ocorrencias %}
+<ul>
+	{% for o in ocorrencias %}
+	<li>{{ o.natureza }} - {{ o.id }}</li>
+	{% endfor %}
+</ul>
+{% else %}
+<p>No ocorrencias</p>
+{% endif %}
+
+<div id='id_feedback'></div>
+<form id="form" method="POST" action="/setup/ajaxTest/">
+	{% csrf_token %}
+	<input type="text" id="test" name="test" value="" />
+</form>
+
+
+<script>
+$(function() {
+	$input = $('#test');
+	var value = $input.val()
+	if (value) {
+		document.write(value);
+	} else {
+		document.write('no value');
+	}
+
+//	ajaxTest();
+
+	function ajaxTest() {
+		$data = $('#form').serialize();
+
+		$.ajax({
+			type: 'POST',
+			url: '/setup/ajaxTest/',
+			data: $data,
+			success: function(data) {
+				document.write(data)
+			}
+		}); // $.ajax
+	} // ajaxTest()
+});
+</script>
+
+{% endblock %}

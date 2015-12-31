@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Mancha Criminal{% endblock %}
+
+{% block body %}
+
+<style>
+	#control {
+		cursor: pointer;
+	}
+</style>
+
+<div class="content">
+
+	<h1>Mancha Criminal</h1>
+
+<!--	<div id="map"></div> -->
+	<div id="appSetings">
+		<div id="control"><h3>Configurações Avançadas</h3></div>
+		<div id="settings">
+			<form id="styleForm" method="post" action="{% url 'analise_criminal:mapAjax' %}">
+				{% csrf_token %}
+				<table>
+					{% if form_styles.errors %}
+						<tr><td colspan="2">{{ form_styles.erros }}</td></tr>
+					{% endif %}
+					<tr><td>{{ form_styles.label_tag }}</td> <td>{{ form_styles }}</td></tr>
+				</table>
+			</form>
+		</div>
+	</div>
+
+
+	<form id="ocorrenciasForm" method="post" action="{% url 'analise_criminal:map' %}">
+		{% csrf_token %}
+		<table>
+		{% for field in form_options %}
+			{% if field.errors %}
+				<tr><td colspan="2">{{ field.errors }}</td></tr>
+			{% endif %}
+
+			<tr><td>{{ field.label_tag }}</td> <td>{{ field }}</td></tr>
+
+		{% endfor %}
+		</table>
+		<div class='user-info'>
+			Os campos marcados com * são obrigatórios. <br />
+			Buscas disponíveis de {{ availability.from.data }} a {{ availability.to.data }}.
+		</div>
+
+		<br />
+		<input type="submit" name="submit" value="Buscar" />
+	</form>
+
+	<!-- Síntese do número das ocorrências -->
+	<div id="info"></div>
+	<!-- Tabela com dados das ocorrências -->
+	<div id="dados-ocorrencias">
+	{% if ocorrencias %}
+		{% for ocorrencia in ocorrencias %}
+			<p>{{ ocorrencia.id }}: {{ ocorrencia.natureza }} - {{ ocorrencia.data }}</p>
+		{% endfor %}
+	{% endif %}
+	</div>
+	<!-- Falhas; dados não encontrados -->
+	<div id="errors"></div>
+
+</div>
+
+<script>
+$(function() {
+/* map.min.js */
+	var map, gm, oms, iw;
+	var markers = [];
+	var ocorrencias = [];
+	var heatmapData = [];
+	var natRoubo = 0;
+	var natFurto = 0;
+	var natHom = 0;
+	var natOutros = 0;
+	var notEven = 1;
+	var index = 1;
+	var $html;
+	
+	var $settings = $('#settings');
+	var $ocorrenciasForm = $('#ocorrenciasForm');
+
+	$settings.hide();
+	$('#control').on('click', function() {
+		$settings.slideToggle();
+	});
+
+	var styleType = 'basicMarker';
+	$('#styleForm').on('change', function(e) {
+		e.preventDefault();
+		styleType = $('#styleType').val();
+		$settings.slideToggle();
+	})
+
+/*	$ocorrenciasForm.on('submit', function(e) {
+		e.preventDefault();
+
+		natRoubo = 0;
+		natFurto = 0;
+		natEnt = 0;
+		natHom = 0;
+		natOutros = 0;
+		ocorrencias = [];
+
+		$.ajax({
+			type: "POST",
+			url: "/analise_criminal/mapAjax/",
+			data: $ocorrenciasForm.serialize(),
+			success: function(data) {
+				
+			}
+		});
+	}); */
+});
+</script>
+<!--
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8&libraries=geometry,visualization" type='text/javascript'></script>
+<script src="{% static 'js/map/styledMarkers.js' %}"></script>
+<script src="{% static 'js/map/oms.js' %}"></script>
+<script src="{% static 'js/map/map.js' %}"></script> -->
+
+{% endblock %}
