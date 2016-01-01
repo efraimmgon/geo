@@ -33,9 +33,17 @@ def mapAjax(request):
 			natureza = form.cleaned_data['natureza']
 			data_inicial = form.cleaned_data['data_inicial']
 			data_final = form.cleaned_data['data_final']
+			hora_inicial = form.cleaned_data['hora_inicial']
+			hora_final = form.cleaned_data['hora_final']
+			
+			if hora_inicial is None:
+				hora_inicial = '00:00'
+			if hora_final is None:
+				hora_final = '23:59'
 
 			o = Ocorrencia.objects.filter(natureza__contains=natureza, 
-				data__gte=data_inicial,data__lte=data_final
+				data__gte=data_inicial, data__lte=data_final,
+				hora__gte=hora_inicial, hora__lte=hora_final
 			)
 
 			json_data = format_data(o)
