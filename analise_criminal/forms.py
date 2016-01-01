@@ -7,6 +7,7 @@ class MapOptionForm(forms.Form):
 
 	naturezas = (
 		('selecione', 'Selecione'),
+		('todas', 'Todas'),
 		('roubo', 'Roubo'),
 		('furto', 'Furto'),
 		('homicídio', 'Homicídio'),

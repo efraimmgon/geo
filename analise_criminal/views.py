@@ -26,7 +26,6 @@ def map(request):
 
 def mapAjax(request):
 	if request.method == 'POST':
-		## not dealing with time for now
 		form = MapOptionForm(data=request.POST)
 		form.full_clean()
 		if form.is_valid():
@@ -41,10 +40,16 @@ def mapAjax(request):
 			if hora_final is None:
 				hora_final = '23:59'
 
-			o = Ocorrencia.objects.filter(natureza__contains=natureza, 
-				data__gte=data_inicial, data__lte=data_final,
-				hora__gte=hora_inicial, hora__lte=hora_final
-			)
+			if natureza == 'todas':
+				o = Ocorrencia.objects.filter(
+					data__gte=data_inicial, data__lte=data_final,
+					hora__gte=hora_inicial, hora__lte=hora_final
+				)
+			else:
+				o = Ocorrencia.objects.filter(natureza__contains=natureza, 
+					data__gte=data_inicial, data__lte=data_final,
+					hora__gte=hora_inicial, hora__lte=hora_final
+				)
 
 			json_data = format_data(o)
 
