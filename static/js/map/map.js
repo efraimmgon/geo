@@ -25,7 +25,7 @@ $(function() {
 	var styleType = 'basicMarker';
 	$('#styleForm').on('change', function(e) {
 		e.preventDefault();
-		styleType = $('#styleType').val();
+		styleType = $('#id_marker_style').val();
 		clearLocations();
 		$settings.slideToggle();
 	})
@@ -62,6 +62,15 @@ $(function() {
 			url: '/analise_criminal/mapAjax/',
 			data: $ocorrenciasForm.serialize(),
 			success: function(json) {
+				if (json.errors) {
+					var $error = $('<ul class="errorlist"></ul>');
+					for (var key in json.errors) {
+						$error.append('<li>' + key + ': ' + json.errors[key][0] + '</li>');
+					}
+					$info.append($error);
+					return;
+				}
+
 				$.each(json, function() {
 
 					var json_id = this.pk;
@@ -95,6 +104,10 @@ $(function() {
 				$info.html('Houve um problema com a solicitação. [AJAX]');
 			},
 			complete: function() {
+				if (ocorrencias.length == 0) {
+					return;
+				}
+
 				if (styleType == 'heatmap') {
 					createHeatmap(heatmapData);
 				}

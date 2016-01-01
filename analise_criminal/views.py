@@ -41,9 +41,8 @@ def mapAjax(request):
 			json_data = format_data(o)
 
 			return HttpResponse(json_data, content_type='application/json')
-		## did not test for errors yet
+		## refactor forms.py to have portuguese errors.
 		else:
- 	 		print(form.errors)
- 	 		data = json.dumps({'errors': 'Validation error.'})
+ 	 		data = json.dumps({'errors': form.errors})
  	 		return HttpResponse(data, content_type='application/json')
 
