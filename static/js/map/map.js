@@ -75,7 +75,8 @@ $(function() {
 
 					var json_id = this.pk;
 					var json_natureza = this.fields.natureza;
-					var json_local = this.fields.local;
+					var json_bairro = this.fields.bairro;
+					var json_via = this.fields.via;
 					var json_data = this.fields.formatted_date;
 					var json_weekday = this.fields.weekday;
 					var json_hora = this.fields.hora;
@@ -88,14 +89,15 @@ $(function() {
 							parseFloat(lng)
 						);
 						if (styleType == 'basicMarker') {
-							createMarker(latLng, json_id, json_natureza, json_local);
+							createMarker(latLng, json_id, json_natureza, json_via);
 						} else {
 							heatmapData.push(latLng);	
 						}
-						ocorrencias.push({natureza: json_natureza, local: json_local, 
-							data: json_data, hora: json_hora, weekday: json_weekday});
+						ocorrencias.push({natureza: json_natureza, bairro: json_bairro, 
+							via: json_via, data: json_data, hora: json_hora, weekday: json_weekday});
 					} else {
-						var notFound = '<br>' + json_id + ': ' + json_local + ': not found';
+						var notFound = '<br>' + json_id + ': ' + json_bairro + ' ' + 
+						json_via + ': not found';
 						$info.append(notFound);
 					}
 				}); 
@@ -211,7 +213,8 @@ $(function() {
 			"<thead>" +
 				"<tr>" +
 					"<th data-sort='name'>Natureza</th>" +
-					"<th data-sort='name'>Local</th>" +
+					"<th data-sort='name'>Bairro</th>" +
+					"<th data-sort='name'>Via</th>" +
 					"<th data-sort='date'>Data</th>" +
 					"<th data-sort='weekday'>Dia da semana</th>" +
 					"<th data-sort='duration'>Hora</th>" +
@@ -232,7 +235,8 @@ $(function() {
 			}
 			
 			$row.append( $('<td></td>').text(ocorrencia.natureza) );
-			$row.append( $('<td></td>').text(ocorrencia.local) );
+			$row.append( $('<td></td>').text(ocorrencia.bairro) );
+			$row.append( $('<td></td>').text(ocorrencia.via) );
 			$row.append( $('<td></td>').text(ocorrencia.data) );
 			$row.append( $('<td></td>').text(ocorrencia.weekday) );
 			$row.append( $('<td></td>').text(ocorrencia.hora) );
@@ -247,12 +251,9 @@ $(function() {
 	function sortableTable() {
 		/* Allows the tables to be sorted */
 		var compare = {
-			/* This won't work as it is. The curren address includes the 
-			** neighborhood name. It might help to add an extra col with
-			** the neighborhood name, allowing the sorting by it too. */
 			name: function(a, b) {
-				a = a.replace(/^(rua)|(avenida)|(mt) /i, '');
-				b = b.replace(/^(rua)|(avenida)|(mt) /i, '');
+				a = a.replace(/^(rua)|(avenida)|(jardim)\s/i, '');
+				b = b.replace(/^(rua)|(avenida)|(jardim)\s/i, '');
 
 				if (a < b) return -1;
 				else return a > b ? 1 : 0;

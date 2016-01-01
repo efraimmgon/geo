@@ -13,8 +13,12 @@ weekdays = {
 }
 
 def format_data(objs):
-	"""Adds a fields with a date in the format dd/mm/yyyy;
-	Adds a weekday string; strips seconds from time"""
+	"""
+	- Adds a fields with a date in the format dd/mm/yyyy;
+	- Adds a weekday string; strips seconds from time
+	- Splits the address and creates a fields for the neighborhood
+	and street.
+	"""
 
 	copy = objs[:]
 	data = serializers.serialize('json', copy)
@@ -29,7 +33,17 @@ def format_data(objs):
 		
 		if obj['fields']['hora'] is None:
 			continue
+		else:
+			obj['fields']['hora'] = obj['fields']['hora'][:-3]
 
-		obj['fields']['hora'] = obj['fields']['hora'][:-3]
-	
+		if ',' in obj['fields']['local']:
+			lst = obj['fields']['local'].split(',')
+			obj['fields']['bairro'] = lst[0]
+			obj['fields']['via'] = lst[1].strip()
+			del obj['fields']['local']
+		else:
+			obj['fields']['bairro'] = obj['fields']['local']
+			obj['fields']['via'] = obj['fields']['local']
+			del obj['fields']['local']
+			
 	return json.dumps(struct)
