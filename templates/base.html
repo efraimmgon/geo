@@ -4,17 +4,23 @@
 
 <html>
 <head>
+	<meta charset='uft-8' />
 	<title>{% block title %}{% endblock %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<script src="{% static 'js/jquery.js' %}"></script>
-	<link type="text/css" rel="stylesheet" href="{% static 'css/style.css' %}" />
+<!--	<link type="text/css" rel="stylesheet" href="{% static 'css/style.css' %}" />
 	<link type="text/css" rel="stylesheet" href="{% static 'css/typography.css' %}" />
-	<link type="text/css" rel="stylesheet" href="{% static 'css/layout.css' %}" />
+	<link type="text/css" rel="stylesheet" href="{% static 'css/layout.css' %}" /> -->
+	<!-- bootstrap -->
+	<link rel='stylesheet' type='text/css' href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
+	<link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-theme.min.css' %}" />
 </head>
 <body>
 	
 	{% block body %}
 	{% endblock %}
 
+	<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 </body>
 </html>

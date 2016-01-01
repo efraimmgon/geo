@@ -13,10 +13,12 @@ import csv
 from datetime import date, time
 from setup_app.models import Ocorrencia
 
-# print("Insira o caminho ao arquivo .csv:")
-# filename = input('> ')
-
 def insert_data(filename):
+	"""
+	Fetches the data from a csv file and inserts it to the DB.
+	File format: [0] natureza, [1] data, [2] endereço, [3] hora.
+	- If no date or time are available, the field must be empty.
+	"""
 	with open(filename, 'rt', encoding='utf-8') as fin:
 		cin = csv.reader(fin)
 		table = [row for row in cin]
@@ -71,6 +73,7 @@ def resolve_time(input_time):
 		resolved_time = time(hour, minute)
 
 	return resolved_time
+
 
 if __name__ == '__main__':
 	print("Insira o arquivo para popular o BD:")

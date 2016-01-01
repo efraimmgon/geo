@@ -13,7 +13,7 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 
 	list_display = ('natureza', 'local', 'data')
 	list_filter = ['natureza', 'data']
-	search_fields = ['local']
+	search_fields = ['local', 'latitude']
 
 
 admin.site.register(Ocorrencia, OcorrenciaAdmin)

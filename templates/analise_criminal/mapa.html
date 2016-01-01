@@ -23,7 +23,7 @@
 
 	<div id="map"></div>
 	<div id="appSetings">
-		<div id="control"><h3>Configurações Avançadas</h3></div>
+		<div id="control"><h3>Configurações</h3></div>
 		<div id="settings">
 			<form id="styleForm" method="post" action="{% url 'analise_criminal:mapAjax' %}">
 				{% csrf_token %}
@@ -53,7 +53,6 @@
 		<div class='user-info'>
 			Os campos marcados com * são obrigatórios. <br />
 			Buscas disponíveis de {{ min }} a {{ max }}.
-			{% if min %}MIN CARALHO{% endif %}
 		</div>
 
 		<br />

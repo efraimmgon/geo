@@ -9,6 +9,9 @@ from analise_criminal.forms import MapOptionForm, MapMarkerStyleForm
 from analise_criminal.functions import format_data
 
 
+def index(request):
+	return render(request, 'analise_criminal/index.html')
+
 def map(request):
 	"""/analise_criminal/mapa/"""
 	form_styles = MapMarkerStyleForm()

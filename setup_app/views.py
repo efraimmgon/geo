@@ -2,14 +2,15 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.core import serializers
 
+import json
+
 from setup_app.models import Ocorrencia
 from setup_app.functions import dump_object
 
 
 def index(request):
 	"""Home for testing code"""
-	o = Ocorrencia.objects.all()[100:110]
-	return render(request, 'setup_app/test.html', context={'ocorrencias': o})
+	return render(request, 'setup_app/index.html')
 
 def ajaxTest(request):
 	"""Testing code"""
@@ -25,7 +26,7 @@ def update_lat_lng(request):
 	return render(request, 'setup_app/update_lat_lng.html')
 
 def get_address(request):
-	"""Fetches Ocorrencia objects and returns them as json."""
+	"""Fetches Ocorrencia objects; returns them as json."""
 	if request.method == 'GET':
 		stop = int(request.GET.get('stop'))
 		if stop == 0:
@@ -35,10 +36,13 @@ def get_address(request):
 			o = o.filter(pk__gt=stop).filter(latitude=0.0)[:10]
 		
 		if o.count() > 0:
-			data = serializers.serialize('json', o)
-			return HttpResponse(data, content_type='application/json')
+			data = serializers.serialize('json', o)	
 		else:
-			return HttpResponse(None)
+			data = json.dumps({'end': 'Não existem mais lat e lng nulos.'})
+
+		return HttpResponse(data, content_type='application/json')
+	
+	
 
 def update_db(request):
 	"""Updates the Ocorrencia model"""
@@ -48,7 +52,8 @@ def update_db(request):
 			stop = int(request.POST.get('stop'))
 
 			stop += 1
-			response_text = ''
+			response_text = {'OK' : '', 'errors': ''}
+
 			for i in range(start, stop):
 				update = request.POST.get('loc-%s' % (i,))
 				if update:
@@ -58,9 +63,10 @@ def update_db(request):
 					o.latitude = lat
 					o.longitude = lng
 					o.save()
-					response_text += 'Pk %s atualizada <br />' % (pk,)
+					response_text['OK'] += "pk %s atualizada<br />" % (pk,)
 				else:
-					response_text += "loc-%s is not set <br />" % (i,)
-			return HttpResponse(response_text)
+					response_text['errors'] += "loc-%s is not set\n" % (i,)
+			data = json.dumps(response_text)
+			return HttpResponse(data, content_type="application/json")
 		else:
 			return HttpResponse("Range start and stop is not set")
