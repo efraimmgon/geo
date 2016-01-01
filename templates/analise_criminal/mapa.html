@@ -52,7 +52,8 @@
 		</table>
 		<div class='user-info'>
 			Os campos marcados com * são obrigatórios. <br />
-			Buscas disponíveis de {{ availability.from.data }} a {{ availability.to.data }}.
+			Buscas disponíveis de {{ min }} a {{ max }}.
+			{% if min %}MIN CARALHO{% endif %}
 		</div>
 
 		<br />
@@ -60,7 +61,8 @@
 	</form>
 
 	<!-- Síntese do número das ocorrências -->
-	<div id="id_info"></div>
+	<div id="id_info">
+	</div>
 	<!-- Tabela com dados das ocorrências -->
 	<div id="dados-ocorrencias">
 	</div>

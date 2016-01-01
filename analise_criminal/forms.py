@@ -5,17 +5,18 @@ from setup_app.models import Ocorrencia
 
 class MapOptionForm(forms.Form):
 
-	naturezas = (
+	naturezas = Ocorrencia.objects.values('natureza').distinct()
+	choices = (
 		('selecione', 'Selecione'),
 		('todas', 'Todas'),
-		('roubo', 'Roubo'),
-		('furto', 'Furto'),
-		('homicídio', 'Homicídio'),
-		('drogas', 'Entorpecente'),
 	)
 
+	for n in naturezas:
+		choices += ( (n['natureza'], n['natureza']), )
+
+
 	natureza = forms.ChoiceField(
-		label='Natureza', label_suffix='*:', choices=naturezas,
+		label='Natureza', label_suffix='*:', choices=choices,
 		required=True
 	)
 	data_inicial = forms.DateField(

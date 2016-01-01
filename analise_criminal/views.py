@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db.models import Min, Max
 
 import json
 
@@ -12,14 +13,13 @@ def map(request):
 	"""/analise_criminal/mapa/"""
 	form_styles = MapMarkerStyleForm()
 	form_options = MapOptionForm()
-	
-	available = {
-		'from': Ocorrencia.objects.first(),
-		'to': Ocorrencia.objects.last()
-	}
+
+	mindata = Ocorrencia.objects.all().aggregate(Min('data'))
+	maxdata = Ocorrencia.objects.all().aggregate(Max('data'))
+
 	context = {
 		'form_options': form_options, 'form_styles': form_styles,
-		'availability': available
+		'min': mindata['data__min'], 'max': maxdata['data__max']
 	}
 
 	return render(request, 'analise_criminal/mapa.html', context)
@@ -46,7 +46,7 @@ def mapAjax(request):
 					hora__gte=hora_inicial, hora__lte=hora_final
 				)
 			else:
-				o = Ocorrencia.objects.filter(natureza__contains=natureza, 
+				o = Ocorrencia.objects.filter(natureza=natureza, 
 					data__gte=data_inicial, data__lte=data_final,
 					hora__gte=hora_inicial, hora__lte=hora_final
 				)
