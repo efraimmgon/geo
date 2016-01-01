@@ -1,0 +1,20 @@
+{% extends "setup_app/base.html" %}
+
+{% block title %}Setup{% endblock %}
+
+{% block body %}
+
+<h1>Setup</h1>
+
+<h3>Navigation</h3>
+<ul>
+	<li><a href="{% url 'setup:update_lat_lng' %}">Update database.</a></li>
+</ul>
+
+<script>
+$(function() {
+	
+});
+</script>
+
+{% endblock %}
