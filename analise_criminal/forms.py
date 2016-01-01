@@ -27,14 +27,14 @@ class MapOptionForm(forms.Form):
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
 		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
 	)
-	hora_inicial = forms.TimeField(
-		label='Hora inicial', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
-	)
-	hora_final = forms.TimeField(
-		label='Hora final', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
-	)
+#	hora_inicial = forms.TimeField(
+#		label='Hora inicial', required=False, input_formats=['%H:%M'],
+#		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+#	)
+#	hora_final = forms.TimeField(
+#		label='Hora final', required=False, input_formats=['%H:%M'],
+#		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+#	)
 
 
 class MapMarkerStyleForm(forms.Form):

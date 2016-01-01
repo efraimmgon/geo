@@ -8,12 +8,13 @@ $(function() {
 	var natHom = 0;
 	var natOutros = 0;
 	var notEven = 1;
-	var index = 1;
 	var $html;
 	var heatmap = new google.maps.visualization.HeatmapLayer();
 
 	var $settings = $('#settings');
 	var $ocorrenciasForm = $('#ocorrenciasForm');
+	var $info = $('#id_info');
+	var $dados_ocorrencias = $('#dados-ocorrencias');
 
 	$settings.hide();
 	$('#control').on('click', function() {
@@ -60,37 +61,44 @@ $(function() {
 			type: "POST",
 			url: '/analise_criminal/mapAjax/',
 			data: $ocorrenciasForm.serialize(),
-			success: function(data) {
-				$.each(data, function() {
-					var id = this.id;
-					var natureza = this.natureza;
-					var local = this.local;
+			success: function(json) {
+				$.each(json, function() {
 
-					if (this.lat && this.lng) {
+					var json_id = this.pk;
+					var json_natureza = this.fields.natureza;
+					var json_local = this.fields.local;
+					var json_data = this.fields.formatted_date;
+					var json_weekday = this.fields.weekday;
+					var json_hora = this.fields.hora;
+					var lat = this.fields.latitude;
+					var lng = this.fields.longitude;
+					
+					if (lat && lng) {
 						var latLng = new google.maps.LatLng(
-							parseFloat(this.lat),
-							parseFloat(this.lng)
+							parseFloat(lat),
+							parseFloat(lng)
 						);
-						if ($styleType == 'basicMarker') {
-							createMarker(latLng, id, natureza, local);
+						if (styleType == 'basicMarker') {
+							createMarker(latLng, json_id, json_natureza, json_local);
 						} else {
 							heatmapData.push(latLng);	
 						}
-						ocorrencias.push({natureza: this.natureza, local: this.local, data: this.unixtime, hora: this.hora});
+						ocorrencias.push({natureza: json_natureza, local: json_local, 
+							data: json_data, hora: json_hora, weekday: json_weekday});
 					} else {
-						var el = document.getElementById('current');
-							var content = el.innerHTML;
-						el.innerHTML = content +  "<br> " + id + ': ' + local + ': not found';
+						var notFound = '<br>' + json_id + ': ' + json_local + ': not found';
+						$info.append(notFound);
 					}
 				}); 
 			},
 			fail: function() {
-				document.getElementById('current').innerHTML = 'Houve um problema com a solicitação. [AJAX]';
+				$info.html('Houve um problema com a solicitação. [AJAX]');
 			},
 			complete: function() {
-				if ($styleType == 'heatmap') {
+				if (styleType == 'heatmap') {
 					createHeatmap(heatmapData);
 				}
+
 				tableGeneration();
 				sortableTable();
 
@@ -101,82 +109,71 @@ $(function() {
 				if (natHom) $html += '<span style="padding-right: 30px">Homicídios: ' + natHom + '</span>';
 				if (natOutros) $html += '<span>Outras ocorrências: ' + natOutros + '</span>';
 
-				var elInfo = document.getElementById('info')
-				elInfo.innerHTML = $html;
+				$info.append($html);
 			}
 		}); // END of ajax call
 	}); // END of ocorrenciasForm
 	
 	oms.addListener('spiderfy', function(markers) {
-			iw.close();
+		iw.close();
 	});
-	
-	function centerMapRegion() {
-		var geocoder = new google.maps.Geocoder();
-		geocoder.geocode({address: region}, function(results, status) {
-			if(status == google.maps.GeocoderStatus.OK) {
-				map.setCenter(results[0].geometry.location);
-			} else {
-				alert('Geocode was not successful for the following reason: ' + status);
-			}
-		});
-	}
 
 	function createMarker(latlng, id, natureza, address) {
 		var html = "<b> id: " + id + ' ' + natureza + "</b> <br />" + address;
-		window.setTimeout(function() {
-			var markerColor, markerText;
-			if(/furto/i.test(natureza)) {
-				markerColor = "E25A5A";
-				markerText = "F"
-			} else if(/roubo/i.test(natureza)) {
-				markerColor = "fff";
-				markerText = "R";
-			} else if(/hom/i.test(natureza)){
-				markerColor = "000";
-				markerText = "H";
-			} else if(/drogas/i.test(natureza)){
-				markerColor = "b4eeb4";
-				markerText = "E";
-			} else {
-				markerColor = "ddd";
-				markerText = "O";
-				natOutros++;
-			}
-			var marker = new StyledMarker({
-				styleIcon: new StyledIcon(StyledIconTypes.MARKER,{color: markerColor,text: markerText}),
-				position:latlng,
-				map:map
-			});
-			google.maps.event.addListener(marker, 'click', function() {
-				iw.setContent(html);
-				iw.open(map, marker);
-			});
-			google.maps.event.addListener(marker, 'mouseover', function() {
-				marker.setOpacity(0.5);
-			});
-			google.maps.event.addListener(marker, 'mouseout', function() {
-				marker.setOpacity(1);
-			});
-			markers.push(marker);
-			oms.addMarker(marker);
-		}, 100 * index); // END of setTimeout
+		
+		var markerColor, markerText;
+		if (/furto/i.test(natureza)) {
+			markerColor = "E25A5A";
+			markerText = "F"
+		} else if (/roubo/i.test(natureza)) {
+			markerColor = "fff";
+			markerText = "R";
+		} else if (/hom/i.test(natureza)){
+			markerColor = "000";
+			markerText = "H";
+		} else if (/drogas/i.test(natureza)){
+			markerColor = "b4eeb4";
+			markerText = "E";
+		} else {
+			markerColor = "ddd";
+			markerText = "O";
+			natOutros++;
+		}
+		
+		var marker = new StyledMarker({
+			styleIcon: new StyledIcon(StyledIconTypes.MARKER,{color: markerColor,text: markerText}),
+			position:latlng,
+			map: map
+		});
+		
+		google.maps.event.addListener(marker, 'click', function() {
+			iw.setContent(html);
+			iw.open(map, marker);
+		});
+		
+		google.maps.event.addListener(marker, 'mouseover', function() {
+			marker.setOpacity(0.5);
+		});
+			
+		google.maps.event.addListener(marker, 'mouseout', function() {
+			marker.setOpacity(1);
+		});
+			
+		markers.push(marker);
+		oms.addMarker(marker);
 
 		var test;
-		if(/roubo/i.test(natureza)) test = 1;
-		else if(/furto/i.test(natureza)) test = 2;
-		else if(/homic[ií]dio/i.test(natureza)) test = 3;
-		else if(/drogas/i.test(natureza)) test = 4;
-		else test = 5;
-
-		switch(test){
-			case 1: natRoubo++; break;
-			case 2: natFurto++; break;
-			case 3: natHom++; break;
-			case 4: natEnt++; break;
-			case 5: natOutros++; break;
+		if (/roubo/i.test(natureza)) {
+			natRoubo++;
+		} else if (/furto/i.test(natureza)) {
+			natFurto++;
+		} else if (/homic[ií]dio/i.test(natureza)) {
+			natHom++;
+		} else if (/drogas/i.test(natureza)) {
+			natEnt++;
+		} else {
+			natOutros++;
 		}
-		index++;
 	} // END OF createMarker()
 
 	function createHeatmap(heatmapData) {
@@ -184,14 +181,18 @@ $(function() {
 			data: heatmapData,
 			dissipating: false,
 			map: map
-		})
+		});
+		/* If I remember, this options weren't working the way I wanted;
+		** Research and refactor. */
 		heatmap.set('radius', 1);
 		heatmap.set('scaleRadius', false);
 	}
 
 	function tableGeneration() {
-	/* Creates the table based on the data given by the ajax call */
-		document.getElementById('dados-ocorrencias').innerHTML = '';
+		/* 
+		** Creates the table based on the data given by the ajax call 
+		** global: ocorrencias
+		*/
 		var $table = $('<table class="sortable"></table>');
 		var $thead = $(
 			"<thead>" +
@@ -210,18 +211,6 @@ $(function() {
 
 		for (var i = 0; i < ocorrencias.length; i++) {
 			var ocorrencia = ocorrencias[i];
-			var data = new Date(ocorrencia.data * 1000);
-			var dataOcorrencia = data.getDate() + '/' + (data.getMonth() + 1) + '/' + data.getFullYear();
-			var weekday = data.getDay();
-			switch(weekday) {
-				case 0: weekday = 'Domingo'; break;
-				case 1: weekday = 'Segunda'; break;
-				case 2: weekday = 'Terça'; break;
-				case 3: weekday = 'Quarta'; break;
-				case 4: weekday = 'Quinta'; break;
-				case 5: weekday = 'Sexta'; break;
-				case 6: weekday = 'Sábado'; break;
-			}
 
 			if (notEven % 2 == 0) {
 				var $row = $('<tr class="even"></tr>');	
@@ -231,20 +220,23 @@ $(function() {
 			
 			$row.append( $('<td></td>').text(ocorrencia.natureza) );
 			$row.append( $('<td></td>').text(ocorrencia.local) );
-			$row.append( $('<td></td>').text(dataOcorrencia) );
-			$row.append( $('<td></td>').text(weekday) );
+			$row.append( $('<td></td>').text(ocorrencia.data) );
+			$row.append( $('<td></td>').text(ocorrencia.weekday) );
 			$row.append( $('<td></td>').text(ocorrencia.hora) );
 			$tableBody.append( $row );
 
 			notEven++
 		}
 		$table.append($tableBody);
-		$('#dados-ocorrencias').append($table);
+		$dados_ocorrencias.append($table);
 	} // tableGeneration()
 
 	function sortableTable() {
-	/* Allows the table to be sorted */
+		/* Allows the tables to be sorted */
 		var compare = {
+			/* This won't work as it is. The curren address includes the 
+			** neighborhood name. It might help to add an extra col with
+			** the neighborhood name, allowing the sorting by it too. */
 			name: function(a, b) {
 				a = a.replace(/^(rua)|(avenida)|(mt) /i, '');
 				b = b.replace(/^(rua)|(avenida)|(mt) /i, '');
@@ -253,6 +245,11 @@ $(function() {
 				else return a > b ? 1 : 0;
 			},
 			duration: function(a, b) {
+				if (a == 'null') {
+					return 1;
+				} else if (b == 'null') {
+					return -1;
+				}
 				a = a.split(':');
 				b = b.split(':');
 
@@ -264,12 +261,12 @@ $(function() {
 			date: function(a, b) {
 				a = returnDate(a);
 				b = returnDate(b);
-				function returnDate(a) {
-					var day = a.split('/')[0];
-					var month = a.split('/')[1];
-					var year = a.split('/')[2];
-					var dateA = new Date(year, month, day);
-					return a = dateA.getTime();
+				function returnDate(dateString) {
+					var day = dateString.split('/')[0];
+					var month = dateString.split('/')[1];
+					var year = dateString.split('/')[2];
+					var dateObj = new Date(year, month, day);
+					return dateObj.getTime();
 				}
 				a = new Date(a);
 				b = new Date(b);
@@ -336,7 +333,7 @@ $(function() {
 	} // sortableTable()
 
 	function clearLocations() {
-	/* Resets the markers and heatmapData array, clearing the map */
+		/* Resets the markers and heatmapData array, clearing the map */
 		iw.close();
 		for (var i = 0; i < markers.length; i++) {
 			markers[i].setMap(null);
@@ -344,8 +341,8 @@ $(function() {
 		markers.length = 0;
 		heatmapData.length = 0;
 		heatmap.setMap(null);
-		document.getElementById('current').innerHTML = '';
-
-		index = 1;
+		document.getElementById('errors').innerHTML = '';
+		$info.html('');
+		$dados_ocorrencias.html('');
 	}
 });

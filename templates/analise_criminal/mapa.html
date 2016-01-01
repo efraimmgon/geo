@@ -16,7 +16,7 @@
 
 	<h1>Mancha Criminal</h1>
 
-<!--	<div id="map"></div> -->
+	<div id="map"></div>
 	<div id="appSetings">
 		<div id="control"><h3>Configurações Avançadas</h3></div>
 		<div id="settings">
@@ -55,75 +55,18 @@
 	</form>
 
 	<!-- Síntese do número das ocorrências -->
-	<div id="info"></div>
+	<div id="id_info"></div>
 	<!-- Tabela com dados das ocorrências -->
 	<div id="dados-ocorrencias">
-	{% if ocorrencias %}
-		{% for ocorrencia in ocorrencias %}
-			<p>{{ ocorrencia.id }}: {{ ocorrencia.natureza }} - {{ ocorrencia.data }}</p>
-		{% endfor %}
-	{% endif %}
 	</div>
 	<!-- Falhas; dados não encontrados -->
 	<div id="errors"></div>
 
 </div>
 
-<script>
-$(function() {
-/* map.min.js */
-	var map, gm, oms, iw;
-	var markers = [];
-	var ocorrencias = [];
-	var heatmapData = [];
-	var natRoubo = 0;
-	var natFurto = 0;
-	var natHom = 0;
-	var natOutros = 0;
-	var notEven = 1;
-	var index = 1;
-	var $html;
-	
-	var $settings = $('#settings');
-	var $ocorrenciasForm = $('#ocorrenciasForm');
-
-	$settings.hide();
-	$('#control').on('click', function() {
-		$settings.slideToggle();
-	});
-
-	var styleType = 'basicMarker';
-	$('#styleForm').on('change', function(e) {
-		e.preventDefault();
-		styleType = $('#styleType').val();
-		$settings.slideToggle();
-	})
-
-/*	$ocorrenciasForm.on('submit', function(e) {
-		e.preventDefault();
-
-		natRoubo = 0;
-		natFurto = 0;
-		natEnt = 0;
-		natHom = 0;
-		natOutros = 0;
-		ocorrencias = [];
-
-		$.ajax({
-			type: "POST",
-			url: "/analise_criminal/mapAjax/",
-			data: $ocorrenciasForm.serialize(),
-			success: function(data) {
-				
-			}
-		});
-	}); */
-});
-</script>
-<!--
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8&libraries=geometry,visualization" type='text/javascript'></script>
 <script src="{% static 'js/map/styledMarkers.js' %}"></script>
 <script src="{% static 'js/map/oms.js' %}"></script>
-<script src="{% static 'js/map/map.js' %}"></script> -->
+<script src="{% static 'js/map/map.js' %}"></script>
 
 {% endblock %}
