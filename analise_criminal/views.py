@@ -16,7 +16,7 @@ def map(request):
 	"""/analise_criminal/mapa/"""
 	form_styles = MapMarkerStyleForm()
 	form_options = MapOptionForm()
-
+	print(form_styles)
 	mindata = Ocorrencia.objects.all().aggregate(Min('data'))
 	maxdata = Ocorrencia.objects.all().aggregate(Max('data'))
 
