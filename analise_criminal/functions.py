@@ -2,6 +2,8 @@ from django.core import serializers
 from datetime import date
 import json
 
+from setup_app.models import Ocorrencia
+
 weekdays = {
 	0: 'Segunda',
 	1: 'Terça',
@@ -40,10 +42,26 @@ def format_data(objs):
 			lst = obj['fields']['local'].split(',')
 			obj['fields']['bairro'] = lst[0]
 			obj['fields']['via'] = lst[1].strip()
-			del obj['fields']['local']
 		else:
 			obj['fields']['bairro'] = obj['fields']['local']
 			obj['fields']['via'] = obj['fields']['local']
-			del obj['fields']['local']
+		del obj['fields']['local']
 			
 	return json.dumps(struct)
+
+
+def add_venue_hood():
+	o = Ocorrencia.objects.values('local').distinct()
+
+	for obj in o:
+		if ',' in obj['local']:
+			lst = obj['local'].split(',')
+			obj['bairro'] = lst[0]
+			obj['via'] = lst[1].strip()
+		else:
+			obj['bairro'] = obj['local']
+			obj['via'] = obj['local']
+		del obj['local']
+
+	return o
+

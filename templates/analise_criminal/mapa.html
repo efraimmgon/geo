@@ -39,6 +39,7 @@
 			</div>
 
 			<h3>Opções de seleção</h3>
+			<h4 class="col-md-offset-2 col-md-10">Básicas</h4>
 			<form id="ocorrenciasForm" class="form-horizontal" method="post" action="{% url 'analise_criminal:map' %}">
 				{% csrf_token %}
 				{% for field in form_options %}
@@ -49,6 +50,17 @@
 					<div class="col-md-10">{{ field }}</div>
 				</div>
 				{% endfor %}
+
+				<h4 class="col-md-offset-2 col-md-10">Avançadas</h4>
+				{% for field in form_advanced %}
+				<div class="form-group">
+					<label for="{{ field.id_for_label }}" class="control-label col-md-2">
+						{{ field.label }}
+					</label>
+					<div class="col-md-10">{{ field }}</div>
+				</div>
+				{% endfor %}
+
 				<div class="form-group">
 					<div class="col-md-offset-2 col-md-10">
 						<button class="btn btn-default" type="submit"> 

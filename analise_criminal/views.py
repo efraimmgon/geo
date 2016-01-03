@@ -7,7 +7,7 @@ import json
 
 from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
-	MapOptionForm, MapMarkerStyleForm
+	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm
 )
 from analise_criminal.functions import format_data
 
@@ -20,12 +20,14 @@ def map(request):
 	"""/analise_criminal/mapa/"""
 	form_styles = MapMarkerStyleForm()
 	form_options = MapOptionForm()
+	form_advanced_options = AdvancedOptionsForm()
 
 	mindata = Ocorrencia.objects.all().aggregate(Min('data'))
 	maxdata = Ocorrencia.objects.all().aggregate(Max('data'))
 
 	context = {
 		'form_options': form_options, 'form_styles': form_styles,
+		'form_advanced': form_advanced_options,
 		'min': mindata['data__min'].strftime('%d/%m/%Y'), 
 		'max': maxdata['data__max'].strftime('%d/%m/%Y')
 	}
@@ -35,14 +37,17 @@ def map(request):
 def mapAjax(request):
 	if request.method == 'POST':
 		form = MapOptionForm(data=request.POST)
+		form_advanced = AdvancedOptionsForm(data=request.POST)
 		form.full_clean()
-		if form.is_valid():
+		form_advanced.full_clean()
+		if form.is_valid() and form_advanced.is_valid():
 			natureza = form.cleaned_data['natureza']
 			data_inicial = form.cleaned_data['data_inicial']
 			data_final = form.cleaned_data['data_final']
 			hora_inicial = form.cleaned_data['hora_inicial']
 			hora_final = form.cleaned_data['hora_final']
-			
+			bairro = form_advanced.cleaned_data['bairro']
+
 			if hora_inicial is None:
 				hora_inicial = '00:00'
 			if hora_final is None:
@@ -59,11 +64,13 @@ def mapAjax(request):
 					hora__gte=hora_inicial, hora__lte=hora_final
 				)
 
-			json_data = format_data(o)
+			if bairro:
+				o = o.filter(local__contains=bairro)
 
-			return HttpResponse(json_data, content_type='application/json')
-		## refactor forms.py to have portuguese errors.
+			json_data = format_data(o)
 		else:
- 	 		data = json.dumps({'errors': form.errors})
- 	 		return HttpResponse(data, content_type='application/json')
+			## refactor forms.py to have portuguese errors.
+ 	 		json_data = json.dumps({'errors': form.errors})
+	
+	return HttpResponse(json_data, content_type='application/json')
 
