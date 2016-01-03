@@ -20,12 +20,14 @@ from django.conf.urls.static import static
 
 from setup_app import urls as setup_urls
 from analise_criminal import urls as analise_urls
+from accounts import urls as accounts_urls
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^setup/', include(setup_urls, namespace="setup")),
     url(r'^analise_criminal/', include(analise_urls, 
         namespace="analise_criminal")),
+    url(r'^accounts/', include(accounts_urls, namespace='accounts')),
 ]
 
 # unsuitable for production; for development only!

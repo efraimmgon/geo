@@ -49,3 +49,7 @@ class MapMarkerStyleForm(forms.Form):
 	marker_style = forms.ChoiceField(
 		label="Tipo de marcador", choices=styles
 	)
+
+
+
+

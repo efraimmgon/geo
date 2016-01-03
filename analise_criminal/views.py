@@ -1,28 +1,33 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db.models import Min, Max
+from django.contrib.auth.decorators import login_required
 
 import json
 
 from setup_app.models import Ocorrencia
-from analise_criminal.forms import MapOptionForm, MapMarkerStyleForm
+from analise_criminal.forms import (
+	MapOptionForm, MapMarkerStyleForm
+)
 from analise_criminal.functions import format_data
 
 
 def index(request):
 	return render(request, 'analise_criminal/index.html')
 
+@login_required
 def map(request):
 	"""/analise_criminal/mapa/"""
 	form_styles = MapMarkerStyleForm()
 	form_options = MapOptionForm()
-	print(form_styles)
+
 	mindata = Ocorrencia.objects.all().aggregate(Min('data'))
 	maxdata = Ocorrencia.objects.all().aggregate(Max('data'))
 
 	context = {
 		'form_options': form_options, 'form_styles': form_styles,
-		'min': mindata['data__min'], 'max': maxdata['data__max']
+		'min': mindata['data__min'].strftime('%d/%m/%Y'), 
+		'max': maxdata['data__max'].strftime('%d/%m/%Y')
 	}
 
 	return render(request, 'analise_criminal/mapa.html', context)

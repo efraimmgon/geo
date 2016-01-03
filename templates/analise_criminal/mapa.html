@@ -7,48 +7,21 @@
 {% block body %}
 
 <style>
-	#control {
-		cursor: pointer;
-	}
-
 	ul.errorlist {
-		background-color: red;
-		color: white;
+		color: red;
 	}
 </style>
 
-<!-- #TODO: move to base.html -->
-<nav role="navigation" class="navbar navbar-default">
-	<div class="navbar-header">
-		<button type="button" data-target="#navbarCollapse" data-toggle="collapse"
-			class="navbar-toggle">
-			<span class="sr-only">Toggle navigation</span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-		</button>
-		<a href="http://www.pm.mt.gov.br" class="navbar-brand">PMMT</a>
-	</div>
-	<div id="navbarCollapse" class="collapse navbar-collapse">
-		<ul class="nav navbar-nav">
-			<li><a href="{% url 'analise_criminal:index' %}">Home</a></li>
-			<!-- #TODO: dynamically attribute active class -->
-			<li class="active"><a href="{% url 'analise_criminal:map' %}">Mapa</a></li>
-		</ul>
-		<ul class="nav navbar-nav navbar-right">
-			<li><a href="#TODO">Login</a></li>
-		</ul>
-	</div>
-</nav>
+<link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
 
 <div class="container">
 	<div class="row">
 		<div class="col-md-12">
 			<div class="page-header">
-				<h1>Análise Criminal <small>Mapa de registros</small></h1>
+				<h1>Georreferenciamento <small>de registros criminais</small></h1>
 			</div>
 
-			<div id="map"></div>
+			<div id="map" class="center-block"></div>
 
 			<div id="appSetings">
 				<div id="control"><h3>Configurações</h3></div>
@@ -65,11 +38,12 @@
 				</form>
 			</div>
 
+			<h3>Opções de seleção</h3>
 			<form id="ocorrenciasForm" class="form-horizontal" method="post" action="{% url 'analise_criminal:map' %}">
 				{% csrf_token %}
 				{% for field in form_options %}
 				<div class="form-group">
-					<label for="{{ form.id_for_label}}" class="control-label col-md-2">
+					<label for="{{ field.id_for_label}}" class="control-label col-md-2">
 						{{ field.label }}
 					</label>
 					<div class="col-md-10">{{ field }}</div>
@@ -82,6 +56,9 @@
 						</button>
 					</div>
 				</div>
+				<p class="text-info">Buscas disponíveis de {{ min }} a {{ max }}.</p>
+				<p class="text-warning">É obrigatória a seleção de uma natureza, e as datas
+					inicial e final.</p>
 			</form>
 
 			<!-- Síntese do número das ocorrências -->
@@ -94,72 +71,18 @@
 			<div id="errors" class="text-danger"></div>
 
 			<div class="row">
-				<blockquote class="col-md-6">
-					<p>- Fiquei sabendo – começou o comerciante – que és um brâmane erudito, mas 
-						procuras um emprego no comércio. Explica-me, pois, ó brâmane; estás na miséria, 
-						de modo que a necessidade te obriga a empregar-te?</p>
-
-					<p>- Absolutamente – respondeu Sidarta. – Não estou na miséria, e nunca padeci 
-					miséria. É preciso que saibas que fiz parte dos samanas e convivi com eles 
-					durante muito tempo.
-
-					<p>- Ora, se viveste a vida dos samanas como dizes que não estás na miséria? 
-					Desde quando não andam os samanas desprovidos de tudo?
-
-					<p>- Não tenho nada que me pertença – replicou Sidarta – se for a isso que te 
-						referes. Estou desprovido de tudo, como não? Mas vivo assim por minha 
-						livre vontade e por isso não careço de nada.</p>
-
-					<p>- Mas de que tencionas viver, uma vez que não possuis nada?</p>
-
-					<p>- Nunca me preocupei com esse problema, meu caro senhor. Por mais de três 
-						anos vivi sem ter bens materiais e nunca me perguntei como me sustentaria no futuro.</p>
-
-					<p>- De maneira que viveste do que outros possuíam.</p>
-
-					<p>- Provavelmente foi assim. Também o comerciante vive do que possuem os outros.</p>
-
-					<p>- Muito bem. Mas não recebe os bens dos outros de graça, uma vez que lhes 
-						dá em troca sua mercadoria.</p>
-
-					<p>- De fato parece que seja assim. Todos recebem e dão alguma coisa. Assim é a vida.</p>
-
-					<p>- Permita-me, porém, uma objeção: tu que não possuis nada, que é que tencionas dar?</p>
-
-					<p>- Cada um dá o que tem. O guerreiro dá a sua força; o comerciante, 
-						a sua mercadoria; o mestre, a sua doutrina; o pescador, os seus peixes.</p>
-
-					<p>- Ótimo. E qual será o bem que tu poderás oferecer? Que aprendeste? Que sabes fazer?</p>
-
-					<p>- Sei pensar. Sei esperar. Sei jejuar.</p>
-
-					<p>- Só isso?</p>
-
-					<p>- Acho que é só isso.</p>
-
-					<p>- E que valor têm esses conhecimentos? O jejum, por exemplo. Para que serve o jejum?</p>
-
-					<p>- Para muita coisa, meu caro senhor. Para quem não tiver nada que comer, 
-						o jejum será a coisa mais inteligente que se possa fazer. Se, por exemplo, 
-						Sidarta não houvesse aprendido a suportar o jejum, estaria obrigado a 
-						aceitar hoje mesmo um serviço qualquer, seja na tua casa, seja em outro lugar, 
-						já que a fome o forçaria a fazê-lo. Assim, porém, Sidarta pode aguardar 
-						os acontecimentos com toda calma. Não sabe o que é impaciência. 
-						Para ele não existem situações embaraçosas. Sidarta pode aguentar por 
-						muito tempo o assédio da fome e ainda rir-se dela. É para isso, meu caro 
-						senhor, que serve o jejum.</p>
-
-					<small><cite>Hermann Hesse</cite>, Sidarta</small>
-
+				<blockquote class="pull-right">
+					<p>μολὼν λαβέ</p>
+					<small><cite>Λεωνίδας</cite></small>
 				</blockquote>
 			</div>
 		</div>
 	</div>
 </div>
-<!--
+
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8&libraries=geometry,visualization" type='text/javascript'></script> 
 <script src="{% static 'js/map/styledMarkers.js' %}"></script>
 <script src="{% static 'js/map/oms.js' %}"></script>
-<script src="{% static 'js/map/map.js' %}"></script> -->
+<script src="{% static 'js/map/map.js' %}"></script>
 
 {% endblock %}
