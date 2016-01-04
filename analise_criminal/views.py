@@ -48,24 +48,21 @@ def mapAjax(request):
 			hora_final = form.cleaned_data['hora_final']
 			bairro = form_advanced.cleaned_data['bairro']
 
-			if hora_inicial is None:
-				hora_inicial = '00:00'
-			if hora_final is None:
-				hora_final = '23:59'
-
 			if natureza == 'todas':
 				o = Ocorrencia.objects.filter(
-					data__gte=data_inicial, data__lte=data_final,
-					hora__gte=hora_inicial, hora__lte=hora_final
+					data__gte=data_inicial, data__lte=data_final
 				)
 			else:
 				o = Ocorrencia.objects.filter(natureza=natureza, 
-					data__gte=data_inicial, data__lte=data_final,
-					hora__gte=hora_inicial, hora__lte=hora_final
+					data__gte=data_inicial, data__lte=data_final
 				)
 
 			if bairro:
 				o = o.filter(bairro__contains=bairro)
+			if hora_inicial:
+				o = o.filter(hora__gte=hora_inicial)
+			if hora_final:
+				o = o.filter(hora__lte=hora_final)
 
 			json_data = format_data(o)
 		else:
