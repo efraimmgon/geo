@@ -77,11 +77,16 @@ $(function() {
 					var json_natureza = this.fields.natureza;
 					var json_bairro = this.fields.bairro;
 					var json_via = this.fields.via;
+					var json_numero = this.fields.numero;
 					var json_data = this.fields.formatted_date;
 					var json_weekday = this.fields.weekday;
 					var json_hora = this.fields.hora;
 					var lat = this.fields.latitude;
 					var lng = this.fields.longitude;
+
+					if (json_numero) {
+						json_via += ', ' + json_numero;
+					}
 					
 					if (lat && lng) {
 						var latLng = new google.maps.LatLng(
@@ -89,7 +94,8 @@ $(function() {
 							parseFloat(lng)
 						);
 						if (styleType == 'basicMarker') {
-							createMarker(latLng, json_id, json_natureza, json_via);
+							var address = json_bairro + ', ' + json_via;
+							createMarker(latLng, json_id, json_natureza, address);
 						} else {
 							heatmapData.push(latLng);	
 						}
