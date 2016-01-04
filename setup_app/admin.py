@@ -7,13 +7,14 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 	
 	fieldsets = [
 		('Registro', {'fields': ['data', 'hora']}),
-		('Localização', {'fields': ['local', 'latitude', 'longitude']}),
+		('Localização', {'fields': ['bairro', 'via', 'numero', 
+			'latitude', 'longitude']}),
 		(None, {'fields': ['natureza']}),
 	]
 
-	list_display = ('natureza', 'local', 'data')
+	list_display = ('natureza', 'bairro', 'via', 'data')
 	list_filter = ['natureza', 'data']
-	search_fields = ['local', 'latitude']
+	search_fields = ['bairro', 'via', 'latitude']
 
 
 admin.site.register(Ocorrencia, OcorrenciaAdmin)

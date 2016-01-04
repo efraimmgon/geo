@@ -4,15 +4,6 @@ import json
 
 from setup_app.models import Ocorrencia
 
-weekdays = {
-	0: 'Segunda',
-	1: 'Terça',
-	2: 'Quarta',
-	3: 'Quinta',
-	4: 'Sexta',
-	5: 'Sábado',
-	6: 'Domingo'
-}
 
 def format_data(objs):
 	"""
@@ -21,6 +12,16 @@ def format_data(objs):
 	- Splits the address and creates a fields for the neighborhood
 	and street.
 	"""
+
+	weekdays = {
+		0: 'Segunda',
+		1: 'Terça',
+		2: 'Quarta',
+		3: 'Quinta',
+		4: 'Sexta',
+		5: 'Sábado',
+		6: 'Domingo'
+	}
 
 	copy = objs[:]
 	data = serializers.serialize('json', copy)
@@ -51,6 +52,7 @@ def format_data(objs):
 
 
 def add_venue_hood():
+	"""Adds 'bairro' and 'via' to  an obj"""
 	o = Ocorrencia.objects.values('local').distinct()
 
 	for obj in o:
@@ -65,3 +67,18 @@ def add_venue_hood():
 
 	return o
 
+
+def insert_bairro_and_via_db():
+	objs = Ocorrencia.objects.all()
+	for obj in objs:
+		if ',' in obj.local:
+			lst = obj.local.split(',')
+			obj.bairro = lst[0].strip()
+			obj.via = lst[1].strip()
+			if len(lst) == 3:
+				obj.numero = lst[2].strip()
+		else:
+			obj.bairro = obj.local
+			obj.via = obj.local
+		obj.save()
+	print('Done')

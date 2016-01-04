@@ -7,6 +7,9 @@ class Ocorrencia(models.Model):
 
 	data = models.DateField(default=None, null=True)
 	local = models.CharField(max_length=200)
+	bairro = models.CharField(max_length=200, null=True, default=None)
+	via = models.CharField(max_length=200, null=True, default=None)
+	numero = models.CharField(max_length=200, null=True, default=None)
 	latitude = models.FloatField(default=0)
 	longitude = models.FloatField(default=0)
 	natureza = models.CharField(max_length=200)
