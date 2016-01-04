@@ -38,15 +38,6 @@ def format_data(objs):
 			continue
 		else:
 			obj['fields']['hora'] = obj['fields']['hora'][:-3]
-
-		if ',' in obj['fields']['local']:
-			lst = obj['fields']['local'].split(',')
-			obj['fields']['bairro'] = lst[0]
-			obj['fields']['via'] = lst[1].strip()
-		else:
-			obj['fields']['bairro'] = obj['fields']['local']
-			obj['fields']['via'] = obj['fields']['local']
-		del obj['fields']['local']
 			
 	return json.dumps(struct)
 

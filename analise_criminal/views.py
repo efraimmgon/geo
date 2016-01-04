@@ -65,7 +65,7 @@ def mapAjax(request):
 				)
 
 			if bairro:
-				o = o.filter(local__contains=bairro)
+				o = o.filter(bairro__contains=bairro)
 
 			json_data = format_data(o)
 		else:
