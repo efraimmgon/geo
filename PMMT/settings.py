@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'setup_app',
     'analise_criminal',
+    'accounts',
 )
 
 MIDDLEWARE_CLASSES = (
