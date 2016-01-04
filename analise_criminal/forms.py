@@ -30,17 +30,19 @@ class MapOptionForm(forms.Form):
 	)
 	hora_inicial = forms.TimeField(
 		label='Hora inicial', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm (opcional)'})
 	)
 	hora_final = forms.TimeField(
 		label='Hora final', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm (opcional)'})
 	)
 
 
 class AdvancedOptionsForm(forms.Form):
 	
-	bairro = forms.CharField(label='Bairro', required=False)
+	bairro = forms.CharField(label='Bairro', required=False,
+		widget=forms.TextInput(attrs={'placeholder': '(opcional)'})
+	)
 ##	via = forms.CharField(label='Via', required=False)
 
 
