@@ -25,6 +25,9 @@ def insert_data(filename):
 
 	for row in table:
 		input_date = resolve_date(row[1])
+		input_bairro = 
+		input_via = 
+		input_numero =
 		input_address = row[2]
 		input_crime = row[0]
 		input_time = resolve_time(row[3])

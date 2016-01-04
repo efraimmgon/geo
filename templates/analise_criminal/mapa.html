@@ -48,6 +48,11 @@
 						{{ field.label }}
 					</label>
 					<div class="col-md-10">{{ field }}</div>
+					{% if field.help_text %}
+					<div class="col-md-offset-2 col-md-10 text-info">
+						{{ field.help_text }}
+					</div>
+					{% endif %}
 				</div>
 				{% endfor %}
 
@@ -58,6 +63,11 @@
 						{{ field.label }}
 					</label>
 					<div class="col-md-10">{{ field }}</div>
+					{% if field.help_text %}
+					<div class="col-md-offset-2 col-md-10 text-info">
+						{{ field.help_text }}
+					</div>
+					{% endif %}
 				</div>
 				{% endfor %}
 

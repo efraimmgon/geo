@@ -44,9 +44,10 @@ def mapAjax(request):
 			natureza = form.cleaned_data['natureza']
 			data_inicial = form.cleaned_data['data_inicial']
 			data_final = form.cleaned_data['data_final']
-			hora_inicial = form.cleaned_data['hora_inicial']
-			hora_final = form.cleaned_data['hora_final']
+			hora_inicial = form_advanced.cleaned_data['hora_inicial']
+			hora_final = form_advanced.cleaned_data['hora_final']
 			bairro = form_advanced.cleaned_data['bairro']
+			via = form_advanced.cleaned_data['via']
 
 			if natureza == 'todas':
 				o = Ocorrencia.objects.filter(
@@ -59,6 +60,8 @@ def mapAjax(request):
 
 			if bairro:
 				o = o.filter(bairro__contains=bairro)
+			if via:
+				o = o.filter(via__contains=via)
 			if hora_inicial:
 				o = o.filter(hora__gte=hora_inicial)
 			if hora_final:

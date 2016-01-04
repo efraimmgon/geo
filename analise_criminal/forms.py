@@ -28,22 +28,26 @@ class MapOptionForm(forms.Form):
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
 		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
 	)
-	hora_inicial = forms.TimeField(
-		label='Hora inicial', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm (opcional)'})
-	)
-	hora_final = forms.TimeField(
-		label='Hora final', required=False, input_formats=['%H:%M'],
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm (opcional)'})
-	)
 
 
 class AdvancedOptionsForm(forms.Form):
 	
 	bairro = forms.CharField(label='Bairro', required=False,
-		widget=forms.TextInput(attrs={'placeholder': '(opcional)'})
+		help_text="Campo opcional."
 	)
-##	via = forms.CharField(label='Via', required=False)
+	via = forms.CharField(label='Via', required=False, 
+		help_text="Campo opcional."
+	)
+	hora_inicial = forms.TimeField(
+		label='Hora inicial', required=False, input_formats=['%H:%M'],
+		help_text="Campo opcional.",
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+	)
+	hora_final = forms.TimeField(
+		label='Hora final', required=False, input_formats=['%H:%M'],
+		help_text="Campo opcional.",
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'})
+	)
 
 
 class MapMarkerStyleForm(forms.Form):
