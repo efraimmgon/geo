@@ -1,6 +1,7 @@
 from django.core import serializers
 from datetime import date
 import json
+import unicodedata
 
 from setup_app.models import Ocorrencia
 
@@ -93,9 +94,9 @@ def process_map_arguments(
 		)
 
 	if bairro:
-		o = o.filter(bairro__contains=bairro)
+		o = o.filter(bairro__icontains=bairro)
 	if via:
-		o = o.filter(via__contains=via)
+		o = o.filter(via__icontains=via)
 	if hora_inicial:
 		o = o.filter(hora__gte=hora_inicial)
 	if hora_final:
@@ -104,4 +105,14 @@ def process_map_arguments(
 	return o
 
 	
+
+def normalize_strings():
+	o = Ocorrencia.objects.all()
+
+	for obj in o:
+		obj.local = unicodedata.normalize('NFKD', obj.local)
+		obj.bairro = unicodedata.normalize('NFKD', obj.bairro)
+		obj.via = unicodedata.normalize('NFKD', obj.via)
+		obj.natureza = unicodedata.normalize('NFKD', obj.natureza)
+		obj.save()
 

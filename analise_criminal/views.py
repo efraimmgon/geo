@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.db.models import Min, Max
 from django.contrib.auth.decorators import login_required
 
-import json
+import json, unicodedata
 
 from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
@@ -22,8 +22,9 @@ def map(request):
 	form_options = MapOptionForm()
 	form_advanced_options = AdvancedOptionsForm()
 
-	mindata = Ocorrencia.objects.all().aggregate(Min('data'))
-	maxdata = Ocorrencia.objects.all().aggregate(Max('data'))
+	queryset = Ocorrencia.objects.all() 
+	mindata = queryset.aggregate(Min('data'))
+	maxdata = queryset.aggregate(Max('data'))
 
 	context = {
 		'form_options': form_options, 'form_styles': form_styles,
@@ -41,13 +42,19 @@ def mapAjax(request):
 		form.full_clean()
 		form_advanced.full_clean()
 		if form.is_valid() and form_advanced.is_valid():
-			natureza = form.cleaned_data['natureza']
+			natureza = unicodedata.normalize(
+				'NFKD', form.cleaned_data['natureza']
+			)
 			data_inicial = form.cleaned_data['data_inicial']
 			data_final = form.cleaned_data['data_final']
 			hora_inicial = form_advanced.cleaned_data['hora_inicial']
 			hora_final = form_advanced.cleaned_data['hora_final']
-			bairro = form_advanced.cleaned_data['bairro']
-			via = form_advanced.cleaned_data['via']
+			bairro = unicodedata.normalize(
+				'NFKD', form_advanced.cleaned_data['bairro']
+			)
+			via = unicodedata.normalize(
+				'NFKD', form_advanced.cleaned_data['via']
+			)
 
 			o = process_map_arguments(natureza, data_inicial, data_final,
 				bairro, via, hora_inicial, hora_final)
