@@ -12,7 +12,6 @@ def format_data(objs):
 	- Splits the address and creates a fields for the neighborhood
 	and street.
 	"""
-
 	weekdays = {
 		0: 'Segunda',
 		1: 'Terça',
@@ -60,6 +59,9 @@ def add_venue_hood():
 
 
 def insert_bairro_and_via_db():
+	"""Since I fucked up and originally created only a local
+	field to locate an address, I had to create this hack to include
+	a bairro, via, numero field into the existing db."""
 	objs = Ocorrencia.objects.all()
 	for obj in objs:
 		if ',' in obj.local:
@@ -73,3 +75,33 @@ def insert_bairro_and_via_db():
 			obj.via = obj.local
 		obj.save()
 	print('Done')
+
+
+def process_map_arguments(
+	natureza, data_inicial, data_final, bairro, 
+	via, hora_inicial, hora_final
+	):
+	"""Uses the selections from the user to decide which objects
+	from Ocorrencia to return"""
+	if natureza == 'todas':
+		o = Ocorrencia.objects.filter(
+			data__gte=data_inicial, data__lte=data_final
+		)
+	else:
+		o = Ocorrencia.objects.filter(
+			natureza=natureza, data__gte=data_inicial, data__lte=data_final
+		)
+
+	if bairro:
+		o = o.filter(bairro__contains=bairro)
+	if via:
+		o = o.filter(via__contains=via)
+	if hora_inicial:
+		o = o.filter(hora__gte=hora_inicial)
+	if hora_final:
+		o = o.filter(hora__lte=hora_final)
+
+	return o
+
+	
+

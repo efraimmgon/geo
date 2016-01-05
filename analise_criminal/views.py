@@ -9,7 +9,7 @@ from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm
 )
-from analise_criminal.functions import format_data
+from analise_criminal.functions import format_data, process_map_arguments
 
 
 def index(request):
@@ -49,23 +49,8 @@ def mapAjax(request):
 			bairro = form_advanced.cleaned_data['bairro']
 			via = form_advanced.cleaned_data['via']
 
-			if natureza == 'todas':
-				o = Ocorrencia.objects.filter(
-					data__gte=data_inicial, data__lte=data_final
-				)
-			else:
-				o = Ocorrencia.objects.filter(natureza=natureza, 
-					data__gte=data_inicial, data__lte=data_final
-				)
-
-			if bairro:
-				o = o.filter(bairro__contains=bairro)
-			if via:
-				o = o.filter(via__contains=via)
-			if hora_inicial:
-				o = o.filter(hora__gte=hora_inicial)
-			if hora_final:
-				o = o.filter(hora__lte=hora_final)
+			o = process_map_arguments(natureza, data_inicial, data_final,
+				bairro, via, hora_inicial, hora_final)
 
 			json_data = format_data(o)
 		else:
