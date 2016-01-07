@@ -7,30 +7,18 @@
 <div class="container">
 	<div class="row">
 		<div class="col-md-12">
-			<h1>Hello world!</h1>
+			<h1>Mapa do Site:</h1>
+			<ol>
+				<li>Login: <a href="{% url 'accounts:login' %}">
+					Autenticação para visualização das páginas do site</a></li>
+				<li>Mapa: <a href="{% url 'analise_criminal:map' %}">
+					Visualização interarativa e dinâmica
+					 de registros criminais</a></li>
+				<li>Relatório: <a href="{% url 'analise_criminal:report' %}">
+					Análise e comparação de registros criminais
+				</a></li>
 
-			<!-- Button HTML (to Trigger Modal) -->
-			<a href="#myModal" role="button" class="btn btn-large btn-primary" data-toggle="modal">Launch Demo Modal</a>
-			 
-			<!-- Modal HTML -->
-			<div id="myModal" class="modal fade">
-			    <div class="modal-dialog">
-			        <div class="modal-content">
-			            <div class="modal-header">
-			                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-			                <h4 class="modal-title">Confirmation</h4>
-			            </div>
-			            <div class="modal-body">
-			                <p>Do you want to save changes you made to document before closing?</p>
-			                <p class="text-warning"><small>If you don't save, your changes will be lost.</small></p>
-			            </div>
-			            <div class="modal-footer">
-			                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-			                <button type="button" class="btn btn-primary">Save changes</button>
-			            </div>
-			        </div>
-			    </div>
-			</div>
+			</ol>
 		</div>
 	</div>
 </div>
