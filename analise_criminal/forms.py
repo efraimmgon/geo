@@ -62,5 +62,25 @@ class MapMarkerStyleForm(forms.Form):
 	)
 
 
+class ReportForm(forms.Form):
+
+	data_inicial_a = forms.DateField(
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
+	)
+	data_final_a = forms.DateField(
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
+	)
+
+	data_inicial_b = forms.DateField(
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
+	)
+	data_final_b = forms.DateField(
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
+	)	
+
 
 

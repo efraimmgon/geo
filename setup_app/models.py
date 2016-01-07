@@ -3,7 +3,18 @@ from django.db import models
 import datetime
 
 
+
 class Ocorrencia(models.Model):
+
+	weekdays = {
+		0: 'Segunda',
+		1: 'Terça',
+		2: 'Quarta',
+		3: 'Quinta',
+		4: 'Sexta',
+		5: 'Sábado',
+		6: 'Domingo'
+	}
 
 	data = models.DateField(default=None, null=True)
 	local = models.CharField(max_length=200)

@@ -5,15 +5,7 @@ import unicodedata
 
 from setup_app.models import Ocorrencia
 
-
-def format_data(objs):
-	"""
-	- Adds a fields with a date in the format dd/mm/yyyy;
-	- Adds a weekday string; strips seconds from time
-	- Splits the address and creates a fields for the neighborhood
-	and street.
-	"""
-	weekdays = {
+weekdays = {
 		0: 'Segunda',
 		1: 'Terça',
 		2: 'Quarta',
@@ -22,6 +14,15 @@ def format_data(objs):
 		5: 'Sábado',
 		6: 'Domingo'
 	}
+
+def format_data(objs):
+	"""
+	- Adds a fields with a date in the format dd/mm/yyyy;
+	- Adds a weekday string; strips seconds from time
+	- Splits the address and creates a fields for the neighborhood
+	and street.
+	"""
+	
 
 	copy = objs[:]
 	data = serializers.serialize('json', copy)
@@ -40,6 +41,13 @@ def format_data(objs):
 			obj['fields']['hora'] = obj['fields']['hora'][:-3]
 			
 	return json.dumps(struct)
+
+def make_weekdays(objs):
+	o = objs[:]
+	for obj in o:
+		obj.weekday = weekdays[ obj.data.weekday() ]
+	return o
+
 
 
 def add_venue_hood():

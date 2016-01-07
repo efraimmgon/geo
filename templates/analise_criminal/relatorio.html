@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Relatório{% endblock %}
+
+{% block body %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+			<div class="page-header">
+				<h1>Relatório <small>de registros criminais</small></h1>
+			</div>
+
+			<form class="form-horizontal" method='get' action="{% url 'analise_criminal:make_report' %}">
+			{% for field in form %}
+				<div class="form-group">
+					<label for="{{ field.id_for_label }}" class="control-label col-md-2">
+						{{ field.label|title }}
+					</label>
+					<div class="col-md-10">{{ field }}
+				{% if field.errors %}
+					{% for error in field.errors %}
+						<span class="text-danger">{{ error }}</span>
+					{% endfor %}
+				{% endif %}
+					</div>
+				</div>
+			{% endfor %}
+			<div class="form-group">
+				<div class="col-md-offset-2 col-md-10">
+					<button type="submit" class="btn btn-default">
+						<span class="glyphicon glyphicon-search"></span> Buscar
+					</button>
+				</div>
+			</div>
+
+			{% if a %}
+			<div id='results' class="row align-center">
+				<div class="col-md-6">
+					<h2>Ocorrências A: {{ a.total }}</h2>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan='3'>Naturezas</th>
+							</tr>
+						</thead>
+						{% for natureza in a.naturezas %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ natureza.natureza }}</td>
+							<td>{{ natureza.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Bairros</th>
+							</tr>
+						</thead>
+							
+						{% for bairro in a.bairros %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ bairro.bairro }}</td>
+							<td>{{ bairro.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Vias</th>
+							</tr>
+						</thead>
+							
+						{% for via in a.vias %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ via.via }}</td>
+							<td>{{ via.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Dias da semana</th>
+							</tr>
+						</thead>
+						{% for dia in a.dias %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ dia.0.data|date:"l" }}</td>
+							<td>{{ dia.count }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+				</div>
+			
+
+				<div class="col-md-6">
+					<h2>Ocorrências B: {{ b.total }}</h2>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan='3'>Naturezas</th>
+							</tr>
+						</thead>
+						{% for natureza in b.naturezas %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ natureza.natureza }}</td>
+							<td>{{ natureza.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Bairros</th>
+							</tr>
+						</thead>
+						{% for bairro in b.bairros %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ bairro.bairro }}</td>
+							<td>{{ bairro.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Vias</th>
+							</tr>
+						</thead>
+						{% for via in b.vias %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ via.via }}</td>
+							<td>{{ via.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="3">Dias da semana</th>
+							</tr>
+						</thead>
+						{% for dia in b.dias %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ dia.0.data|date:"l" }}</td>
+							<td>{{ dia.count }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+{% endblock %}
