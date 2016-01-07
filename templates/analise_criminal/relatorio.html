@@ -15,6 +15,15 @@
 				<h1>Relatório <small>de registros criminais</small></h1>
 			</div>
 
+			<p class="text-info">
+				Selecione dois períodos para gerar um relatório de
+				comparação de dados com os respectvos dados, por exemplo: <br /><br />
+				Período A:<br />
+				Data Inicial A: 1/9/2015 - Data Final A: 30/9/2015 <br />
+				Período B:<br />
+				Data Inicial B: 1/10/2015 - Data Final B: 31/10/2015
+			</p>
+
 			<form class="form-horizontal" method='get' action="{% url 'analise_criminal:make_report' %}">
 			{% for field in form %}
 				<div class="form-group">

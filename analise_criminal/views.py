@@ -68,6 +68,7 @@ def mapAjax(request):
 	return HttpResponse(json_data, content_type='application/json')
 
 
+@login_required
 def report(request):
 	form = ReportForm()
 	context = {'form': form}
