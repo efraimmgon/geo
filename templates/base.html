@@ -34,6 +34,7 @@
 			<li><a href="{% url 'analise_criminal:index' %}">Home</a></li>
 			<!-- #TODO: dynamically attribute active class -->
 			<li><a href="{% url 'analise_criminal:map' %}">Mapa</a></li>
+			<li><a href="{% url 'analise_criminal:report' %}">Relatório</a></li>
 		</ul>
 		<ul class="nav navbar-nav navbar-right">
 		{% if user.is_authenticated %}

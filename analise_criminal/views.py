@@ -98,6 +98,8 @@ def make_report(request):
 		bairros1 = bairros1.order_by('-num')[:5]
 		vias1 = o1.values('via').annotate(num=Count('id'))
 		vias1 = vias1.order_by('-num')[:10]
+		bairros_vias1 = o1.values('bairro', 'via').annotate(num=Count('id'))
+		bairros_vias1 = bairros_vias1.order_by('-num')[:10]
 		dom1 = o1.filter(data__week_day=1)
 		seg1 = o1.filter(data__week_day=2)
 		ter1 = o1.filter(data__week_day=3)
@@ -113,6 +115,8 @@ def make_report(request):
 		bairros2 = bairros2.order_by('-num')[:5]
 		vias2 = o2.values('via').annotate(num=Count('id'))
 		vias2 = vias2.order_by('-num')[:10]
+		bairros_vias2 = o2.values('bairro', 'via').annotate(num=Count('id'))
+		bairros_vias2 = bairros_vias2.order_by('-num')[:10]
 		dom2 = o2.filter(data__week_day=1)
 		seg2 = o2.filter(data__week_day=2)
 		ter2 = o2.filter(data__week_day=3)
@@ -126,6 +130,7 @@ def make_report(request):
 			'naturezas': naturezas1,
 			'bairros': bairros1,
 			'vias': vias1,
+			'b_v': bairros_vias1,
 			'dias': [dom1, seg1, ter1, qua1, qui1, sex1, sab1],
 		}
 
@@ -134,6 +139,7 @@ def make_report(request):
 			'naturezas': naturezas2,
 			'bairros': bairros2,
 			'vias': vias2,
+			'b_v': bairros_vias2,
 			'dias': [dom2, seg2, ter2, qua2, qui2, sex2, sab2],
 		}
 
