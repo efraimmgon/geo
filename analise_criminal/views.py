@@ -8,9 +8,11 @@ import json, unicodedata
 from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
-	ReportForm
+	ReportForm,
 )
-from analise_criminal.functions import format_data, process_map_arguments
+from analise_criminal.functions import (
+	format_data, process_map_arguments, get_percentage,
+)
 
 
 def index(request):
@@ -126,6 +128,43 @@ def make_report(request):
 		sex2 = o2.filter(data__week_day=6)
 		sab2 = o2.filter(data__week_day=7)
 
+		# comparação a/b
+		# variação dado a em relação ao dado b, e vice-versa
+		# a
+		furto1 = o1.filter(natureza__contains='furto').values(
+			'natureza').annotate(num=Count('id'))[0]
+		roubo1 = o1.filter(natureza__contains='roubo').values(
+			'natureza').annotate(num=Count('id'))[0]
+		uso1 = o1.filter(natureza__contains='uso il').values(
+			'natureza').annotate(num=Count('id'))[0]
+		homicidio1 = o1.filter(natureza__contains='dio doloso').values(
+			'natureza').annotate(num=Count('id'))[0]
+		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
+		trafico1 = o1.filter(natureza=search).values(
+			'natureza').annotate(num=Count('id'))[0]
+		# b
+		furto2 = o2.filter(natureza__contains='furto').values(
+			'natureza').annotate(num=Count('id'))[0]
+		roubo2 = o2.filter(natureza__contains='roubo').values(
+			'natureza').annotate(num=Count('id'))[0]
+		uso2 = o2.filter(natureza__contains='uso il').values(
+			'natureza').annotate(num=Count('id'))[0]
+		homicidio2 = o2.filter(natureza__contains='dio doloso').values(
+			'natureza').annotate(num=Count('id'))[0]
+		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
+		trafico2 = o2.filter(natureza=search).values(
+			'natureza').annotate(num=Count('id'))[0]
+		# percentage variation from a to b
+		percent_furto = get_percentage(furto1['num'], furto2['num'])
+		percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
+		percent_uso = get_percentage(uso1['num'], uso2['num'])
+		percent_homicidio = get_percentage(
+			homicidio1['num'], homicidio2['num']
+		)
+		percent_trafico = get_percentage(
+			trafico1['num'], trafico2['num']
+		)
+
 		context['a'] = {
 			'total': o1.count(),
 			'naturezas': naturezas1,
@@ -143,6 +182,14 @@ def make_report(request):
 			'b_v': bairros_vias2,
 			'dias': [dom2, seg2, ter2, qua2, qui2, sex2, sab2],
 		}
+
+		context['comparison'] = [
+			{'a': furto1, 'b': furto2, 'variation': percent_furto},
+			{'a': roubo1, 'b': roubo2, 'variation': percent_roubo},
+			{'a': homicidio1, 'b': homicidio2, 'variation': percent_homicidio},
+			{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
+			{'a': uso1, 'b': uso2, 'variation': percent_uso},
+		]
 
 		context['form'] = form
 

@@ -49,6 +49,7 @@
 
 			{% if a %}
 			<div id='results' class="row align-center">
+				<div class="row">
 				<div class="col-md-6">
 					<h2>Ocorrências A: {{ a.total }}</h2>
 
@@ -262,8 +263,49 @@
 						</tr>
 						{% endfor %}
 					</table>
+
+				</div> <!-- B -->
+			</div> <!-- row -->
+			
+			<!-- COMPARING: VARIATION -->
+			<div class="row">
+				<div class="col-md-12">
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
+							<tr>
+								<th colspan="5">Variação</th>
+							</tr>
+							<tr>
+								<th>Ord.</th>
+								<th>Natureza</th>
+								<th>Período A</th>
+								<th>Período B</th>
+								<th>Variação</th>
+							</tr>
+						</thead>
+						{% for natureza in comparison %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>{{ natureza.a.natureza }}</td>
+							<td>{{ natureza.a.num }}</td>
+							<td>{{ natureza.b.num }}</td>
+							{% if natureza.a.num < natureza.b.num %}
+							<td class="bg-danger">
+								<span class="glyphicon glyphicon-arrow-up"></span> {{ natureza.variation|floatformat }}%
+							</td>
+							{% elif natureza.a.num > natureza.b.num %}
+							<td class="bg-success">
+								<span class="glyphicon glyphicon-arrow-down"></span> {{ natureza.variation|floatformat }}%
+							</td>
+							{% else %}
+							<td>Sem alteração.</td>
+							{% endif %}
+						</tr>
+						{% endfor %}
+					</table>
 				</div>
 			</div>
+			</div><!-- #results -->
 			{% endif %}
 		</div>
 	</div>

@@ -112,8 +112,6 @@ def process_map_arguments(
 
 	return o
 
-	
-
 def normalize_strings():
 	o = Ocorrencia.objects.all()
 
@@ -123,4 +121,23 @@ def normalize_strings():
 		obj.via = unicodedata.normalize('NFKD', obj.via)
 		obj.natureza = unicodedata.normalize('NFKD', obj.natureza)
 		obj.save()
+
+def calculate_variation(a, b):
+	"""
+	Calculates variation relative from b to a.
+	a < b: percent. of Increase, if a > b: percent. of decrease
+	"""
+	if (b == 0):
+		percentage = 0
+	else:
+		percentage = (abs(a - b) / b) * 100
+	return percentage	
+
+def get_percentage(a, b):
+	a = int(a)
+	b = int(b)
+	if a < b:
+		return calculate_variation(a, b)
+	else:
+		return calculate_variation(b, a)
 
