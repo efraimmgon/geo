@@ -140,8 +140,9 @@ def make_report(request):
 		homicidio1 = o1.filter(natureza__contains='dio doloso').values(
 			'natureza').annotate(num=Count('id'))[0]
 		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		trafico1 = o1.filter(natureza=search).values(
-			'natureza').annotate(num=Count('id'))[0]
+#		trafico1 = o1.filter(natureza=search).values(
+#			'natureza').annotate(num=Count('id'))[0]
+		
 		# b
 		furto2 = o2.filter(natureza__contains='furto').values(
 			'natureza').annotate(num=Count('id'))[0]
