@@ -139,10 +139,9 @@ def make_report(request):
 			'natureza').annotate(num=Count('id'))[0]
 		homicidio1 = o1.filter(natureza__contains='dio doloso').values(
 			'natureza').annotate(num=Count('id'))[0]
-		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-#		trafico1 = o1.filter(natureza=search).values(
-#			'natureza').annotate(num=Count('id'))[0]
-		
+		trafico1 = o1.filter(natureza__contains='drogas').values(
+			'natureza').annotate(num=Count('id'))[0]
+
 		# b
 		furto2 = o2.filter(natureza__contains='furto').values(
 			'natureza').annotate(num=Count('id'))[0]
@@ -153,7 +152,7 @@ def make_report(request):
 		homicidio2 = o2.filter(natureza__contains='dio doloso').values(
 			'natureza').annotate(num=Count('id'))[0]
 		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		trafico2 = o2.filter(natureza=search).values(
+		trafico2 = o2.filter(natureza__contains='drogas').values(
 			'natureza').annotate(num=Count('id'))[0]
 		# percentage variation from a to b
 		percent_furto = get_percentage(furto1['num'], furto2['num'])
