@@ -97,11 +97,14 @@ def make_report(request):
 		# a
 		naturezas1 = o1.values('natureza').annotate(num=Count('id'))
 		naturezas1 = naturezas1.order_by('-num')[:5]
-		bairros1 = o1.values('bairro').annotate(num=Count('id'))
+		bairros1 = o1.exclude(bairro=None)
+		bairros1 = bairros1.values('bairro').annotate(num=Count('id'))
 		bairros1 = bairros1.order_by('-num')[:5]
-		vias1 = o1.values('via').annotate(num=Count('id'))
+		vias1 = o1.exclude(via=None)
+		vias1 = vias1.values('via').annotate(num=Count('id'))
 		vias1 = vias1.order_by('-num')[:10]
-		bairros_vias1 = o1.values('bairro', 'via').annotate(num=Count('id'))
+		bairros_vias1 = o1.exclude(bairro=None, via=None)
+		bairros_vias1 = bairros_vias1.values('bairro', 'via').annotate(num=Count('id'))
 		bairros_vias1 = bairros_vias1.order_by('-num')[:10]
 		dom1 = o1.filter(data__week_day=1)
 		seg1 = o1.filter(data__week_day=2)
@@ -114,11 +117,14 @@ def make_report(request):
 		# b
 		naturezas2 = o2.values('natureza').annotate(num=Count('id'))
 		naturezas2 = naturezas2.order_by('-num')[:5]
-		bairros2 = o2.values('bairro').annotate(num=Count('id'))
+		bairros2 = o2.exclude(bairro=None)
+		bairros2 = bairros2.values('bairro').annotate(num=Count('id'))
 		bairros2 = bairros2.order_by('-num')[:5]
-		vias2 = o2.values('via').annotate(num=Count('id'))
+		vias2 = o2.exclude(via=None)
+		vias2 = vias2.values('via').annotate(num=Count('id'))
 		vias2 = vias2.order_by('-num')[:10]
-		bairros_vias2 = o2.values('bairro', 'via').annotate(num=Count('id'))
+		bairros_vias2 = o2.exclude(bairro=None, via=None)
+		bairros_vias2 = bairros_vias2.values('bairro', 'via').annotate(num=Count('id'))
 		bairros_vias2 = bairros_vias2.order_by('-num')[:10]
 		dom2 = o2.filter(data__week_day=1)
 		seg2 = o2.filter(data__week_day=2)
@@ -131,36 +137,84 @@ def make_report(request):
 		# comparação a/b
 		# variação dado a em relação ao dado b, e vice-versa
 		# a
-		furto1 = o1.filter(natureza__contains='furto').values(
-			'natureza').annotate(num=Count('id'))[0]
-		roubo1 = o1.filter(natureza__contains='roubo').values(
-			'natureza').annotate(num=Count('id'))[0]
-		uso1 = o1.filter(natureza__contains='uso il').values(
-			'natureza').annotate(num=Count('id'))[0]
-		homicidio1 = o1.filter(natureza__contains='dio doloso').values(
-			'natureza').annotate(num=Count('id'))[0]
+		try:
+			furto1 = o1.filter(natureza__contains='furto').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			furto1 = {'natureza': 'Furto', 'num': 0}
+		try:
+			roubo1 = o1.filter(natureza__contains='roubo').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			roubo1 = {'natureza': 'Roubo', 'num': 0}
+		try:
+			uso1 = o1.filter(natureza__contains='uso il').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			uso1 = {'natureza': 'Uso Ilícito de Drogas', 'num': 0}
+		search = unicodedata.normalize('NFKD', 'Homicídio Doloso')
+		try:
+			homicidio_d1 = o1.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			homicidio_c1 = {'natureza': search, 'count': 0}
+		search = unicodedata.normalize('NFKD', 'Homicídio Culposo')
+		try:
+			homicidio_c1 = o1.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			homicidio_c1 = {'natureza': search, 'num': 0}
 		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		trafico1 = o1.filter(natureza=search).values(
-			'natureza').annotate(num=Count('id'))[0]
+		try:
+			trafico1 = o1.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			trafico1 = {'natureza': search, 'num': 0}
 
 		# b
-		furto2 = o2.filter(natureza__contains='furto').values(
-			'natureza').annotate(num=Count('id'))[0]
-		roubo2 = o2.filter(natureza__contains='roubo').values(
-			'natureza').annotate(num=Count('id'))[0]
-		uso2 = o2.filter(natureza__contains='uso il').values(
-			'natureza').annotate(num=Count('id'))[0]
-		homicidio2 = o2.filter(natureza__contains='dio doloso').values(
-			'natureza').annotate(num=Count('id'))[0]
+		try:
+			furto2 = o2.filter(natureza__contains='furto').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			furto2 = {'natureza': 'Furto', 'num': 0}
+		try:
+			roubo2 = o2.filter(natureza__contains='roubo').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			roubo2 = {'natureza': 'Roubo', 'num': 0}
+		try:
+			uso2 = o2.filter(natureza__contains='uso il').values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			uso2 = {'natureza': 'Uso Ilícito de Drogas', 'num': 0}
+		search = unicodedata.normalize('NFKD', 'Homicídio Doloso')
+		try:
+			homicidio_d2 = o2.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			homicidio_c2 = {'natureza': search, 'count': 0}
+		search = unicodedata.normalize('NFKD', 'Homicídio Culposo')
+		try:
+			homicidio_c2 = o2.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			homicidio_c2 = {'natureza': search, 'num': 0}
 		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		trafico2 = o2.filter(natureza=search).values(
-			'natureza').annotate(num=Count('id'))[0]
+		try:
+			trafico2 = o2.filter(natureza=search).values(
+				'natureza').annotate(num=Count('id'))[0]
+		except IndexError:
+			trafico2 = {'natureza': search, 'num': 0}
+		
 		# percentage variation from a to b
 		percent_furto = get_percentage(furto1['num'], furto2['num'])
 		percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
 		percent_uso = get_percentage(uso1['num'], uso2['num'])
-		percent_homicidio = get_percentage(
-			homicidio1['num'], homicidio2['num']
+		percent_homicidio_d = get_percentage(
+			homicidio_d1['num'], homicidio_d2['num']
+		)
+		percent_homicidio_c = get_percentage(
+			homicidio_c1['num'], homicidio_c2['num']
 		)
 		percent_trafico = get_percentage(
 			trafico1['num'], trafico2['num']
@@ -187,7 +241,8 @@ def make_report(request):
 		context['comparison'] = [
 			{'a': furto1, 'b': furto2, 'variation': percent_furto},
 			{'a': roubo1, 'b': roubo2, 'variation': percent_roubo},
-			{'a': homicidio1, 'b': homicidio2, 'variation': percent_homicidio},
+			{'a': homicidio_d1, 'b': homicidio_d2, 'variation': percent_homicidio_d},
+			{'a': homicidio_c1, 'b': homicidio_c2, 'variation': percent_homicidio_c},
 			{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
 			{'a': uso1, 'b': uso2, 'variation': percent_uso},
 		]
