@@ -7,13 +7,12 @@ import datetime
 class Ocorrencia(models.Model):
 
 	data = models.DateField(default=None, null=True)
-	weekday = models.CharField
-	local = models.CharField(max_length=200)
+	local = models.CharField(max_length=200, null=True, default=None)
 	bairro = models.CharField(max_length=200, null=True, default=None)
 	via = models.CharField(max_length=200, null=True, default=None)
 	numero = models.CharField(max_length=200, null=True, default=None)
-	latitude = models.FloatField(default=0)
-	longitude = models.FloatField(default=0)
+	latitude = models.FloatField(default=0, null=True)
+	longitude = models.FloatField(default=0, null=True)
 	natureza = models.CharField(max_length=200)
 	hora = models.TimeField(default=None, null=True)
 

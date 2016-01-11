@@ -47,264 +47,190 @@
 				</div>
 			</div>
 
-			{% if a %}
+			{% if total.a and total.b %}
 			<div id='results' class="row align-center">
 				<div class="row">
-				<div class="col-md-6">
-					<h2>Ocorrências A: {{ a.total }}</h2>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
+					<div class="col-md-12">
+						<h3>Total de ocorrências registradas</h3>
+						<table class="table">
 							<tr>
-								<th colspan='3'>Naturezas</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Natureza</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for natureza in a.naturezas %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ natureza.natureza }}</td>
-							<td>{{ natureza.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Bairros</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Bairro</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-							
-						{% for bairro in a.bairros %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ bairro.bairro }}</td>
-							<td>{{ bairro.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Vias</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Via</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-							
-						{% for via in a.vias %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ via.via }}</td>
-							<td>{{ via.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="4">Locais</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Bairro</th>
-								<th>Via</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for bv in a.b_v %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ bv.bairro }}</td>
-							<td>{{ bv.via }}</td>
-							<td>{{ bv.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Dias da semana</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Dia da semana</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for dia in a.dias %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ dia.0.data|date:"l" }}</td>
-							<td>{{ dia.count }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-				</div>
-			
-
-				<div class="col-md-6">
-					<h2>Ocorrências B: {{ b.total }}</h2>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan='3'>Naturezas</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Natureza</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for natureza in b.naturezas %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ natureza.natureza }}</td>
-							<td>{{ natureza.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Bairros</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Bairro</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for bairro in b.bairros %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ bairro.bairro }}</td>
-							<td>{{ bairro.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Vias</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Via</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for via in b.vias %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ via.via }}</td>
-							<td>{{ via.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="4">Locais</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Bairro</th>
-								<th>Via</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for bv in b.b_v %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ bv.bairro }}</td>
-							<td>{{ bv.via }}</td>
-							<td>{{ bv.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="3">Dias da semana</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Dia da semana</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for dia in b.dias %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ dia.0.data|date:"l" }}</td>
-							<td>{{ dia.count }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-
-				</div> <!-- B -->
-			</div> <!-- row -->
-			
-			<!-- COMPARING: VARIATION -->
-			<div class="row">
-				<div class="col-md-12">
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th colspan="5">Variação</th>
-							</tr>
-							<tr>
-								<th>Ord.</th>
-								<th>Natureza</th>
-								<th>Período A</th>
-								<th>Período B</th>
+								<th>{{ data.a }}</th>
+								<th>{{ data.b }}</th>
 								<th>Variação</th>
 							</tr>
-						</thead>
-						{% for natureza in comparison %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>{{ natureza.a.natureza }}</td>
-							<td>{{ natureza.a.num }}</td>
-							<td>{{ natureza.b.num }}</td>
-							{% if natureza.a.num < natureza.b.num %}
-							<td class="bg-danger">
-								<span class="glyphicon glyphicon-arrow-up"></span> {{ natureza.variation|floatformat }}%
-							</td>
-							{% elif natureza.a.num > natureza.b.num %}
-							<td class="bg-success">
-								<span class="glyphicon glyphicon-arrow-down"></span> {{ natureza.variation|floatformat }}%
-							</td>
-							{% else %}
-							<td>Sem alteração.</td>
-							{% endif %}
-						</tr>
-						{% endfor %}
-					</table>
+							<tr>
+								<td>{{ total.a }}</td>
+								<td>{{ total.b }}</td>
+								<td>#TODO: VARIAÇÃO</td>
+							</tr>
+						</table>
+
+					</div>
 				</div>
-			</div>
+				
+				<h3>5 ocorrências com maior registro</h3>
+				<div class="row">
+					{% for periodo in naturezas %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Natureza</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for natureza in periodo %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ natureza.natureza }}</td>
+								<td>{{ natureza.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
+				<h3>5 bairros com maior registro</h3>
+				<div class="row">
+					{% for periodo in bairros %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Bairro</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+								
+							{% for bairro in periodo %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ bairro.bairro }}</td>
+								<td>{{ bairro.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
+				<h3>10 vias com maior registro</h3>
+				<div class="row">
+					{% for periodo in vias %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Via</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+								
+							{% for via in periodo %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ via.via }}</td>
+								<td>{{ via.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
+				<h3>5 locais com maior registro</h3>
+				<div class="row">
+					{% for periodo in locais %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Bairro</th>
+									<th>Via</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for local in periodo %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ local.bairro }}</td>
+								<td>{{ local.via }}</td>
+								<td>{{ local.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
+				<h3>Registros por dia da semana</h3>
+				<div class="row">
+					{% for periodo in dias %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th colspan="3">Dias da semana</th>
+								</tr>
+								<tr>
+									<th>Ord.</th>
+									<th>Dia da semana</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for dia in periodo|dictsortreversed:"count" %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ dia.0.data|date:"l" }}</td>
+								<td>{{ dia.count }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
+				<h3>Variação de registros por natureza</h3>
+				<div class="row">
+					<div class="col-md-12">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Natureza</th>
+									<th>Período A</th>
+									<th>Período B</th>
+									<th>Variação</th>
+								</tr>
+							</thead>
+							{% for natureza in comparison %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ natureza.a.natureza }}</td>
+								<td>{{ natureza.a.num }}</td>
+								<td>{{ natureza.b.num }}</td>
+								{% if natureza.a.num < natureza.b.num %}
+								<td class="bg-danger">
+									<span class="glyphicon glyphicon-arrow-up"></span> {{ natureza.variation|floatformat }}%
+								</td>
+								{% elif natureza.a.num > natureza.b.num %}
+								<td class="bg-success">
+									<span class="glyphicon glyphicon-arrow-down"></span> {{ natureza.variation|floatformat }}%
+								</td>
+								{% else %}
+								<td>Sem alteração.</td>
+								{% endif %}
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+				</div>
+
 			</div><!-- #results -->
 			{% endif %}
 		</div>

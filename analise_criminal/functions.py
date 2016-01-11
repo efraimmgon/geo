@@ -110,15 +110,20 @@ def process_map_arguments(
 	if hora_final:
 		o = o.filter(hora__lte=hora_final)
 
+	o = o.exclude(latitude=None)
+
 	return o
 
 def normalize_strings():
 	o = Ocorrencia.objects.all()
 
 	for obj in o:
-		obj.local = unicodedata.normalize('NFKD', obj.local)
-		obj.bairro = unicodedata.normalize('NFKD', obj.bairro)
-		obj.via = unicodedata.normalize('NFKD', obj.via)
+		if obj.local:
+			obj.local = unicodedata.normalize('NFKD', obj.local)
+		if obj.bairro:
+			obj.bairro = unicodedata.normalize('NFKD', obj.bairro)
+		if obj.via:
+			obj.via = unicodedata.normalize('NFKD', obj.via)
 		obj.natureza = unicodedata.normalize('NFKD', obj.natureza)
 		obj.save()
 

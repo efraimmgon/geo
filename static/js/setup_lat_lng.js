@@ -58,8 +58,24 @@ $(function() {
 			$.each(json, function() {
 				var id = this.pk;
 				var natureza = this.fields.natureza;
-				var local = this.fields.local;
-				var ponto = local + ', ' + region;
+				if (this.fields.bairro) {
+					var bairro = this.fields.bairro;
+				} else {
+					var bairro = '';
+				}
+				if (this.fields.via) {
+					var via = this.fields.via;	
+				} else {
+					var via = '';
+				}
+				if (this.fields.numero) {
+					var numero = this.fields.numero;
+				} else {
+					var numero = '';
+				}
+
+				var addrs = bairro + ', ' + via + ', ' + numero;
+				var ponto = addrs + ', ' + region;
 
 				var geocoder = new google.maps.Geocoder();
 				geocoder.geocode({'address': ponto}, function(results, status) {
@@ -68,6 +84,8 @@ $(function() {
 							id + "' value='" + id + ' ' + 
 							results[0].geometry.location.lat() + ' ' +
 							results[0].geometry.location.lng() + "' />");
+
+						$feedback.append('<br />' + addrs + '<br />');
 						$feedback.append($found);
 							
 						if (id) {
@@ -80,7 +98,7 @@ $(function() {
 							$pksArray.val(value);
 						}
 					} else {
-						$statusError = $('<br /> ' + id + ': ' + local + ': ' + status);
+						$statusError = $('<br /> ' + id + ': ' + addrs + ': ' + status);
 						$feedback.append($statusError);
 					}
 				});  // geocoder 

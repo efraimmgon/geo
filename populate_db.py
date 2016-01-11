@@ -2,9 +2,7 @@
 # the model can be imported
 
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-	'PMMT.settings'
-)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'PMMT.settings')
 
 import django
 django.setup()
@@ -16,7 +14,8 @@ from setup_app.models import Ocorrencia
 def insert_data(filename):
 	"""
 	Fetches the data from a csv file and inserts it to the DB.
-	File format: [0] natureza, [1] data, [2] endereço, [3] hora.
+	File format: [0] natureza, [1] data, [2] bairro, [3] via, 
+	[4] numero [5] hora.
 	- If no date or time are available, the field must be empty.
 	"""
 	with open(filename, 'rt', encoding='utf-8') as fin:
@@ -25,16 +24,15 @@ def insert_data(filename):
 
 	for row in table:
 		input_date = resolve_date(row[1])
-		input_bairro = 
-		input_via = 
-		input_numero =
-		input_address = row[2]
+		input_bairro = row[2]
+		input_via = row[3]
+		input_numero = row[4]
 		input_crime = row[0]
-		input_time = resolve_time(row[3])
+		input_time = resolve_time(row[5])
 
 		o = Ocorrencia(
-			data=input_date, local=input_address, 
-			natureza=input_crime, hora=input_time
+			data=input_date, bairro=input_bairro, via=input_via,
+			numero=input_numero, natureza=input_crime, hora=input_time
 		)
 		o.save()
 

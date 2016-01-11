@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Min, Max, Count
 from django.contrib.auth.decorators import login_required
 
@@ -76,7 +76,7 @@ def report(request):
 	context = {'form': form}
 	return render(request, 'analise_criminal/relatorio.html', context)
 
-
+@login_required
 def make_report(request):
 	form = ReportForm(data=request.GET)
 	context = {}
@@ -166,23 +166,23 @@ def make_report(request):
 			trafico1['num'], trafico2['num']
 		)
 
-		context['a'] = {
-			'total': o1.count(),
-			'naturezas': naturezas1,
-			'bairros': bairros1,
-			'vias': vias1,
-			'b_v': bairros_vias1,
-			'dias': [dom1, seg1, ter1, qua1, qui1, sex1, sab1],
+		data_a = data_inicial_a.strftime('%d/%m/%Y') 
+		data_a += ' a ' + data_final_a.strftime('%d/%m/%Y')
+		data_b = data_inicial_b.strftime('%d/%m/%Y')
+		data_b += ' a ' + data_final_b.strftime('%d/%m/%Y')
+		context['data'] = {
+			'a': data_a,
+			'b': data_b,
 		}
-
-		context['b'] = {
-			'total': o2.count(),
-			'naturezas': naturezas2,
-			'bairros': bairros2,
-			'vias': vias2,
-			'b_v': bairros_vias2,
-			'dias': [dom2, seg2, ter2, qua2, qui2, sex2, sab2],
-		}
+		context['total'] = {'a': o1.count(), 'b': o2.count()}
+		context['naturezas'] = [naturezas1, naturezas2]
+		context['bairros'] = [bairros1, bairros2]
+		context['vias'] = [vias1, vias2]
+		context['locais'] = [bairros_vias1, bairros_vias2]
+		context['dias'] = [
+			[dom1, seg1, ter1, qua1, qui1, sex1, sab1],
+			[dom2, seg2, ter2, qua2, qui2, sex2, sab2]
+		]
 
 		context['comparison'] = [
 			{'a': furto1, 'b': furto2, 'variation': percent_furto},
