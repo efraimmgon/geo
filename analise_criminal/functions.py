@@ -1,4 +1,5 @@
 from django.core import serializers
+from django.db.models import Count
 from datetime import date
 import json
 import unicodedata
@@ -146,3 +147,20 @@ def get_percentage(a, b):
 	else:
 		return calculate_variation(b, a)
 
+def get_value(queryset, field, limit):
+	data = queryset.values(field).annotate(num=Count('id'))
+	data = data.order_by('-num')[:limit]
+	return data
+
+def get_values(queryset, field1, field2, limit):
+	data = queryset.values(field1, field2).annotate(num=Count('id'))
+	data = data.order_by('-num')[:limit]
+	return data	
+
+def get_comparison_data(queryset, param):
+	try:
+		data = queryset.filter(natureza__contains=param).values(
+			'natureza').annotate(num=Count('id'))[0]
+	except IndexError:
+		data = {'natureza': param, 'num': 0}
+	return data

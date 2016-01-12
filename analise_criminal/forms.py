@@ -82,5 +82,15 @@ class ReportForm(forms.Form):
 		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
 	)	
 
+class ReportFilterForm(forms.Form):
 
+	choices = (
+		('Roubo', 'Roubo'),
+		('Furto', 'Furto'),
+		('Tráfico Ilícito de Drogas', 'Tráfico'),
+		('Homicídio', 'Homicídio'),
+	)
+
+	naturezas = forms.MultipleChoiceField(required=False,
+		widget=forms.CheckboxSelectMultiple, choices=choices)
 

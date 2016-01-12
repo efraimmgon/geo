@@ -4,14 +4,16 @@ from django.db.models import Min, Max, Count
 from django.contrib.auth.decorators import login_required
 
 import json, unicodedata
+from collections import defaultdict
 
 from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
-	ReportForm,
+	ReportForm, ReportFilterForm
 )
 from analise_criminal.functions import (
 	format_data, process_map_arguments, get_percentage,
+	get_value, get_values, get_comparison_data
 )
 
 
@@ -72,20 +74,23 @@ def mapAjax(request):
 
 @login_required
 def report(request):
-	form = ReportForm()
-	context = {'form': form}
+	form_report = ReportForm()
+	form_filter = ReportFilterForm()
+
+	context = {'form_report': form_report, 'form_filter': form_filter}
 	return render(request, 'analise_criminal/relatorio.html', context)
+
 
 @login_required
 def make_report(request):
-	form = ReportForm(data=request.GET)
+	form_report = ReportForm(data=request.GET)
+	form_filter = ReportFilterForm(data=request.GET)
 	context = {}
-	stat = {}
-	if form.is_valid():
-		data_inicial_a = form.cleaned_data['data_inicial_a']
-		data_final_a = form.cleaned_data['data_final_a']
-		data_inicial_b = form.cleaned_data['data_inicial_b']
-		data_final_b = form.cleaned_data['data_final_b']
+	if form_report.is_valid() and form_filter.is_valid():
+		data_inicial_a = form_report.cleaned_data['data_inicial_a']
+		data_final_a = form_report.cleaned_data['data_final_a']
+		data_inicial_b = form_report.cleaned_data['data_inicial_b']
+		data_final_b = form_report.cleaned_data['data_final_b']
 
 		o1 = Ocorrencia.objects.filter(
 			data__gte=data_inicial_a, data__lte=data_final_a
@@ -95,147 +100,81 @@ def make_report(request):
 		)
 
 		# a
-		naturezas1 = o1.values('natureza').annotate(num=Count('id'))
-		naturezas1 = naturezas1.order_by('-num')[:5]
-		bairros1 = o1.exclude(bairro=None)
-		bairros1 = bairros1.values('bairro').annotate(num=Count('id'))
-		bairros1 = bairros1.order_by('-num')[:5]
-		vias1 = o1.exclude(via=None)
-		vias1 = vias1.values('via').annotate(num=Count('id'))
-		vias1 = vias1.order_by('-num')[:10]
-		bairros_vias1 = o1.exclude(bairro=None, via=None)
-		bairros_vias1 = bairros_vias1.values('bairro', 'via').annotate(num=Count('id'))
-		bairros_vias1 = bairros_vias1.order_by('-num')[:10]
-		dom1 = o1.filter(data__week_day=1)
-		seg1 = o1.filter(data__week_day=2)
-		ter1 = o1.filter(data__week_day=3)
-		qua1 = o1.filter(data__week_day=4)
-		qui1 = o1.filter(data__week_day=5)
-		sex1 = o1.filter(data__week_day=6)
-		sab1 = o1.filter(data__week_day=7)
+		naturezas1 = get_value(o1, 'natureza', limit=5)
+		bairros1 = get_value(o1.exclude(bairro=None), 'bairro', limit=5)
+		vias1 = get_value(o1.exclude(via=None), 'via', limit=10)
+		bairros_vias1 = get_values(
+			o1.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 10
+		)
+		weekdays1 = []
+		for i in range(1, 8):
+			weekdays1.append(o1.filter(data__week_day=i))
 
 		# b
-		naturezas2 = o2.values('natureza').annotate(num=Count('id'))
-		naturezas2 = naturezas2.order_by('-num')[:5]
-		bairros2 = o2.exclude(bairro=None)
-		bairros2 = bairros2.values('bairro').annotate(num=Count('id'))
-		bairros2 = bairros2.order_by('-num')[:5]
-		vias2 = o2.exclude(via=None)
-		vias2 = vias2.values('via').annotate(num=Count('id'))
-		vias2 = vias2.order_by('-num')[:10]
-		bairros_vias2 = o2.exclude(bairro=None, via=None)
-		bairros_vias2 = bairros_vias2.values('bairro', 'via').annotate(num=Count('id'))
-		bairros_vias2 = bairros_vias2.order_by('-num')[:10]
-		dom2 = o2.filter(data__week_day=1)
-		seg2 = o2.filter(data__week_day=2)
-		ter2 = o2.filter(data__week_day=3)
-		qua2 = o2.filter(data__week_day=4)
-		qui2 = o2.filter(data__week_day=5)
-		sex2 = o2.filter(data__week_day=6)
-		sab2 = o2.filter(data__week_day=7)
+		naturezas2 = get_value(o2, 'natureza', limit=5)
+		bairros2 = get_value(o2.exclude(bairro=None), 'bairro', limit=5)
+		vias2 = get_value(o2.exclude(via=None), 'via', limit=10)
+		bairros_vias2 = get_values(
+			o2.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 10
+		)
+		weekdays2 = []
+		for i in range(1, 8):
+			weekdays2.append(o2.filter(data__week_day=i))
 
 		# comparação a/b
 		# variação dado a em relação ao dado b, e vice-versa
 		# a
-		try:
-			furto1 = o1.filter(natureza__contains='furto').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			furto1 = {'natureza': 'Furto', 'num': 0}
-		try:
-			roubo1 = o1.filter(natureza__contains='roubo').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			roubo1 = {'natureza': 'Roubo', 'num': 0}
-		try:
-			uso1 = o1.filter(natureza__contains='uso il').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			uso1 = {'natureza': 'Uso Ilícito de Drogas', 'num': 0}
-		search = unicodedata.normalize('NFKD', 'Homicídio Doloso')
-		try:
-			homicidio_d1 = o1.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			homicidio_c1 = {'natureza': search, 'count': 0}
-		search = unicodedata.normalize('NFKD', 'Homicídio Culposo')
-		try:
-			homicidio_c1 = o1.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			homicidio_c1 = {'natureza': search, 'num': 0}
-		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		try:
-			trafico1 = o1.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			trafico1 = {'natureza': search, 'num': 0}
+		furto1 = get_comparison_data(o1, 'Furto')
+		roubo1 = get_comparison_data(o1, 'Roubo')
+		uso1 = get_comparison_data(
+			o1, unicodedata.normalize('NFKD', 'Uso Ilícito de Drogas'))
+		homicidio_d1 = get_comparison_data(
+			o1, unicodedata.normalize('NFKD', 'Homicídio Doloso'))
+		homicidio_c1 = get_comparison_data(
+			o1, unicodedata.normalize('NFKD', 'Homicídio Culposo'))
+		trafico1 = get_comparison_data(
+		 	o1, unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas'))
 
 		# b
-		try:
-			furto2 = o2.filter(natureza__contains='furto').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			furto2 = {'natureza': 'Furto', 'num': 0}
-		try:
-			roubo2 = o2.filter(natureza__contains='roubo').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			roubo2 = {'natureza': 'Roubo', 'num': 0}
-		try:
-			uso2 = o2.filter(natureza__contains='uso il').values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			uso2 = {'natureza': 'Uso Ilícito de Drogas', 'num': 0}
-		search = unicodedata.normalize('NFKD', 'Homicídio Doloso')
-		try:
-			homicidio_d2 = o2.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			homicidio_c2 = {'natureza': search, 'count': 0}
-		search = unicodedata.normalize('NFKD', 'Homicídio Culposo')
-		try:
-			homicidio_c2 = o2.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			homicidio_c2 = {'natureza': search, 'num': 0}
-		search = unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas')
-		try:
-			trafico2 = o2.filter(natureza=search).values(
-				'natureza').annotate(num=Count('id'))[0]
-		except IndexError:
-			trafico2 = {'natureza': search, 'num': 0}
+		furto2 = get_comparison_data(o2, 'Furto')
+		roubo2 = get_comparison_data(o2, 'Roubo')
+		uso2 = get_comparison_data(
+			o2, unicodedata.normalize('NFKD', 'Uso Ilícito de Drogas'))
+		homicidio_d2 = get_comparison_data(
+			o2, unicodedata.normalize('NFKD', 'Homicídio Doloso'))
+		homicidio_c2 = get_comparison_data(
+			o2, unicodedata.normalize('NFKD', 'Homicídio Culposo'))
+		trafico2 = get_comparison_data(
+		 	o2, unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas'))
 		
 		# percentage variation from a to b
+		percent_total = get_percentage(o1.count(), o2.count())
 		percent_furto = get_percentage(furto1['num'], furto2['num'])
 		percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
 		percent_uso = get_percentage(uso1['num'], uso2['num'])
 		percent_homicidio_d = get_percentage(
-			homicidio_d1['num'], homicidio_d2['num']
-		)
+			homicidio_d1['num'], homicidio_d2['num'])
 		percent_homicidio_c = get_percentage(
-			homicidio_c1['num'], homicidio_c2['num']
-		)
+			homicidio_c1['num'], homicidio_c2['num'])
 		percent_trafico = get_percentage(
-			trafico1['num'], trafico2['num']
-		)
+			trafico1['num'], trafico2['num'])
 
-		data_a = data_inicial_a.strftime('%d/%m/%Y') 
-		data_a += ' a ' + data_final_a.strftime('%d/%m/%Y')
-		data_b = data_inicial_b.strftime('%d/%m/%Y')
-		data_b += ' a ' + data_final_b.strftime('%d/%m/%Y')
+		data_a = data_inicial_a.strftime('%d-%m-%Y') 
+		data_a += ' a ' + data_final_a.strftime('%d-%m-%Y')
+		data_b = data_inicial_b.strftime('%d-%m-%Y')
+		data_b += ' a ' + data_final_b.strftime('%d-%m-%Y')
 		context['data'] = {
 			'a': data_a,
 			'b': data_b,
 		}
-		context['total'] = {'a': o1.count(), 'b': o2.count()}
+		context['total'] = {'a': o1.count(), 'b': o2.count(), 'variation': percent_total}
 		context['naturezas'] = [naturezas1, naturezas2]
 		context['bairros'] = [bairros1, bairros2]
 		context['vias'] = [vias1, vias2]
 		context['locais'] = [bairros_vias1, bairros_vias2]
 		context['dias'] = [
-			[dom1, seg1, ter1, qua1, qui1, sex1, sab1],
-			[dom2, seg2, ter2, qua2, qui2, sex2, sab2]
+			weekdays1,
+			weekdays2
 		]
 
 		context['comparison'] = [
@@ -246,12 +185,35 @@ def make_report(request):
 			{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
 			{'a': uso1, 'b': uso2, 'variation': percent_uso},
 		]
-		print(context['comparison'][3])
 
-		context['form'] = form
+		if form_filter.cleaned_data['naturezas']:
+			context['filtro'] = {}
+			for natureza in form_filter.cleaned_data['naturezas']:
+				natureza = unicodedata.normalize('NFKD', natureza)
+				context['filtro'][natureza] = []
+				for registros in [o1.filter(natureza__contains=natureza),
+					o2.filter(natureza__contains=natureza)]:
+					bairros = get_value(
+					registros.exclude(bairro=None), 'bairro', 5)
+					vias = get_value(registros.exclude(via=None), 'via', 10)
+					locais = get_values(
+						registros.exclude(bairro=None).exclude(via=None), 
+						'bairro', 'via', 5)
+					weekdays = []
+					for i in range(1, 8):
+						weekdays.append(registros.filter(data__week_day=i))
+					
+					context['filtro'][natureza].append({
+						'bairros': bairros,
+						'vias': vias,
+						'locais': locais,
+						'weekdays': weekdays
+					})
+					print(context['filtro'])
 
-		return render(request, 'analise_criminal/relatorio.html', context)
+		context['form_report'] = form_report
+		context['form_filter'] = form_filter
 	else:
-		return render(request, 'analise_criminal/relatorio.html', {'form': 
-			form})
-
+		context = {'form_report': form_report, 'form_filter': form_filter}
+	
+	return render(request, 'analise_criminal/relatorio.html', context)
