@@ -4,7 +4,7 @@ from django.db.models import Min, Max, Count
 from django.contrib.auth.decorators import login_required
 
 import json, unicodedata
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from setup_app.models import Ocorrencia
 from analise_criminal.forms import (
@@ -13,7 +13,7 @@ from analise_criminal.forms import (
 )
 from analise_criminal.functions import (
 	format_data, process_map_arguments, get_percentage,
-	get_value, get_values, get_comparison_data
+	get_value, get_values, get_comparison_data, get_time
 )
 
 
@@ -99,6 +99,9 @@ def make_report(request):
 			data__gte=data_inicial_b, data__lte=data_final_b
 		)
 
+		lst_a = list(o1)
+		lst_b = list(o2)
+
 		# a
 		naturezas1 = get_value(o1, 'natureza', limit=5)
 		bairros1 = get_value(o1.exclude(bairro=None), 'bairro', limit=5)
@@ -146,6 +149,28 @@ def make_report(request):
 			o2, unicodedata.normalize('NFKD', 'Homicídio Culposo'))
 		trafico2 = get_comparison_data(
 		 	o2, unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas'))
+
+		# hora
+		madrugada1, matutino1, vespertino1, noturno1 = get_time(lst_a)
+		madrugada2, matutino2, vespertino2, noturno2 = get_time(lst_b)
+
+		Hora = namedtuple('Hora', ['field', 'num'])
+		Madrugada1 = Hora('00:00 - 05:59', len(madrugada1))
+		Matutino1 = Hora('06:00 - 11:59', len(matutino1))
+		Vespertino1 = Hora('12:00 - 17:59', len(vespertino1))
+		Noturno1 = Hora('18:00 - 23:59', len(noturno1))
+		Madrugada2 = Hora('00:00 - 05:59', len(madrugada2))
+		Matutino2 = Hora('06:00 - 11:59', len(matutino2))
+		Vespertino2 = Hora('12:00 - 17:59', len(vespertino2))
+		Noturno2 = Hora('18:00 - 23:59', len(noturno2))
+
+		
+		context['horas'] = [
+			{'madrugada': Madrugada1, 'matutino': Matutino1, 
+			'vespertino': Vespertino1, 'noturno': Noturno1},
+			{'madrugada': Madrugada2, 'matutino': Matutino2, 
+			'vespertino': Vespertino2, 'noturno': Noturno2},
+		]
 		
 		# percentage variation from a to b
 		percent_total = get_percentage(o1.count(), o2.count())
@@ -186,6 +211,10 @@ def make_report(request):
 			{'a': uso1, 'b': uso2, 'variation': percent_uso},
 		]
 
+		Response = namedtuple('Response', ['field', 'num'])
+		test = Response('somefield', 10)
+
+		# filter natureza
 		if form_filter.cleaned_data['naturezas']:
 			context['filtro'] = {}
 			for natureza in form_filter.cleaned_data['naturezas']:
@@ -202,14 +231,21 @@ def make_report(request):
 					weekdays = []
 					for i in range(1, 8):
 						weekdays.append(registros.filter(data__week_day=i))
+
+					mad, mat, vesp, noturno = get_time(registros)
+					mad = Hora('00:00 - 05:59', len(mad))
+					mat = Hora('06:00 - 11:59', len(mat))
+					vesp = Hora('12:00 - 17:59', len(vesp))
+					noturno = Hora('18:00 - 23:59', len(noturno))
 					
 					context['filtro'][natureza].append({
 						'bairros': bairros,
 						'vias': vias,
 						'locais': locais,
-						'weekdays': weekdays
+						'weekdays': weekdays,
+						'horas': {'madrugada': mad, 'matutino': mat, 
+								'vespertino': vesp, 'noturno': noturno},
 					})
-					print(context['filtro'])
 
 		context['form_report'] = form_report
 		context['form_filter'] = form_filter

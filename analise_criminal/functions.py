@@ -1,6 +1,6 @@
 from django.core import serializers
 from django.db.models import Count
-from datetime import date
+from datetime import date, time
 import json
 import unicodedata
 
@@ -164,3 +164,21 @@ def get_comparison_data(queryset, param):
 	except IndexError:
 		data = {'natureza': param, 'num': 0}
 	return data
+
+def get_time(querylst):
+	madrugada = []
+	matutino = []
+	vespertino = []
+	noturno = []
+	for ocorrencia in querylst:
+		if ocorrencia.hora is None:
+			continue
+		if time(0) <= ocorrencia.hora < time(6):
+			madrugada.append(ocorrencia)
+		elif time(6) <= ocorrencia.hora < time(12):
+			matutino.append(ocorrencia)
+		elif time(12) <= ocorrencia.hora < time(18):
+			vespertino.append(ocorrencia)
+		else:
+			noturno.append(ocorrencia)
+	return [madrugada, matutino, vespertino, noturno]

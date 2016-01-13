@@ -219,9 +219,6 @@
 						<table class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<th colspan="3">Dias da semana</th>
-								</tr>
-								<tr>
 									<th>Ord.</th>
 									<th>Dia da semana</th>
 									<th>Registros</th>
@@ -273,6 +270,30 @@
 							{% endfor %}
 						</table>
 					</div>
+				</div>
+
+				<h3>Registros por horário</h3>
+				<div class="row">
+				{% for periodo in horas %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Horário</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for hora in periodo.values|dictsortreversed:"num" %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ hora.field }}</td>
+								<td>{{ hora.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+				{% endfor %}
 				</div>
 
 			{% if filtro %}
@@ -355,9 +376,6 @@
 						<table class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<th colspan="3">Dias da semana</th>
-								</tr>
-								<tr>
 									<th>Ord.</th>
 									<th>Dia da semana</th>
 									<th>Registros</th>
@@ -373,7 +391,31 @@
 						</table>
 					</div>
 					{% endfor %}
-				</div>		
+				</div>
+
+				<div class="row">
+					{% for periodo in periodos %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>Horários</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for hora in periodo.horas.values|dictsortreversed:"num" %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+								<td>{{ hora.field }}</td>
+								<td>{{ hora.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+
 				{% endfor %}
 			{% endif %}
 
