@@ -13,7 +13,8 @@ from analise_criminal.forms import (
 )
 from analise_criminal.functions import (
 	format_data, process_map_arguments, get_percentage,
-	get_value, get_values, get_comparison_data, get_time
+	get_value, get_values, get_comparison_data, get_time,
+	fetch_data
 )
 
 
@@ -86,6 +87,7 @@ def make_report(request):
 	form_report = ReportForm(data=request.GET)
 	form_filter = ReportFilterForm(data=request.GET)
 	context = {}
+	Response = namedtuple('Response', ['field', 'num', 'type'])
 	if form_report.is_valid() and form_filter.is_valid():
 		data_inicial_a = form_report.cleaned_data['data_inicial_a']
 		data_final_a = form_report.cleaned_data['data_final_a']
@@ -106,23 +108,28 @@ def make_report(request):
 		naturezas1 = get_value(o1, 'natureza', limit=5)
 		bairros1 = get_value(o1.exclude(bairro=None), 'bairro', limit=5)
 		vias1 = get_value(o1.exclude(via=None), 'via', limit=10)
-		bairros_vias1 = get_values(
-			o1.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 10
+		locais1 = get_values(
+			o1.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
 		)
 		weekdays1 = []
 		for i in range(1, 8):
-			weekdays1.append(o1.filter(data__week_day=i))
+			d = o1.filter(data__week_day=i)
+			d = Response(d[0].data, d.count(), 'Dia da semana')
+			weekdays1.append(d)
+
 
 		# b
 		naturezas2 = get_value(o2, 'natureza', limit=5)
 		bairros2 = get_value(o2.exclude(bairro=None), 'bairro', limit=5)
 		vias2 = get_value(o2.exclude(via=None), 'via', limit=10)
-		bairros_vias2 = get_values(
-			o2.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 10
+		locais2 = get_values(
+			o2.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
 		)
 		weekdays2 = []
 		for i in range(1, 8):
-			weekdays2.append(o2.filter(data__week_day=i))
+			d = o2.filter(data__week_day=i)
+			d = Response(d[0].data, d.count(), 'Dia da semana')
+			weekdays2.append(d)
 
 		# comparação a/b
 		# variação dado a em relação ao dado b, e vice-versa
@@ -151,26 +158,20 @@ def make_report(request):
 		 	o2, unicodedata.normalize('NFKD', 'Tráfico Ilícito de Drogas'))
 
 		# hora
-		madrugada1, matutino1, vespertino1, noturno1 = get_time(lst_a)
-		madrugada2, matutino2, vespertino2, noturno2 = get_time(lst_b)
+		mad1, mat1, vesp1, noturno1 = get_time(lst_a)
+		mad2, mat2, vesp2, noturno2 = get_time(lst_b)
 
-		Hora = namedtuple('Hora', ['field', 'num'])
-		Madrugada1 = Hora('00:00 - 05:59', len(madrugada1))
-		Matutino1 = Hora('06:00 - 11:59', len(matutino1))
-		Vespertino1 = Hora('12:00 - 17:59', len(vespertino1))
-		Noturno1 = Hora('18:00 - 23:59', len(noturno1))
-		Madrugada2 = Hora('00:00 - 05:59', len(madrugada2))
-		Matutino2 = Hora('06:00 - 11:59', len(matutino2))
-		Vespertino2 = Hora('12:00 - 17:59', len(vespertino2))
-		Noturno2 = Hora('18:00 - 23:59', len(noturno2))
+		mad1 = Response('00:00 - 05:59', len(mad1), 'Horário')
+		mat1 = Response('06:00 - 11:59', len(mat1), 'Horário')
+		vesp1 = Response('12:00 - 17:59', len(vesp1), 'Horário')
+		noturno1 = Response('18:00 - 23:59', len(noturno1), 'Horário')
+		mad2 = Response('00:00 - 05:59', len(mad2), 'Horário')
+		mat2 = Response('06:00 - 11:59', len(mat2), 'Horário')
+		vesp2 = Response('12:00 - 17:59', len(vesp2), 'Horário')
+		noturno2 = Response('18:00 - 23:59', len(noturno2), 'Horário')
 
-		
-		context['horas'] = [
-			{'madrugada': Madrugada1, 'matutino': Matutino1, 
-			'vespertino': Vespertino1, 'noturno': Noturno1},
-			{'madrugada': Madrugada2, 'matutino': Matutino2, 
-			'vespertino': Vespertino2, 'noturno': Noturno2},
-		]
+		horarios1 = [mad1, mat1, vesp1, noturno1]
+		horarios2 = [mad2, mat2, vesp2, noturno2]
 		
 		# percentage variation from a to b
 		percent_total = get_percentage(o1.count(), o2.count())
@@ -193,13 +194,18 @@ def make_report(request):
 			'b': data_b,
 		}
 		context['total'] = {'a': o1.count(), 'b': o2.count(), 'variation': percent_total}
-		context['naturezas'] = [naturezas1, naturezas2]
-		context['bairros'] = [bairros1, bairros2]
-		context['vias'] = [vias1, vias2]
-		context['locais'] = [bairros_vias1, bairros_vias2]
 		context['dias'] = [
 			weekdays1,
 			weekdays2
+		]
+
+		context['basico'] = [
+			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
+			{'5 bairros com maior registro': [bairros1, bairros2]},
+			{'10 vias com maior registro': [vias1, vias2]},
+			{'5 locais com maior registro': [locais1, locais2]},
+			{'Registros por dia da semana': [weekdays1, weekdays2]},
+			{'Registros por horário': [horarios1, horarios2]},
 		]
 
 		context['comparison'] = [
@@ -211,15 +217,19 @@ def make_report(request):
 			{'a': uso1, 'b': uso2, 'variation': percent_uso},
 		]
 
-		Response = namedtuple('Response', ['field', 'num'])
-		test = Response('somefield', 10)
-
 		# filter natureza
 		if form_filter.cleaned_data['naturezas']:
 			context['filtro'] = {}
 			for natureza in form_filter.cleaned_data['naturezas']:
 				natureza = unicodedata.normalize('NFKD', natureza)
-				context['filtro'][natureza] = []
+				context['filtro'][natureza] = [
+					{'5 bairros com maior registro': []},
+					{'10 vias com maior registro': []},
+					{'5 locais com maior registro': []},
+					{'Registros por dia da semana': []},
+					{'Registros por horário': []}
+				]
+				current = context['filtro'][natureza]
 				for registros in [o1.filter(natureza__contains=natureza),
 					o2.filter(natureza__contains=natureza)]:
 					bairros = get_value(
@@ -230,22 +240,26 @@ def make_report(request):
 						'bairro', 'via', 5)
 					weekdays = []
 					for i in range(1, 8):
-						weekdays.append(registros.filter(data__week_day=i))
+						d = registros.filter(data__week_day=i)
+						try:
+							d = Response(d[0].data, d.count(), 'Dia da semana')
+						except IndexError:
+							continue
+						weekdays.append(d)
 
 					mad, mat, vesp, noturno = get_time(registros)
-					mad = Hora('00:00 - 05:59', len(mad))
-					mat = Hora('06:00 - 11:59', len(mat))
-					vesp = Hora('12:00 - 17:59', len(vesp))
-					noturno = Hora('18:00 - 23:59', len(noturno))
+					mad = Response('00:00 - 05:59', len(mad), 'Horário')
+					mat = Response('06:00 - 11:59', len(mat), 'Horário')
+					vesp = Response('12:00 - 17:59', len(vesp), 'Horário')
+					noturno = Response('18:00 - 23:59', len(noturno), 'Horário')
+					horarios = [mad, mat, vesp, noturno]
 					
-					context['filtro'][natureza].append({
-						'bairros': bairros,
-						'vias': vias,
-						'locais': locais,
-						'weekdays': weekdays,
-						'horas': {'madrugada': mad, 'matutino': mat, 
-								'vespertino': vesp, 'noturno': noturno},
-					})
+					current[0]['5 bairros com maior registro'] += [bairros]
+					current[1]['10 vias com maior registro'] += [vias]
+					current[2]['5 locais com maior registro'] += [locais]
+					current[3]['Registros por dia da semana'] += [weekdays]
+					current[4]['Registros por horário'] += [horarios]
+
 
 		context['form_report'] = form_report
 		context['form_filter'] = form_filter

@@ -7,6 +7,13 @@
 {% block body %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
+<style>
+	.header {
+		background-color: black;
+		color: white;
+		padding: 5px 5px;
+	}
+</style>
 
 <div class="container">
 	<div class="row">
@@ -76,10 +83,10 @@
 				
 				<div class="row">
 					<div class="col-md-6">
-						<h2>Período A<br />{{ data.a }}</h2>
+						<h2 class="header">Período A<br />{{ data.a }}</h2>
 					</div>
 					<div class="col-md-6">
-						<h2>Período B<br />{{ data.b }}</h2>
+						<h2 class="header">Período B<br />{{ data.b }}</h2>
 					</div>
 				</div>
 
@@ -111,130 +118,38 @@
 
 					</div>
 				</div>
-				
-				<h3>5 ocorrências com maior registro</h3>
-				<div class="row">
-					{% for periodo in naturezas %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Natureza</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for natureza in periodo %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ natureza.natureza }}</td>
-								<td>{{ natureza.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
 
-				<h3>5 bairros com maior registro</h3>
+			{% for row in basico %}
+				{% for descricao, periodos in row.items %}
+				<h3>{{ descricao }}</h3>
 				<div class="row">
-					{% for periodo in bairros %}
+					{% for periodo in periodos %}
 					<div class="col-md-6">
 						<table class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
 									<th>Ord.</th>
-									<th>Bairro</th>
+									<th>{{ periodo.0.type|title }}</th>
 									<th>Registros</th>
 								</tr>
 							</thead>
-								
-							{% for bairro in periodo %}
+							{% for item in periodo|dictsortreversed:"num" %}
 							<tr>
 								<td>{{ forloop.counter }}</td>
-								<td>{{ bairro.bairro }}</td>
-								<td>{{ bairro.num }}</td>
+							{% if item.type == 'Dia da semana' %}
+								<td>{{ item.field|date:"l" }}</td>
+							{% else %}
+								<td>{{ item.field }}</td>
+							{% endif %}
+								<td>{{ item.num }}</td>
 							</tr>
 							{% endfor %}
 						</table>
 					</div>
 					{% endfor %}
 				</div>
-
-				<h3>10 vias com maior registro</h3>
-				<div class="row">
-					{% for periodo in vias %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Via</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-								
-							{% for via in periodo %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ via.via }}</td>
-								<td>{{ via.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<h3>5 locais com maior registro</h3>
-				<div class="row">
-					{% for periodo in locais %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Bairro</th>
-									<th>Via</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for local in periodo %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ local.bairro }}</td>
-								<td>{{ local.via }}</td>
-								<td>{{ local.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<h3>Registros por dia da semana</h3>
-				<div class="row">
-					{% for periodo in dias %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Dia da semana</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for dia in periodo|dictsortreversed:"count" %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ dia.0.data|date:"l" }}</td>
-								<td>{{ dia.count }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
+				{% endfor %}
+			{% endfor %}
 
 				<h3>Variação de registros por natureza</h3>
 				<div class="row">
@@ -272,155 +187,45 @@
 					</div>
 				</div>
 
-				<h3>Registros por horário</h3>
-				<div class="row">
-				{% for periodo in horas %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Horário</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for hora in periodo.values|dictsortreversed:"num" %}
+		{% if filtro %}
+			{% for natureza, rows in filtro.items %}
+			<h2 class="header">{{ natureza }}</h2>
+			{% for row in rows %}
+			{% for descricao, periodos in row.items %}
+			<h3>{{ descricao }}</h3>
+			<div class="row">
+				{% for periodo in periodos %}
+				<div class="col-md-6">
+					<table class="table table-striped table-bordered table-hover">
+						<thead>
 							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ hora.field }}</td>
-								<td>{{ hora.num }}</td>
+								<th>Ord.</th>
+								<th>{{ periodo.0.type|capfirst }}</th>
+								<th>Registros</th>
 							</tr>
-							{% endfor %}
-						</table>
-					</div>
+						</thead>
+						{% for item in periodo|dictsortreversed:"num" %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							{% if item.type == 'Dia da semana' %}
+								<td>{{ item.field|date:"l" }}</td>
+							{% else %}
+								<td>{{ item.field }}</td>
+							{% endif %}
+							<td>{{ item.num }}</td>
+						</tr>
+						{% endfor %}
+					</table>
+				</div>
 				{% endfor %}
-				</div>
-
-			{% if filtro %}
-				{% for natureza, periodos in filtro.items %}
-				<h2>{{ natureza }}</h2>
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Bairro</th>
-									<th>Registors</th>
-								</tr>
-							</thead>
-							{% for bairro in periodo.bairros %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ bairro.bairro }}</td>
-								<td>{{ bairro.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Via</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for via in periodo.vias %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ via.via }}</td>
-								<td>{{ via.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Bairro</th>
-									<th>Via</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for local in periodo.locais %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ local.bairro }}</td>
-								<td>{{ local.via }}</td>
-								<td>{{ local.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Dia da semana</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for dia in periodo.weekdays|dictsortreversed:"count" %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ dia.0.data|date:"l" }}</td>
-								<td>{{ dia.count }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>Horários</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for hora in periodo.horas.values|dictsortreversed:"num" %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>{{ hora.field }}</td>
-								<td>{{ hora.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-
-				{% endfor %}
-			{% endif %}
+			</div>
+			{% endfor %}
+			{% endfor %}
+			{% endfor %}
+		{% endif %}
 
 			</div><!-- #results -->
-			{% endif %}
+			{% endif %} {% comment %} total.a and total.b {% endcomment %}
 		</div>
 	</div>
 </div>
