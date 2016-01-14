@@ -7,15 +7,16 @@ import json, unicodedata
 from collections import defaultdict, namedtuple
 
 from setup_app.models import Ocorrencia
-from analise_criminal.forms import (
+from .forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
-	ReportForm, ReportFilterForm
+	ReportForm, ReportFilterForm,
 )
-from analise_criminal.functions import (
-	format_data, process_map_arguments, get_percentage,
-	get_value, get_values, get_comparison_data, get_time,
-	fetch_data
+from .functions import format_data, process_map_arguments
+from .report import (
+	get_percentage, get_value, get_values, get_comparison_data,
+	get_time,
 )
+
 
 
 def index(request):
@@ -114,7 +115,10 @@ def make_report(request):
 		weekdays1 = []
 		for i in range(1, 8):
 			d = o1.filter(data__week_day=i)
-			d = Response(d[0].data, d.count(), 'Dia da semana')
+			try:
+				d = Response(d[0].data, d.count(), 'Dia da semana')
+			except IndexError:
+				continue
 			weekdays1.append(d)
 
 
@@ -194,10 +198,6 @@ def make_report(request):
 			'b': data_b,
 		}
 		context['total'] = {'a': o1.count(), 'b': o2.count(), 'variation': percent_total}
-		context['dias'] = [
-			weekdays1,
-			weekdays2
-		]
 
 		context['basico'] = [
 			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
