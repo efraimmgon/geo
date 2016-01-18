@@ -11,14 +11,14 @@ from unicodedata import normalize
 from setup_app.models import Ocorrencia
 
 weekdays = {
-		0: 'Segunda',
-		1: 'Terça',
-		2: 'Quarta',
-		3: 'Quinta',
-		4: 'Sexta',
-		5: 'Sábado',
-		6: 'Domingo'
-	}
+	0: 'Segunda',
+	1: 'Terça',
+	2: 'Quarta',
+	3: 'Quinta',
+	4: 'Sexta',
+	5: 'Sábado',
+	6: 'Domingo'
+}
 
 def format_data(objs):
 	"""
@@ -26,9 +26,8 @@ def format_data(objs):
 	- Adds a weekday string; strips seconds from time
 	- Splits the address and creates a fields for the neighborhood
 	and street.
+	Returns data as JSON
 	"""
-	
-
 	copy = objs[:]
 	data = serializers.serialize('json', copy)
 	struct = json.loads(data)
@@ -91,12 +90,22 @@ def insert_bairro_and_via_db():
 	print('Done')
 
 
-def process_map_arguments(
-	natureza, data_inicial, data_final, bairro, 
-	via, hora_inicial, hora_final
-	):
+def process_map_arguments(form, form_advanced):
 	"""Uses the selections from the user to decide which objects
 	from Ocorrencia to return"""
+	natureza = normalize(
+			'NFKD', form.cleaned_data['natureza']
+	)
+	data_inicial = form.cleaned_data['data_inicial']
+	data_final = form.cleaned_data['data_final']
+	hora_inicial = form_advanced.cleaned_data['hora_inicial']
+	hora_final = form_advanced.cleaned_data['hora_final']
+	bairro = normalize(
+		'NFKD', form_advanced.cleaned_data['bairro']
+	)
+	via = normalize(
+		'NFKD', form_advanced.cleaned_data['via']
+	)
 	if natureza == 'todas':
 		o = Ocorrencia.objects.filter(
 			data__gte=data_inicial, data__lte=data_final
@@ -116,10 +125,14 @@ def process_map_arguments(
 		o = o.filter(hora__lte=hora_final)
 
 	o = o.exclude(latitude=None)
-
+	o = format_data(o) # return JSON
 	return o
 
 def normalize_strings():
+	"""
+	I'm still fucking it when inserting data to the DB, so I have
+	to loop through the inserted data to normalize them...
+	"""
 	o = Ocorrencia.objects.all()
 
 	for obj in o:
