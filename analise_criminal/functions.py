@@ -141,3 +141,5 @@ def normalize_strings():
 		obj.natureza = normalize('NFKD', obj.natureza)
 		obj.save()
 
+
+
