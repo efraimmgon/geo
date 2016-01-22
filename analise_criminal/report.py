@@ -6,11 +6,11 @@ from django.db.models import Count
 
 from datetime import time
 from unicodedata import normalize
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 from setup_app.models import Ocorrencia
 
-
+Response = namedtuple('Response', ['field', 'num', 'type'])
 monthnames = {
 	1: 'Janeiro',
 	2: 'Fevereiro',
@@ -26,13 +26,22 @@ monthnames = {
 	12: 'Dezembro'
 }
 
+weekdays = {
+	1: 'Domingo',
+	2: 'Segunda-feira',
+	3: 'Terça-feira',
+	4: 'Quarta-feira',
+	5: 'Quinta-feira',
+	6: 'Sexta-feira',
+	7: 'Sábado'
+}
+
 def process_report_arguments(form_report, form_filter):
 	"""
 	Uses user's selections to decide what analysis to process,
 	and what data to present.
 	"""
 	context = {}
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 
 	context['form_report'] = form_report
 	context['form_filter'] = form_filter
@@ -64,14 +73,14 @@ def process_report_arguments(form_report, form_filter):
 
 	if form_report.cleaned_data['opts'] == 'Sim':
 		# A
-		lst_a, months1, axis1, a, comparison1, horarios1 = process_args(o1)
-		xaxis1, yaxis1 = axis1
+		a, comparison1, horarios1 = process_args(o1, compare=True)
+		months1, xaxis1, yaxis1 = make_graphs(o1, months=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
 		furto1, roubo1, uso1, homicidio_d1, homicidio_c1, trafico1 = comparison1
 
 		# B
-		lst_b, months2, axis2, b, comparison2, horarios2 = process_args(o2)
-		xaxis2, yaxis2 = axis2
+		b, comparison2, horarios2 = process_args(o2, compare=True)
+		months1, xaxis2, yaxis2 = make_graphs(o2, months=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
 		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
 
@@ -128,56 +137,19 @@ def process_report_arguments(form_report, form_filter):
 			current = context['filtro'][natureza]
 			for registros in [o1.filter(natureza__contains=natureza),
 				o2.filter(natureza__contains=natureza)]:
-				bairros = get_value(
-				registros.exclude(bairro=None), 'bairro', 5)
-				vias = get_value(registros.exclude(via=None), 'via', 10)
-				locais = get_values(
-					registros.exclude(bairro=None).exclude(via=None), 
-					'bairro', 'via', 5)
-				weekdays = []
-				for i in range(1, 8):
-					d = registros.filter(data__week_day=i)
-					try:
-						d = Response(d[0].data, d.count(), 'Dia da semana')
-					except IndexError:
-						continue
-					weekdays.append(d)
-
-				horarios = generate_horarios(get_time(registros))
-					
-				current[0]['5 bairros com maior registro'] += [bairros]
-				current[1]['10 vias com maior registro'] += [vias]
-				current[2]['5 locais com maior registro'] += [locais]
-				current[3]['Registros por dia da semana'] += [weekdays]
-				current[4]['Registros por horário'] += [horarios]
+				(_, bairros, vias, locais, wd), _, horarios = process_args(
+					registros, compare=False)
+				values = [bairros, vias, locais, wd, horarios]
+				for i in range(len(current)):
+					for key in current[i].keys():
+						current[i][key] += [values[i]]
 
 	if form_filter.cleaned_data['bairro']:
 		bairro = normalize('NFKD', form_filter.cleaned_data['bairro'])
-		o1_bairro = o1.filter(bairro__icontains=bairro)
-		naturezas1 = get_value(o1_bairro, 'natureza', limit=5)
-		vias1 = get_value(o1_bairro.exclude(via=None), 'via', limit=10)
-		weekdays1 = get_weekdays(o1_bairro)
-
-		lst_a = list(o1_bairro)
-		mad1, mat1, vesp1, noturno1 = get_time(lst_a)
-		mad1 = Response('00:00 - 05:59', len(mad1), 'Horário')
-		mat1 = Response('06:00 - 11:59', len(mat1), 'Horário')
-		vesp1 = Response('12:00 - 17:59', len(vesp1), 'Horário')
-		noturno1 = Response('18:00 - 23:59', len(noturno1), 'Horário')
-		horarios1 = [mad1, mat1, vesp1, noturno1]
-
-		o2_bairro = o2.filter(bairro__icontains=bairro)
-		naturezas2 = get_value(o2_bairro, 'natureza', limit=5)
-		vias2 = get_value(o2_bairro.exclude(via=None), 'via', limit=10)
-		weekdays2 = get_weekdays(o2_bairro)
-
-		lst_a = list(o2_bairro)
-		mad2, mat2, vesp2, noturno2 = get_time(lst_a)
-		mad2 = Response('00:00 - 05:59', len(mad2), 'Horário')
-		mat2 = Response('06:00 - 11:59', len(mat2), 'Horário')
-		vesp2 = Response('12:00 - 17:59', len(vesp2), 'Horário')
-		noturno2 = Response('18:00 - 23:59', len(noturno2), 'Horário')
-		horarios2 = [mad2, mat2, vesp2, noturno2]
+		(naturezas1, _, vias1, _, weekdays1), _, horarios1 = process_args(
+			o1.filter(bairro__icontains=bairro), compare=False)
+		(naturezas2, _, vias2, _, weekdays2), _, horarios2 = process_args(
+			o2.filter(bairro__icontains=bairro), compare=False)
 
 		context['bairro_detail'] = bairro
 		context['detail'] = [
@@ -188,19 +160,31 @@ def process_report_arguments(form_report, form_filter):
 		]
 	if form_filter.cleaned_data['details']:
 		if 'weekdays' in form_filter.cleaned_data['details']:
-			pass
-
+			context['weekday_detail'] = OrderedDict()
+			for i in range(1, 8):
+				context['weekday_detail'][weekdays[i]] = [
+					{'5 naturezas com maior registro': []},
+					{'5 bairros com maior registro': []},
+					{'10 vias com maior registro': []},
+					{'5 locais com maior registro': []},
+					{'Registros por horário': []}
+				]
+				current = context['weekday_detail'][weekdays[i]]
+				for periodo in [o1, o2]:
+					(naturezas, bairros, vias, locais, _), _, horarios = process_args(
+						periodo.filter(data__week_day=i), compare=False)
+					values = [naturezas, bairros, vias, locais, horarios]
+					print(horarios)
+					for j in range(len(current)):
+						for key in current[j].keys():
+							current[j][key] += [values[j]]
 
 	return context
 
 
-def process_args(queryset):
+def process_args(queryset, compare=False):
 	"""Process arguments for a given queryset"""
-	Response = namedtuple('Response', ['field', 'num', 'type'])
-
 	lst = list(queryset)
-	months = get_months(queryset)
-	xaxis, yaxis = get_month_axis(months)
 
 	naturezas = get_value(queryset, 'natureza', limit=5)
 	bairros = get_value(queryset.exclude(bairro=None), 'bairro', limit=5)
@@ -212,22 +196,31 @@ def process_args(queryset):
 
 	## Comparison A/B
 	# data fluctuation of a in relation to b, and vice-versa
-	furto = get_comparison_data(queryset, 'Furto')
-	roubo = get_comparison_data(queryset, 'Roubo')
-	uso = get_comparison_data(
-		queryset, normalize('NFKD', 'Uso Ilícito de Drogas'))
-	homicidio_d = get_comparison_data(
-		queryset, normalize('NFKD', 'Homicídio Doloso'))
-	homicidio_c = get_comparison_data(
-		queryset, normalize('NFKD', 'Homicídio Culposo'))
-	trafico = get_comparison_data(
-		queryset, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
+	comparison = []
+	if compare:
+		furto = get_comparison_data(queryset, 'Furto')
+		roubo = get_comparison_data(queryset, 'Roubo')
+		uso = get_comparison_data(
+			queryset, normalize('NFKD', 'Uso Ilícito de Drogas'))
+		homicidio_d = get_comparison_data(
+			queryset, normalize('NFKD', 'Homicídio Doloso'))
+		homicidio_c = get_comparison_data(
+			queryset, normalize('NFKD', 'Homicídio Culposo'))
+		trafico = get_comparison_data(
+			queryset, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
+		comparison = [furto, roubo, uso, homicidio_d, homicidio_c, trafico]
 
 	mad, mat, vesp, noturno = generate_horarios(get_time(lst))
+	horarios = [mad, mat, vesp, noturno]
 
-	return [lst, months, [xaxis, yaxis], [naturezas, bairros, vias, locais,
-		weekdays], [furto, roubo, uso, homicidio_d, homicidio_c, trafico],
-		[mad, mat, vesp, noturno]]
+	return [[naturezas, bairros, vias, locais,
+		weekdays], comparison, horarios]
+
+def make_graphs(queryset, months=False):
+	if months:
+		months = get_months(queryset)
+		xaxis, yaxis = get_month_axis(months)
+		return [months, xaxis, yaxis]
 
 
 def calculate_variation(a, b):
@@ -276,10 +269,7 @@ def get_comparison_data(queryset, param):
 
 def get_natureza(querylst):
 	"""Return a list of data sorted by natureza"""
-	roubo = []
-	furto = []
-	trafico = []
-	homicidio = []
+	roubo, furto, trafico, homicidio = [], [], [], []
 	for ocorrencia in querylst:
 		if 'roubo' in ocorrencia.natureza.lower():
 			roubo.append(ocorrencia)
@@ -293,7 +283,6 @@ def get_natureza(querylst):
 
 def prepare_data(querylst, field):
 	"""Wraps the data for iteration on the template"""
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 	data = []
 	for row in querylst:
 		data.append(Response(row[field], row['num'], field))
@@ -301,21 +290,10 @@ def prepare_data(querylst, field):
 
 def prepare_double_field_data(querylst, field1, field2):
 	"""Wraps the data for iteration on the template"""
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 	data = []
 	for row in querylst:
 		data.append(Response(row[field1] + ', ' + row[field2], row['num'],
 			field1 + ', ' + field2))
-	return data
-
-# unused so far...
-def fetch_data(queryset, field, limit):
-	"""
-	1 - Returns the data filtered on the database.
-	2 - Wraps the data for iteration on the template.
-	"""
-	data = get_value(queryset, field, limit)
-	data = prepare_data(data, field)
 	return data
 
 
@@ -339,8 +317,8 @@ def get_time(querylst):
 	return [madrugada, matutino, vespertino, noturno]
 
 def generate_horarios(horarios):
+	"""Takes a lst of horarios and returns a lst in the Response format"""
 	lst = []
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 	tags = ['00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59']
 	for horario, tag in zip(horarios, tags):
 		lst.append(Response(tag, len(horario), 'Horário'))
@@ -348,7 +326,6 @@ def generate_horarios(horarios):
 
 def get_weekdays(queryset):
 	"""Returns a list, with the number of records by weekday"""
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 	weekdays = []
 	for i in range(1, 8):
 		d = queryset.filter(data__week_day=i)
@@ -360,7 +337,6 @@ def get_weekdays(queryset):
 	return weekdays
 
 def get_months(queryset):
-	Response = namedtuple('Response', ['field', 'num', 'type'])
 	months = []
 	for i in range(1, 13):
 		m = queryset.filter(data__month=i)
@@ -378,3 +354,11 @@ def get_month_axis(months):
 		xaxis.append(monthnames[month.field.month])
 		yaxis.append(month.num)
 	return [xaxis, yaxis]
+
+def weekdays_queryset(queryset):
+	weekdays = []
+	for i in range(1, 8):
+		w = queryset.filter(data__week_day=i)
+		weekdays.append(w)
+	return weekdays
+
