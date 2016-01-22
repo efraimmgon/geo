@@ -11,6 +11,21 @@ from collections import namedtuple
 from setup_app.models import Ocorrencia
 
 
+monthnames = {
+	1: 'Janeiro',
+	2: 'Fevereiro',
+	3: 'Março',
+	4: 'Abril',
+	5: 'Maio',
+	6: 'Junho',
+	7: 'Julho',
+	8: 'Agosto',
+	9: 'Setembro',
+	10: 'Outubro',
+	11: 'Novembro',
+	12: 'Dezembro'
+}
+
 def process_report_arguments(form_report, form_filter):
 	"""
 	Uses user's selections to decide what analysis to process,
@@ -43,103 +58,120 @@ def process_report_arguments(form_report, form_filter):
 		data__gte=data_inicial_b, data__lte=data_final_b
 	)
 
-	lst_a = list(o1)
-	lst_b = list(o2)
+	context['total'] = {
+		'a': o1.count(), 'b': o2.count()
+	}
 
-	# A
-	naturezas1 = get_value(o1, 'natureza', limit=5)
-	bairros1 = get_value(o1.exclude(bairro=None), 'bairro', limit=5)
-	vias1 = get_value(o1.exclude(via=None), 'via', limit=10)
-	locais1 = get_values(
-		o1.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
-	)
-	weekdays1 = get_weekdays(o1)
+	if form_report.cleaned_data['opts'] == 'Sim':
+		lst_a = list(o1)
+		lst_b = list(o2)
 
-	# B
-	naturezas2 = get_value(o2, 'natureza', limit=5)
-	bairros2 = get_value(o2.exclude(bairro=None), 'bairro', limit=5)
-	vias2 = get_value(o2.exclude(via=None), 'via', limit=10)
-	locais2 = get_values(
-		o2.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
-	)
-	weekdays2 = get_weekdays(o2)
+		# months
+		months1 = get_months(o1)
+		xaxis1, yaxis1 = get_month_axis(months1)
 
-	## Comparison A/B
-	# data fluctuation of a in relation to b, and vice-versa
-	# A
-	furto1 = get_comparison_data(o1, 'Furto')
-	roubo1 = get_comparison_data(o1, 'Roubo')
-	uso1 = get_comparison_data(
-		o1, normalize('NFKD', 'Uso Ilícito de Drogas'))
-	homicidio_d1 = get_comparison_data(
-		o1, normalize('NFKD', 'Homicídio Doloso'))
-	homicidio_c1 = get_comparison_data(
-		o1, normalize('NFKD', 'Homicídio Culposo'))
-	trafico1 = get_comparison_data(
-		 o1, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
+		months2 = get_months(o2)
+		xaxis2, yaxis2 = get_month_axis(months2)
 
-	# B
-	furto2 = get_comparison_data(o2, 'Furto')
-	roubo2 = get_comparison_data(o2, 'Roubo')
-	uso2 = get_comparison_data(
-		o2, normalize('NFKD', 'Uso Ilícito de Drogas'))
-	homicidio_d2 = get_comparison_data(
-		o2, normalize('NFKD', 'Homicídio Doloso'))
-	homicidio_c2 = get_comparison_data(
-		o2, normalize('NFKD', 'Homicídio Culposo'))
-	trafico2 = get_comparison_data(
-		o2, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
+		context['axis'] = {}
+		if len(months1) > 2 or len(months2) > 2:
+			context['axis']['total'] = [
+				{'x': xaxis1, 'y': yaxis1, 'id': 'id_total_graph_a'},
+				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_b'}
+			]
 
-	# Timings
-	mad1, mat1, vesp1, noturno1 = get_time(lst_a)
-	mad2, mat2, vesp2, noturno2 = get_time(lst_b)
+		# A
+		naturezas1 = get_value(o1, 'natureza', limit=5)
+		bairros1 = get_value(o1.exclude(bairro=None), 'bairro', limit=5)
+		vias1 = get_value(o1.exclude(via=None), 'via', limit=10)
+		locais1 = get_values(
+			o1.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
+		)
+		weekdays1 = get_weekdays(o1)
 
-	mad1 = Response('00:00 - 05:59', len(mad1), 'Horário')
-	mat1 = Response('06:00 - 11:59', len(mat1), 'Horário')
-	vesp1 = Response('12:00 - 17:59', len(vesp1), 'Horário')
-	noturno1 = Response('18:00 - 23:59', len(noturno1), 'Horário')
-	mad2 = Response('00:00 - 05:59', len(mad2), 'Horário')
-	mat2 = Response('06:00 - 11:59', len(mat2), 'Horário')
-	vesp2 = Response('12:00 - 17:59', len(vesp2), 'Horário')
-	noturno2 = Response('18:00 - 23:59', len(noturno2), 'Horário')
+		# B
+		naturezas2 = get_value(o2, 'natureza', limit=5)
+		bairros2 = get_value(o2.exclude(bairro=None), 'bairro', limit=5)
+		vias2 = get_value(o2.exclude(via=None), 'via', limit=10)
+		locais2 = get_values(
+			o2.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
+		)
+		weekdays2 = get_weekdays(o2)
 
-	horarios1 = [mad1, mat1, vesp1, noturno1]
-	horarios2 = [mad2, mat2, vesp2, noturno2]
+		## Comparison A/B
+		# data fluctuation of a in relation to b, and vice-versa
+		# A
+		furto1 = get_comparison_data(o1, 'Furto')
+		roubo1 = get_comparison_data(o1, 'Roubo')
+		uso1 = get_comparison_data(
+			o1, normalize('NFKD', 'Uso Ilícito de Drogas'))
+		homicidio_d1 = get_comparison_data(
+			o1, normalize('NFKD', 'Homicídio Doloso'))
+		homicidio_c1 = get_comparison_data(
+			o1, normalize('NFKD', 'Homicídio Culposo'))
+		trafico1 = get_comparison_data(
+			 o1, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
 
-	# Percentage fluctuation from A to B
-	percent_total = get_percentage(o1.count(), o2.count())
-	percent_furto = get_percentage(furto1['num'], furto2['num'])
-	percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
-	percent_uso = get_percentage(uso1['num'], uso2['num'])
-	percent_homicidio_d = get_percentage(
-		homicidio_d1['num'], homicidio_d2['num'])
-	percent_homicidio_c = get_percentage(
-		homicidio_c1['num'], homicidio_c2['num'])
-	percent_trafico = get_percentage(
-		trafico1['num'], trafico2['num'])
+		# B
+		furto2 = get_comparison_data(o2, 'Furto')
+		roubo2 = get_comparison_data(o2, 'Roubo')
+		uso2 = get_comparison_data(
+			o2, normalize('NFKD', 'Uso Ilícito de Drogas'))
+		homicidio_d2 = get_comparison_data(
+			o2, normalize('NFKD', 'Homicídio Doloso'))
+		homicidio_c2 = get_comparison_data(
+			o2, normalize('NFKD', 'Homicídio Culposo'))
+		trafico2 = get_comparison_data(
+			o2, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
 
-	context['total'] = {'a': o1.count(), 'b': o2.count(), 
-	'variation': percent_total}
+		# Timings
+		mad1, mat1, vesp1, noturno1 = get_time(lst_a)
+		mad2, mat2, vesp2, noturno2 = get_time(lst_b)
 
-	context['basico'] = [
-		{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
-		{'5 bairros com maior registro': [bairros1, bairros2]},
-		{'10 vias com maior registro': [vias1, vias2]},
-		{'5 locais com maior registro': [locais1, locais2]},
-		{'Registros por dia da semana': [weekdays1, weekdays2]},
-		{'Registros por horário': [horarios1, horarios2]},
-	]
+		mad1 = Response('00:00 - 05:59', len(mad1), 'Horário')
+		mat1 = Response('06:00 - 11:59', len(mat1), 'Horário')
+		vesp1 = Response('12:00 - 17:59', len(vesp1), 'Horário')
+		noturno1 = Response('18:00 - 23:59', len(noturno1), 'Horário')
+		mad2 = Response('00:00 - 05:59', len(mad2), 'Horário')
+		mat2 = Response('06:00 - 11:59', len(mat2), 'Horário')
+		vesp2 = Response('12:00 - 17:59', len(vesp2), 'Horário')
+		noturno2 = Response('18:00 - 23:59', len(noturno2), 'Horário')
 
-	context['comparison'] = [
-		{'a': furto1, 'b': furto2, 'variation': percent_furto},
-		{'a': roubo1, 'b': roubo2, 'variation': percent_roubo},
-		{'a': homicidio_d1, 'b': homicidio_d2, 'variation': percent_homicidio_d},
-		{'a': homicidio_c1, 'b': homicidio_c2, 'variation': percent_homicidio_c},
-		{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
-		{'a': uso1, 'b': uso2, 'variation': percent_uso},
-	]
+		horarios1 = [mad1, mat1, vesp1, noturno1]
+		horarios2 = [mad2, mat2, vesp2, noturno2]
 
-	# Filter: natureza
+		# Percentage fluctuation from A to B
+		percent_total = get_percentage(o1.count(), o2.count())
+		percent_furto = get_percentage(furto1['num'], furto2['num'])
+		percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
+		percent_uso = get_percentage(uso1['num'], uso2['num'])
+		percent_homicidio_d = get_percentage(
+			homicidio_d1['num'], homicidio_d2['num'])
+		percent_homicidio_c = get_percentage(
+			homicidio_c1['num'], homicidio_c2['num'])
+		percent_trafico = get_percentage(
+			trafico1['num'], trafico2['num'])
+
+		context['total']['variation'] = percent_total
+
+		context['basico'] = [
+			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
+			{'5 bairros com maior registro': [bairros1, bairros2]},
+			{'10 vias com maior registro': [vias1, vias2]},
+			{'5 locais com maior registro': [locais1, locais2]},
+			{'Registros por dia da semana': [weekdays1, weekdays2]},
+			{'Registros por horário': [horarios1, horarios2]},
+		]
+
+		context['comparison'] = [
+			{'a': furto1, 'b': furto2, 'variation': percent_furto},
+			{'a': roubo1, 'b': roubo2, 'variation': percent_roubo},
+			{'a': homicidio_d1, 'b': homicidio_d2, 'variation': percent_homicidio_d},
+			{'a': homicidio_c1, 'b': homicidio_c2, 'variation': percent_homicidio_c},
+			{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
+			{'a': uso1, 'b': uso2, 'variation': percent_uso},
+		]
+
 	if form_filter.cleaned_data['naturezas']:
 		context['filtro'] = {}
 		for natureza in form_filter.cleaned_data['naturezas']:
@@ -181,6 +213,46 @@ def process_report_arguments(form_report, form_filter):
 				current[2]['5 locais com maior registro'] += [locais]
 				current[3]['Registros por dia da semana'] += [weekdays]
 				current[4]['Registros por horário'] += [horarios]
+
+	if form_filter.cleaned_data['bairro']:
+		bairro = normalize('NFKD', form_filter.cleaned_data['bairro'])
+		o1_bairro = o1.filter(bairro__icontains=bairro)
+		naturezas1 = get_value(o1_bairro, 'natureza', limit=5)
+		vias1 = get_value(o1_bairro.exclude(via=None), 'via', limit=10)
+		weekdays1 = get_weekdays(o1_bairro)
+
+		lst_a = list(o1_bairro)
+		mad1, mat1, vesp1, noturno1 = get_time(lst_a)
+		mad1 = Response('00:00 - 05:59', len(mad1), 'Horário')
+		mat1 = Response('06:00 - 11:59', len(mat1), 'Horário')
+		vesp1 = Response('12:00 - 17:59', len(vesp1), 'Horário')
+		noturno1 = Response('18:00 - 23:59', len(noturno1), 'Horário')
+		horarios1 = [mad1, mat1, vesp1, noturno1]
+
+		o2_bairro = o2.filter(bairro__icontains=bairro)
+		naturezas2 = get_value(o2_bairro, 'natureza', limit=5)
+		vias2 = get_value(o2_bairro.exclude(via=None), 'via', limit=10)
+		weekdays2 = get_weekdays(o2_bairro)
+
+		lst_a = list(o2_bairro)
+		mad2, mat2, vesp2, noturno2 = get_time(lst_a)
+		mad2 = Response('00:00 - 05:59', len(mad2), 'Horário')
+		mat2 = Response('06:00 - 11:59', len(mat2), 'Horário')
+		vesp2 = Response('12:00 - 17:59', len(vesp2), 'Horário')
+		noturno2 = Response('18:00 - 23:59', len(noturno2), 'Horário')
+		horarios2 = [mad2, mat2, vesp2, noturno2]
+
+		context['bairro_detail'] = bairro
+		context['detail'] = [
+			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
+			{'10 vias com maior registro': [vias1, vias2]},
+			{'Registros por dia da semana': [weekdays1, weekdays2]},
+			{'Registros por horário': [horarios1, horarios2]},
+		]
+	if form_filter.cleaned_data['details']:
+		if 'weekdays' in form_filter.cleaned_data['details']:
+			pass
+
 
 	return context
 
@@ -317,3 +389,11 @@ def get_months(queryset):
 			continue
 		months.append(m)
 	return months
+
+def get_month_axis(months):
+	xaxis = []
+	yaxis = []
+	for month in months:
+		xaxis.append(monthnames[month.field.month])
+		yaxis.append(month.num)
+	return [xaxis, yaxis]

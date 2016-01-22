@@ -17,7 +17,7 @@ def user_login(request):
 		if user:
 			if user.is_active:
 				login(request, user)
-				return redirect('/analise_criminal/mapa/')
+				return redirect('/analise_criminal/')
 			else:
 				return HttpResponse('Sua conta está desabilitada.')
 		else:

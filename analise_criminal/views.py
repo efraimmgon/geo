@@ -12,33 +12,15 @@ from .forms import (
 	ReportForm, ReportFilterForm,
 )
 from .functions import process_map_arguments
-from .report import process_report_arguments, get_months
+from .report import process_report_arguments, get_months, get_month_axis
 
-monthnames = {
-	1: 'Janeiro',
-	2: 'Fevereiro',
-	3: 'Março',
-	4: 'Abril',
-	5: 'Maio',
-	6: 'Junho',
-	7: 'Julho',
-	8: 'Agosto',
-	9: 'Setembro',
-	10: 'Outubro',
-	11: 'Novembro',
-	12: 'Dezembro'
-}
-
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
 def index(request):
 	o = Ocorrencia.objects.all()
 	months = get_months(o)
-	xaxis = []
-	yaxis = []
-	for month in months:
-		xaxis.append(monthnames[month.field.month])
-		yaxis.append(month.num)
+	xaxis, yaxis = get_month_axis(months)
 
-	print(xaxis)
 	context = {
 		'x': xaxis,
 		'y': yaxis

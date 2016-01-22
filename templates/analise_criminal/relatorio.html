@@ -6,6 +6,7 @@
 
 {% block body %}
 
+<script src="{% static 'js/plotly.min.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
 <style>
 	.header {
@@ -36,6 +37,8 @@
 				
 				<div class="row">
 					<div class="col-md-6">
+						<fieldset>
+							<legend>Períodos</legend>
 					{% for field in form_report %}
 						<div class="form-group">
 							<label for="{{ field.id_for_label }}" class="control-label col-md-4">
@@ -50,23 +53,25 @@
 							</div>
 						</div>
 					{% endfor %}
+						</fieldset>
 					</div>
 				
 					<div class="col-md-6">
+						<fieldset>
+							<legend>Filtros</legend>
 					{% for field in form_filter %}
 						<div class="form-group">
-							<label for="{{ field.id_for_label }}" class="control-label col-md-2">
+							<label for="{{ field.id_for_label }}" class="control-label col-md-3">
 								{{ field.label|title }}
 							</label>
-							<div class="col-md-10">{{ field }}
-							{% if field.errors %}
-								{% for error in field.errors %}
-								<span class="text-danger">{{ error }}</span>
-								{% endfor %}
-							{% endif %}
+							<div class="col-md-9">
+							{% for option in field %}
+								<p>{{ option }}</p>
+							{% endfor %}
 							</div>
 						</div>
 					{% endfor %}
+						</fieldset>
 					</div>
 				</div>
 				<div class="form-group">
@@ -79,7 +84,9 @@
 			</form>
 
 			{% if total.a and total.b %}
-			<div id='results' class="row align-center">
+			<div id='results'>
+				<div class="row">
+					<div class="col-md-10">
 				
 				<div class="row">
 					<div class="col-md-6">
@@ -89,6 +96,39 @@
 						<h2 class="header">Período B<br />{{ data.b }}</h2>
 					</div>
 				</div>
+
+		{% if basico %}	
+				{% if axis.total %}
+				<div class="row">
+					{% for periodo in axis.total %}
+					<div class="col-md-6">
+						<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
+					</div>
+
+					<script>
+					$(function() {
+						CONTAINER = document.getElementById('{{ periodo.id }}');
+						data = [
+							{
+								type: 'scatter',
+								{% autoescape off %}
+								x: {{ periodo.x }},
+								y: {{ periodo.y }},
+								{% endautoescape %}
+								marker: { color: 'rgb(16,32,77)'}
+							}
+						]
+						layout = {
+							xaxis: { title: 'Mês' },
+							yaxis: { title: 'Registros'},
+						}
+
+						Plotly.plot(CONTAINER, data, layout);
+					});
+					</script>
+					{% endfor %}
+				</div>
+				{% endif %}
 
 				<div class="row">
 					<div class="col-md-12">
@@ -186,6 +226,42 @@
 						</table>
 					</div>
 				</div>
+		{% endif %} {# basico #}
+
+		{% if detail %}
+			<h2 class="header">Detalhamento por bairro: {{ bairro_detail|title }}</h2>
+			{% for row in detail %}
+				{% for descricao, periodos in row.items %}
+				<h3>{{ descricao }}</h3>
+				<div class="row">
+					{% for periodo in periodos %}
+					<div class="col-md-6">
+						<table class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<th>Ord.</th>
+									<th>{{ periodo.0.type|title }}</th>
+									<th>Registros</th>
+								</tr>
+							</thead>
+							{% for item in periodo|dictsortreversed:"num" %}
+							<tr>
+								<td>{{ forloop.counter }}</td>
+							{% if item.type == 'Dia da semana' %}
+								<td>{{ item.field|date:"l" }}</td>
+							{% else %}
+								<td>{{ item.field }}</td>
+							{% endif %}
+								<td>{{ item.num }}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+					{% endfor %}
+				</div>
+				{% endfor %}
+			{% endfor %}
+		{% endif %}
 
 		{% if filtro %}
 			{% for natureza, rows in filtro.items %}
@@ -224,6 +300,12 @@
 			{% endfor %}
 		{% endif %}
 
+
+					</div>
+					<div class="col-md-2">
+						NAVIGATION
+					</div>
+				</div>
 			</div><!-- #results -->
 			{% endif %} {% comment %} total.a and total.b {% endcomment %}
 		</div>

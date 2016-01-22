@@ -80,7 +80,16 @@ class ReportForm(forms.Form):
 	data_final_b = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
 		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'})
-	)	
+	)
+
+	choices = (
+		('Sim', 'Sim'),
+		('Não', 'Não'),
+	)
+
+	opts = forms.ChoiceField(required=False, 
+		label='Gerar análise principal?', choices=choices
+	)
 
 class ReportFilterForm(forms.Form):
 
@@ -93,4 +102,12 @@ class ReportFilterForm(forms.Form):
 
 	naturezas = forms.MultipleChoiceField(required=False,
 		widget=forms.CheckboxSelectMultiple, choices=choices)
+	bairro = forms.CharField(label='Bairro', required=False)
 
+	choices_opts = (
+		('weekdays', 'Dias da semana'),
+		('time', 'Horários'),
+	)
+
+	details = forms.MultipleChoiceField(required=False, label='Detalhamentos',
+		widget=forms.CheckboxSelectMultiple, choices=choices_opts)

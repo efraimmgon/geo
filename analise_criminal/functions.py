@@ -100,12 +100,8 @@ def process_map_arguments(form, form_advanced):
 	data_final = form.cleaned_data['data_final']
 	hora_inicial = form_advanced.cleaned_data['hora_inicial']
 	hora_final = form_advanced.cleaned_data['hora_final']
-	bairro = normalize(
-		'NFKD', form_advanced.cleaned_data['bairro']
-	)
-	via = normalize(
-		'NFKD', form_advanced.cleaned_data['via']
-	)
+	bairro = normalize('NFKD', form_advanced.cleaned_data['bairro'])
+	via = normalize('NFKD', form_advanced.cleaned_data['via'])
 	if natureza == 'todas':
 		o = Ocorrencia.objects.filter(
 			data__gte=data_inicial, data__lte=data_final
@@ -124,7 +120,7 @@ def process_map_arguments(form, form_advanced):
 	if hora_final:
 		o = o.filter(hora__lte=hora_final)
 
-	o = o.exclude(latitude=None)
+	o = o.exclude(latitude=None).exclude(latitude=0.0)
 	o = format_data(o) # return JSON
 	return o
 

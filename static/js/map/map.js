@@ -102,7 +102,7 @@ $(function() {
 						ocorrencias.push({natureza: json_natureza, bairro: json_bairro, 
 							via: json_via, data: json_data, hora: json_hora, weekday: json_weekday});
 					} else {
-						var notFound = '<br>' + json_id + ': ' + json_bairro + ' ' + 
+						var notFound = '<br>' + json_id + ': ' + json_bairro + ', ' + 
 						json_via + ': not found';
 						$info.append(notFound);
 					}
