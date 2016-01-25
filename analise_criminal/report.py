@@ -27,13 +27,13 @@ monthnames = {
 }
 
 weekdays = {
-	1: 'Domingo',
-	2: 'Segunda-feira',
-	3: 'Terça-feira',
-	4: 'Quarta-feira',
-	5: 'Quinta-feira',
-	6: 'Sexta-feira',
-	7: 'Sábado'
+	0: 'Segunda-feira',
+	1: 'Terça-feira',
+	2: 'Quarta-feira',
+	3: 'Quinta-feira',
+	4: 'Sexta-feira',
+	5: 'Sábado',
+	6: 'Domingo'
 }
 
 def process_report_arguments(form_report, form_filter):
@@ -74,15 +74,15 @@ def process_report_arguments(form_report, form_filter):
 	if form_report.cleaned_data['opts'] == 'Sim':
 		# A
 		a, comparison1, horarios1 = process_args(o1, compare=True)
-		months1, xaxis1, yaxis1 = make_graphs(o1, months=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
 		furto1, roubo1, uso1, homicidio_d1, homicidio_c1, trafico1 = comparison1
+		months1, xaxis1, yaxis1 = make_graphs(months=get_months(o1))
 
 		# B
 		b, comparison2, horarios2 = process_args(o2, compare=True)
-		months1, xaxis2, yaxis2 = make_graphs(o2, months=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
 		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
+		months1, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
 
 		context['axis'] = {}
 		if len(months1) > 2 or len(months2) > 2:
@@ -90,6 +90,12 @@ def process_report_arguments(form_report, form_filter):
 				{'x': xaxis1, 'y': yaxis1, 'id': 'id_total_graph_a'},
 				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_b'}
 			]
+		_, wd_xaxis1, wd_yaxis1 = make_graphs(weekdays=weekdays1)
+		_, wd_xaxis2, wd_yaxis2 = make_graphs(weekdays=weekdays2)
+		context['axis']['weekdays'] = [
+			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a'},
+			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_b'},
+		]
 
 		# Percentage fluctuation from A to B
 		percent_total = get_percentage(o1.count(), o2.count())
@@ -216,11 +222,13 @@ def process_args(queryset, compare=False):
 	return [[naturezas, bairros, vias, locais,
 		weekdays], comparison, horarios]
 
-def make_graphs(queryset, months=False):
+def make_graphs(months=False, weekdays=False):
 	if months:
-		months = get_months(queryset)
 		xaxis, yaxis = get_month_axis(months)
-		return [months, xaxis, yaxis]
+		return months, xaxis, yaxis
+	if weekdays:
+		xaxis, yaxis = get_weekday_axis(weekdays)
+		return weekdays, xaxis, yaxis
 
 
 def calculate_variation(a, b):
@@ -296,13 +304,9 @@ def prepare_double_field_data(querylst, field1, field2):
 			field1 + ', ' + field2))
 	return data
 
-
 def get_time(querylst):
 	"""Returns a list, with the data sorted by time blocks"""
-	madrugada = []
-	matutino = []
-	vespertino = []
-	noturno = []
+	madrugada, matutino, vespertino, noturno = [], [], [], []
 	for ocorrencia in querylst:
 		if ocorrencia.hora is None:
 			continue
@@ -314,7 +318,7 @@ def get_time(querylst):
 			vespertino.append(ocorrencia)
 		else:
 			noturno.append(ocorrencia)
-	return [madrugada, matutino, vespertino, noturno]
+	return madrugada, matutino, vespertino, noturno
 
 def generate_horarios(horarios):
 	"""Takes a lst of horarios and returns a lst in the Response format"""
@@ -348,17 +352,17 @@ def get_months(queryset):
 	return months
 
 def get_month_axis(months):
-	xaxis = []
-	yaxis = []
+	xaxis, yaxis = [], []
 	for month in months:
 		xaxis.append(monthnames[month.field.month])
 		yaxis.append(month.num)
-	return [xaxis, yaxis]
+	return xaxis, yaxis
 
-def weekdays_queryset(queryset):
-	weekdays = []
-	for i in range(1, 8):
-		w = queryset.filter(data__week_day=i)
-		weekdays.append(w)
-	return weekdays
+def get_weekday_axis(wds):
+	xaxis, yaxis = [], []
+	print(wds)
+	for wd in wds:
+		xaxis.append(weekdays[wd.field.weekday()][:3])
+		yaxis.append(wd.num)
+	return xaxis, yaxis
 

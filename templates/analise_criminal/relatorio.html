@@ -188,7 +188,35 @@
 					</div>
 					{% endfor %}
 				</div>
+				{% for periodo in axis.weekdays %}
+					{% if 'dia da semana' in descricao %}
+				<div class="col-md-6">
+					<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
+				</div>
+						<script>
+						$(function() {
+							CONTAINER = document.getElementById('{{ periodo.id }}');
+							data = [
+								{
+									type: 'scatter',
+									{% autoescape off %}
+									x: {{ periodo.x }},
+									y: {{ periodo.y }},
+									{% endautoescape %}
+									marker: { color: 'rgb(16,32,77)'}
+								}
+							]
+							layout = {
+								xaxis: { title: 'Dia da semana' },
+								yaxis: { title: 'Registros'},
+							}
+
+							Plotly.plot(CONTAINER, data, layout);
+						});
+						</script>
+					{% endif %}
 				{% endfor %}
+				{% endfor %} {# row.items #}
 			{% endfor %}
 
 				<h3>Variação de registros por natureza</h3>
@@ -226,6 +254,7 @@
 						</table>
 					</div>
 				</div>
+
 		{% endif %} {# basico #}
 
 		{% if detail %}
@@ -261,7 +290,7 @@
 				</div>
 				{% endfor %}
 			{% endfor %}
-		{% endif %}
+		{% endif %} {# detail #}
 
 		{% if filtro %}
 			{% for natureza, rows in filtro.items %}
@@ -298,7 +327,7 @@
 			{% endfor %}
 			{% endfor %}
 			{% endfor %}
-		{% endif %}
+		{% endif %} {# filtro #}
 
 		{% if weekday_detail %}
 			{% for weekday, rows in weekday_detail.items %}
@@ -335,7 +364,7 @@
 			{% endfor %}
 			{% endfor %}
 			{% endfor %}
-		{% endif %}
+		{% endif %} {# weekday_detail #}
 
 
 					</div>

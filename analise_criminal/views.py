@@ -4,7 +4,6 @@ from django.db.models import Min, Max
 from django.contrib.auth.decorators import login_required
 
 import json
-from collections import defaultdict, namedtuple
 
 from setup_app.models import Ocorrencia
 from .forms import (
@@ -20,12 +19,10 @@ def index(request):
 	o = Ocorrencia.objects.all()
 	months = get_months(o)
 	xaxis, yaxis = get_month_axis(months)
-
 	context = {
 		'x': xaxis,
 		'y': yaxis
 	}
-
 	return render(request, 'analise_criminal/index.html', context)
 
 
@@ -67,7 +64,6 @@ def mapAjax(request):
 def report(request):
 	form_report = ReportForm()
 	form_filter = ReportFilterForm()
-
 	context = {'form_report': form_report, 'form_filter': form_filter}
 	return render(request, 'analise_criminal/relatorio.html', context)
 
