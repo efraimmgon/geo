@@ -36,6 +36,16 @@ weekdays = {
 	6: 'Domingo'
 }
 
+weekdays_django = {
+	1: 'Domingo',
+	2: 'Segunda-feira',
+	3: 'Terça-feira',
+	4: 'Quarta-feira',
+	5: 'Quinta-feira',
+	6: 'Sexta-feira',
+	7: 'Sábado',
+}
+
 def process_report_arguments(form_report, form_filter):
 	"""
 	Uses user's selections to decide what analysis to process,
@@ -168,14 +178,14 @@ def process_report_arguments(form_report, form_filter):
 		if 'weekdays' in form_filter.cleaned_data['details']:
 			context['weekday_detail'] = OrderedDict()
 			for i in range(1, 8):
-				context['weekday_detail'][weekdays[i]] = [
+				context['weekday_detail'][weekdays_django[i]] = [
 					{'5 naturezas com maior registro': []},
 					{'5 bairros com maior registro': []},
 					{'10 vias com maior registro': []},
 					{'5 locais com maior registro': []},
 					{'Registros por horário': []}
 				]
-				current = context['weekday_detail'][weekdays[i]]
+				current = context['weekday_detail'][weekdays_django[i]]
 				for periodo in [o1, o2]:
 					(naturezas, bairros, vias, locais, _), _, horarios = process_args(
 						periodo.filter(data__week_day=i), compare=False)
