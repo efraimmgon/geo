@@ -61,13 +61,9 @@ def process_report_arguments(form_report, form_filter):
 	data_inicial_b = form_report.cleaned_data['data_inicial_b']
 	data_final_b = form_report.cleaned_data['data_final_b']
 
-	data_a = data_inicial_a.strftime('%d-%m-%Y') 
-	data_a += ' a ' + data_final_a.strftime('%d-%m-%Y')
-	data_b = data_inicial_b.strftime('%d-%m-%Y')
-	data_b += ' a ' + data_final_b.strftime('%d-%m-%Y')
 	context['data'] = {
-		'a': data_a,
-		'b': data_b,
+		'a': [data_inicial_a, data_final_a],
+		'b': [data_inicial_b, data_final_b],
 	}
 
 	o1 = Ocorrencia.objects.filter(
@@ -94,17 +90,58 @@ def process_report_arguments(form_report, form_filter):
 		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
 		months1, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
 
-		context['axis'] = {}
+		context['axis'] = OrderedDict()
 		if len(months1) > 2 or len(months2) > 2:
 			context['axis']['total'] = [
-				{'x': xaxis1, 'y': yaxis1, 'id': 'id_total_graph_a'},
-				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_b'}
+				{'x': xaxis1, 'y': yaxis1, 'id': 'id_total_graph_a',
+				'color': 'rgb(255,0,0)', 'name': 'Período A'},
+				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_a',
+				'color': 'rgb(255,255,0)', 'name': 'Período B'}
 			]
+
 		_, wd_xaxis1, wd_yaxis1 = make_graphs(weekdays=weekdays1)
 		_, wd_xaxis2, wd_yaxis2 = make_graphs(weekdays=weekdays2)
-		context['axis']['weekdays'] = [
-			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a'},
-			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_b'},
+		context['axis']['Dias da semana'] = [
+			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a',
+			'color': 'rgb(255,0,0)', 'name': 'Período A'},
+			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_a',
+			'color': 'rgb(255,255,0)', 'name': 'Período B'},
+		]
+
+		nat_xaxis1, nat_yaxis1 = get_axis(naturezas1)
+		nat_xaxis2, nat_yaxis2 = get_axis(naturezas2)
+		context['axis']['Naturezas'] = [
+			{'x': nat_xaxis1, 'y': nat_yaxis1, 'id': 'id_natureza_graph_a',
+			'color': 'rgb(255,0,0)', 'name': 'Período A'},
+			{'x': nat_xaxis2, 'y': nat_yaxis2, 'id': 'id_natureza_graph_a',
+			'color': 'rgb(255,255,0)', 'name': 'Período B'},
+		]
+
+		bairro_xaxis1, bairro_yaxis1 = get_axis(bairros1)
+		bairro_xaxis2, bairro_yaxis2 = get_axis(bairros2)
+		context['axis']['Bairros'] = [
+			{'x': bairro_xaxis1, 'y': bairro_yaxis1, 'id': 'id_bairro_graph_a',
+			'color': 'rgb(255,0,0)', 'name': 'Período A'},
+			{'x': bairro_xaxis2, 'y': bairro_yaxis2, 'id': 'id_bairro_graph_a',
+			'color': 'rgb(255,255,0)', 'name': 'Período B'},
+		]
+
+		via_xaxis1, via_yaxis1 = get_axis(vias1)
+		via_xaxis2, via_yaxis2 = get_axis(vias2)
+		context['axis']['Vias'] = [
+			{'x': via_xaxis1, 'y': via_yaxis1, 'id': 'id_via_graph_a',
+			'color': 'rgb(255,0,0)', 'name': 'Período A'},
+			{'x': via_xaxis2, 'y': via_yaxis2, 'id': 'id_via_graph_a',
+			'color': 'rgb(255,255,0)', 'name': 'Período B'},
+		]
+
+		hora_xaxis1, hora_yaxis1 = get_axis(horarios1)
+		hora_xaxis2, hora_yaxis2 = get_axis(horarios2)
+		context['axis']['Horários'] = [
+			{'x': hora_xaxis1, 'y': hora_yaxis1, 'id': 'id_hora_graph_a',
+			'color': 'rgb(255,0,0)', 'name': 'Período A'},
+			{'x': hora_xaxis2, 'y': hora_yaxis2, 'id': 'id_hora_graph_a',
+			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
 		# Percentage fluctuation from A to B
@@ -370,9 +407,15 @@ def get_month_axis(months):
 
 def get_weekday_axis(wds):
 	xaxis, yaxis = [], []
-	print(wds)
 	for wd in wds:
 		xaxis.append(weekdays[wd.field.weekday()][:3])
 		yaxis.append(wd.num)
+	return xaxis, yaxis
+
+def get_axis(namedtpl):
+	xaxis, yaxis = [], []
+	for item in namedtpl:
+		xaxis.append(item.field)
+		yaxis.append(item.num)
 	return xaxis, yaxis
 

@@ -127,46 +127,14 @@
 				
 						<div class="row">
 							<div class="col-md-6">
-								<h2 class="header">Período A<br />{{ data.a }}</h2>
+								<h2 class="header">Período A<br />{{ data.a.0|date:"d M Y" }} a {{ data.a.1|date:"d M Y" }}</h2>
 							</div>
 							<div class="col-md-6">
-								<h2 class="header">Período B<br />{{ data.b }}</h2>
+								<h2 class="header">Período B<br />{{ data.b.0|date:"d M Y" }} a {{ data.b.1|date:"d M Y" }}</h2>
 							</div>
 						</div>
-<div id="section-total">
 				{% if basico %}	
-						{% if axis.total %}
-						<div class="row">
-							{% for periodo in axis.total %}
-							<div class="col-md-6">
-								<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
-							</div>
-
-							<script>
-							$(function() {
-								CONTAINER = document.getElementById('{{ periodo.id }}');
-								data = [
-									{
-										type: 'scatter',
-										{% autoescape off %}
-										x: {{ periodo.x }},
-										y: {{ periodo.y }},
-										{% endautoescape %}
-										marker: { color: 'rgb(16,32,77)'}
-									}
-								]
-								layout = {
-									xaxis: { title: 'Mês' },
-									yaxis: { title: 'Registros'},
-								}
-
-								Plotly.plot(CONTAINER, data, layout);
-							});
-							</script>
-							{% endfor %}
-						</div>
-						{% endif %}
-
+<div id="section-total">
 						<div class="row">
 							<div class="col-md-12">
 								<h3>Total de ocorrências registradas</h3>
@@ -225,35 +193,38 @@
 							</div>
 							{% endfor %}
 						</div>
-							{% for periodo in axis.weekdays %}
-								{% if 'dia da semana' in descricao %}
-								<div class="col-md-6">
-									<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
-								</div>
-								<script>
-								$(function() {
-									CONTAINER = document.getElementById('{{ periodo.id }}');
-									data = [
-										{
-											type: 'scatter',
-											{% autoescape off %}
-											x: {{ periodo.x }},
-											y: {{ periodo.y }},
-											{% endautoescape %}
-											marker: { color: 'rgb(16,32,77)'}
-										}
-									]
-									layout = {
-										xaxis: { title: 'Dia da semana' },
-										yaxis: { title: 'Registros'},
-									}
-									Plotly.plot(CONTAINER, data, layout);
-								});
-								</script>
-								{% endif %}
-							{% endfor %}
 						{% endfor %} {# row.items #}
 					{% endfor %} {# row #}
+
+				{% for tag, periodos in axis.items %}
+						<div class="col-md-12">
+							<div id="{{ periodos.0.id }}" style="width:100%; height:400px;"></div>
+						</div>
+					{% for periodo in periodos %}
+						<script>
+						$(function() {
+							CONTAINER = document.getElementById('{{ periodo.id }}');
+							data = [
+								{
+									type: 'bar',
+									{% autoescape off %}
+									x: {{ periodo.x }},
+									y: {{ periodo.y }},
+									{% endautoescape %}
+									marker: { color: '{{ periodo.color }}' },
+									name: '{{ periodo.name }}'
+								}
+							]
+							layout = {
+								xaxis: { title: '{{ tag|capfirst }}' },
+								yaxis: { title: 'Registros'},
+							}
+							Plotly.plot(CONTAINER, data, layout);
+						});
+						</script>
+					{% endfor %} {# periodo #}
+				{% endfor %} {# key, values #}
+
 <div id="section-variacao">
 				<h3>Variação de registros por natureza</h3>
 				<div class="row">
@@ -331,7 +302,7 @@
 
 		{% if filtro %}
 			{% for natureza, rows in filtro.items %}
-<div id="section-{{ natureza }}">
+<div id="section-{{ natureza|slice:':5' }}">
 			<h2 class="header">{{ natureza }}</h2>
 			{% for row in rows %}
 			{% for descricao, periodos in row.items %}
@@ -369,6 +340,7 @@
 		{% endif %} {# filtro #}
 
 		{% if weekday_detail %}
+<div id="section-semana"></div>
 			{% for weekday, rows in weekday_detail.items %}
 <div id="section-{{ weekday }}">
 			<h2 class="header">{{ weekday }}</h2>
@@ -420,11 +392,11 @@
 						{% endif %}
 						{% if filtro %}
 							{% for natureza in filtro.keys %}
-							<li><a href="#section-{{ natureza }}">Filtro: {{ natureza }}
+							<li><a href="#section-{{ natureza|slice:':5' }}">Filtro: {{ natureza }}
 							{% endfor %}
 						{% endif %}
 						{% if weekday_detail %}
-							<li><a href="#">Dias da semana</a></li>
+							<li><a href="#section-semana">Dias da semana</a></li>
 							<ol>
 							{% for weekday in weekday_detail.keys %}
 							<li><a href="#section-{{ weekday }}">{{ weekday|slice:":3" }}</a></li>
