@@ -99,48 +99,20 @@ def process_report_arguments(form_report, form_filter):
 				'color': 'rgb(255,255,0)', 'name': 'Período B'}
 			]
 
-		_, wd_xaxis1, wd_yaxis1 = make_graphs(weekdays=weekdays1)
-		_, wd_xaxis2, wd_yaxis2 = make_graphs(weekdays=weekdays2)
+		append_axis(
+			tags=['naturezas', 'bairros', 'vias', 'horários'],
+			data_lst=[(naturezas1, naturezas2), (bairros1, bairros2),
+				(vias1, vias2), (horarios1, horarios2)],
+			names=['Período A', 'Período B'],
+			context=context
+		)
+
+		wd_xaxis1, wd_yaxis1 = get_weekday_axis(weekdays1)
+		wd_xaxis2, wd_yaxis2 = get_weekday_axis(weekdays2)
 		context['axis']['Dias da semana'] = [
 			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,0,0)', 'name': 'Período A'},
 			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_a',
-			'color': 'rgb(255,255,0)', 'name': 'Período B'},
-		]
-
-		nat_xaxis1, nat_yaxis1 = get_axis(naturezas1)
-		nat_xaxis2, nat_yaxis2 = get_axis(naturezas2)
-		context['axis']['Naturezas'] = [
-			{'x': nat_xaxis1, 'y': nat_yaxis1, 'id': 'id_natureza_graph_a',
-			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': nat_xaxis2, 'y': nat_yaxis2, 'id': 'id_natureza_graph_a',
-			'color': 'rgb(255,255,0)', 'name': 'Período B'},
-		]
-
-		bairro_xaxis1, bairro_yaxis1 = get_axis(bairros1)
-		bairro_xaxis2, bairro_yaxis2 = get_axis(bairros2)
-		context['axis']['Bairros'] = [
-			{'x': bairro_xaxis1, 'y': bairro_yaxis1, 'id': 'id_bairro_graph_a',
-			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': bairro_xaxis2, 'y': bairro_yaxis2, 'id': 'id_bairro_graph_a',
-			'color': 'rgb(255,255,0)', 'name': 'Período B'},
-		]
-
-		via_xaxis1, via_yaxis1 = get_axis(vias1)
-		via_xaxis2, via_yaxis2 = get_axis(vias2)
-		context['axis']['Vias'] = [
-			{'x': via_xaxis1, 'y': via_yaxis1, 'id': 'id_via_graph_a',
-			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': via_xaxis2, 'y': via_yaxis2, 'id': 'id_via_graph_a',
-			'color': 'rgb(255,255,0)', 'name': 'Período B'},
-		]
-
-		hora_xaxis1, hora_yaxis1 = get_axis(horarios1)
-		hora_xaxis2, hora_yaxis2 = get_axis(horarios2)
-		context['axis']['Horários'] = [
-			{'x': hora_xaxis1, 'y': hora_yaxis1, 'id': 'id_hora_graph_a',
-			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': hora_xaxis2, 'y': hora_yaxis2, 'id': 'id_hora_graph_a',
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
@@ -269,13 +241,10 @@ def process_args(queryset, compare=False):
 	return [[naturezas, bairros, vias, locais,
 		weekdays], comparison, horarios]
 
-def make_graphs(months=False, weekdays=False):
+def make_graphs(months=False):
 	if months:
 		xaxis, yaxis = get_month_axis(months)
 		return months, xaxis, yaxis
-	if weekdays:
-		xaxis, yaxis = get_weekday_axis(weekdays)
-		return weekdays, xaxis, yaxis
 
 
 def calculate_variation(a, b):
@@ -419,3 +388,13 @@ def get_axis(namedtpl):
 		yaxis.append(item.num)
 	return xaxis, yaxis
 
+def append_axis(tags, data_lst, names, context):
+	for tag, data in zip(tags, data_lst):
+		xaxis1, yaxis1 = get_axis(data[0])
+		xaxis2, yaxis2 = get_axis(data[1])
+		context['axis'][tag] = [
+			{'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
+			'color': 'rgb(255,0,0)', 'name': names[0]},
+			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
+			'color': 'rgb(255,255,0)', 'name': names[1]},
+		]

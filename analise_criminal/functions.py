@@ -140,6 +140,3 @@ def normalize_strings():
 			obj.via = normalize('NFKD', obj.via)
 		obj.natureza = normalize('NFKD', obj.natureza)
 		obj.save()
-
-
-

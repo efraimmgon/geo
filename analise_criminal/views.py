@@ -79,3 +79,31 @@ def make_report(request):
 		context = {'form_report': form_report, 'form_filter': form_filter}
 	
 	return render(request, 'analise_criminal/relatorio.html', context)
+
+
+def draggable(request):
+	updated = []
+	if request.method == 'POST':
+		for pk, values in request.POST.items():
+			try:
+				row = Ocorrencia.objects.get(pk=pk)
+				values = values.split(' ')
+
+				row.latitude = values[1]
+				row.longitude = values[2]
+				row.save()
+				updated.append(pk)
+			except ValueError:
+				continue
+
+	form_styles = MapMarkerStyleForm()
+	form_options = MapOptionForm()
+	form_advanced_options = AdvancedOptionsForm()
+
+	context = {
+		'form_options': form_options, 'form_styles': form_styles,
+		'form_advanced': form_advanced_options,
+		'updated': updated
+	}
+
+	return render(request, 'analise_criminal/draggable.html', context)
