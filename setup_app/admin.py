@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Ocorrencia
+from principal.models import ExternalSource, Tag
 
 
 class OcorrenciaAdmin(admin.ModelAdmin):
@@ -18,3 +19,5 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Ocorrencia, OcorrenciaAdmin)
+admin.site.register(ExternalSource)
+admin.site.register(Tag)
