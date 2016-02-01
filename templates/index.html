@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}11º BPM{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+	<h1>11º Batalhão de Polícia Militar <small>Sinop - MT</small></h1>
+</div>
+
+<h2>Aplicativos</h2>
+<p class="lead">- <a href="{% url 'analise_criminal:index' %}">Análise criminal</a></p>
+
+<h2>Referências e documentos</h2>
+<p class="lead">- <a href="{% url 'principal:biblioteca' %}">Biblioteca</a>
+
+{% endblock %}

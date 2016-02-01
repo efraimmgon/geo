@@ -6,9 +6,8 @@
 
 {% block body %}
 
-<div class="container">
-	<div class="row">
-		<div class="col-md-12">
+<script src="{% static 'js/plotly.min.js' %}"></script>
+
 			<h1>Mapa do Site:</h1>
 			<ol>
 				<li>Login: <a href="{% url 'accounts:login' %}">
@@ -21,35 +20,39 @@
 				</a></li>
 			</ol>
 
-			<div id="tester" style="width:100%; height:500px;"></div>
-		</div>
-	</div>
-</div>
+		{% for key, values in axis.items %}
+			<div id="{{ key|slugify }}" style="width:100%; height:500px;"></div>
+			<script>
+			$(function() {
+				TESTER = document.getElementById('{{ key|slugify }}');
+				data = [
+					{
+					{% if key == 'pie' %}
+						type: 'pie',
+						{% autoescape off %}
+						labels: {{ values.labels }},
+						values: {{ values.values }},
+						{% endautoescape %}
+					{% else %}
+						type: 'scatter',
+						{% autoescape off %}
+						x: {{ values.x }},
+						y: {{ values.y }},
+						{% endautoescape %}
+						marker: { color: 'rgb(16,32,77)'},
+					{% endif %}
+					}
+				]
+				layout = {
+					title: '<b>11º BPM - Sinop</b><br />' +
+						'{{ key|capfirst }} - 2015',
+					xaxis: { title: 'Mês' },
+					yaxis: { title: 'Registros'},
+				}
 
+				Plotly.plot(TESTER, data, layout);
+			});
+			</script>
+		{% endfor %} {# axis.values #}
 
-<script src="{% static 'js/plotly.min.js' %}"></script>
-<script>
-$(function() {
-	TESTER = document.getElementById('tester');
-	data = [
-		{
-			type: 'scatter',
-			{% autoescape off %}
-			x: {{ x }},
-			y: {{ y }},
-			{% endautoescape %}
-			marker: { color: 'rgb(16,32,77)'}
-		}
-	]
-	layout = {
-		title: '<b>11º BPM - Sinop</b><br />' +
-			'Registros (roubos, furtos, homicídios, drogas) por mês - 2015',
-		xaxis: { title: 'Mês' },
-		yaxis: { title: 'Registros'},
-	}
-
-	Plotly.plot(TESTER, data, layout);
-});
-</script>
-
-{% endblock %}
+{% endblock %} {# body #}

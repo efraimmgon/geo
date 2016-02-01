@@ -25,7 +25,9 @@ SECRET_KEY = 'kmgv=i!l3gk86k$8%-gwb)v(+5*ophnrlsj$g5pkvzyo3@8$6k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['efraimmgon.pythonanywhere.com']
+ADMINS = [('Efraim', 'efraim@pm.mt.gov.br'),]
+
+ALLOWED_HOSTS = ['efraimmgon.pythonanywhere.com', 'pmmt.pythonanywhere.com']
 
 
 # Application definition
@@ -40,6 +42,7 @@ INSTALLED_APPS = (
     'setup_app',
     'analise_criminal',
     'accounts',
+    'principal',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -112,3 +115,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/analise_criminal/'

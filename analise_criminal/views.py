@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.db.models import Min, Max
 from django.contrib.auth.decorators import login_required
 
 import json
+from collections import OrderedDict
+from unicodedata import normalize
 
 from setup_app.models import Ocorrencia
 from .forms import (
@@ -11,20 +13,35 @@ from .forms import (
 	ReportForm, ReportFilterForm,
 )
 from .functions import process_map_arguments
-from .report import process_report_arguments, get_months, get_month_axis
+from .report import (process_report_arguments, get_months, get_month_axis, 
+	return_months_axis, return_naturezas_axis)
 
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse
+
+
 def index(request):
-	o = Ocorrencia.objects.all()
+	context = {}
+	context['axis'] = OrderedDict()
+	o = Ocorrencia.objects.filter(data__year=2015)
 	months = get_months(o)
 	xaxis, yaxis = get_month_axis(months)
-	context = {
-		'x': xaxis,
-		'y': yaxis
-	}
-	return render(request, 'analise_criminal/index.html', context)
+	context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
 
+	context = return_months_axis(
+		queryset=o,
+		filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
+		normalize('NFKD', 'tráfico ilícito de drogas')],
+		context=context)
+	
+	labels, values = return_naturezas_axis(
+		queryset=o,
+		filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
+		normalize('NFKD', 'tráfico ilícito de drogas'), 'outros']
+	)
+	context['axis']['pie'] = {'labels': labels, 'values': values}
+
+	return render(request, 'analise_criminal/index.html', context)
 
 @login_required
 def map(request):
@@ -80,8 +97,12 @@ def make_report(request):
 	
 	return render(request, 'analise_criminal/relatorio.html', context)
 
-
+@login_required
 def draggable(request):
+	if str(request.user) != 'efraimmgon':
+		return HttpResponse("%s: você não tem permissão para acessar esta " + 
+			"página" % request.user)
+
 	updated = []
 	if request.method == 'POST':
 		for pk, values in request.POST.items():

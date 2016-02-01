@@ -6,45 +6,11 @@ from django.db.models import Count
 
 from datetime import time
 from unicodedata import normalize
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
+from .collections import monthnames, weekdays, weekdays_django, Response
 
-Response = namedtuple('Response', ['field', 'num', 'type'])
-monthnames = {
-	1: 'Janeiro',
-	2: 'Fevereiro',
-	3: 'Março',
-	4: 'Abril',
-	5: 'Maio',
-	6: 'Junho',
-	7: 'Julho',
-	8: 'Agosto',
-	9: 'Setembro',
-	10: 'Outubro',
-	11: 'Novembro',
-	12: 'Dezembro'
-}
-
-weekdays = {
-	0: 'Segunda-feira',
-	1: 'Terça-feira',
-	2: 'Quarta-feira',
-	3: 'Quinta-feira',
-	4: 'Sexta-feira',
-	5: 'Sábado',
-	6: 'Domingo'
-}
-
-weekdays_django = {
-	1: 'Domingo',
-	2: 'Segunda-feira',
-	3: 'Terça-feira',
-	4: 'Quarta-feira',
-	5: 'Quinta-feira',
-	6: 'Sexta-feira',
-	7: 'Sábado',
-}
 
 def process_report_arguments(form_report, form_filter):
 	"""
@@ -77,6 +43,7 @@ def process_report_arguments(form_report, form_filter):
 		'a': o1.count(), 'b': o2.count()
 	}
 
+	# GENERAL ANALYSIS + GRAPHS
 	if form_report.cleaned_data['opts'] == 'Sim':
 		# A
 		a, comparison1, horarios1 = process_args(o1, compare=True)
@@ -90,6 +57,7 @@ def process_report_arguments(form_report, form_filter):
 		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
 		months1, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
 
+		# GRAPHS
 		context['axis'] = OrderedDict()
 		if len(months1) > 2 or len(months2) > 2:
 			context['axis']['total'] = [
@@ -116,6 +84,16 @@ def process_report_arguments(form_report, form_filter):
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
+		context['axis']['pie'] = []
+		for queryset, id_ in zip([o1, o2], ['pie_a', 'pie_b']):
+			labels, values = return_naturezas_axis(
+				queryset=queryset,
+				filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
+				normalize('NFKD', 'tráfico ilícito de drogas'), 'outros']
+			)
+			context['axis']['pie'].append(
+				{'labels': labels, 'values': values, 'id': id_})
+
 		# Percentage fluctuation from A to B
 		percent_total = get_percentage(o1.count(), o2.count())
 		percent_furto = get_percentage(furto1['num'], furto2['num'])
@@ -133,7 +111,7 @@ def process_report_arguments(form_report, form_filter):
 		context['basico'] = [
 			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
 			{'5 bairros com maior registro': [bairros1, bairros2]},
-			{'10 vias com maior registro': [vias1, vias2]},
+			{'5 vias com maior registro': [vias1, vias2]},
 			{'5 locais com maior registro': [locais1, locais2]},
 			{'Registros por dia da semana': [weekdays1, weekdays2]},
 			{'Registros por horário': [horarios1, horarios2]},
@@ -154,7 +132,7 @@ def process_report_arguments(form_report, form_filter):
 			natureza = normalize('NFKD', natureza)
 			context['filtro'][natureza] = [
 				{'5 bairros com maior registro': []},
-				{'10 vias com maior registro': []},
+				{'5 vias com maior registro': []},
 				{'5 locais com maior registro': []},
 				{'Registros por dia da semana': []},
 				{'Registros por horário': []}
@@ -179,30 +157,54 @@ def process_report_arguments(form_report, form_filter):
 		context['bairro_detail'] = bairro
 		context['detail'] = [
 			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
-			{'10 vias com maior registro': [vias1, vias2]},
+			{'5 vias com maior registro': [vias1, vias2]},
 			{'Registros por dia da semana': [weekdays1, weekdays2]},
 			{'Registros por horário': [horarios1, horarios2]},
 		]
 	if form_filter.cleaned_data['details']:
+		context['detalhamento'] = OrderedDict()
 		if 'weekdays' in form_filter.cleaned_data['details']:
-			context['weekday_detail'] = OrderedDict()
+			weekday_detail = OrderedDict()
 			for i in range(1, 8):
-				context['weekday_detail'][weekdays_django[i]] = [
+				weekday_detail[weekdays_django[i]] = [
 					{'5 naturezas com maior registro': []},
 					{'5 bairros com maior registro': []},
-					{'10 vias com maior registro': []},
+					{'5 vias com maior registro': []},
 					{'5 locais com maior registro': []},
 					{'Registros por horário': []}
 				]
-				current = context['weekday_detail'][weekdays_django[i]]
+				current = weekday_detail[weekdays_django[i]]
 				for periodo in [o1, o2]:
 					(naturezas, bairros, vias, locais, _), _, horarios = process_args(
 						periodo.filter(data__week_day=i), compare=False)
 					values = [naturezas, bairros, vias, locais, horarios]
-					print(horarios)
 					for j in range(len(current)):
 						for key in current[j].keys():
 							current[j][key] += [values[j]]
+			context['detalhamento']['semana'] = weekday_detail
+		if 'time' in form_filter.cleaned_data['details']:
+			time_detail = OrderedDict()
+			for hora in ['00:00 - 05:59', '06:00 - 11:59', 
+			'12:00 - 17:59', '18:00 - 23:59']:
+				time_detail[hora] = [
+					{'5 naturezas com maior registro': []},
+					{'5 bairros com maior registro': []},
+					{'5 vias com maior registro': []},
+					{'5 locais com maior registro': []},
+					{'Registros por dia da semana': []}
+				]
+				current = time_detail[hora]
+				for periodo in [o1, o2]:
+					hora_lst = hora.split(' - ')
+					queryset = periodo.filter(hora__gte=hora_lst[0], hora__lte=hora_lst[1])
+					(naturezas, bairros, vias, locais, wd), _, _ = process_args(
+						queryset, compare=False)
+					values = [naturezas, bairros, vias, locais, wd]
+					for j in range(len(current)):
+						for key in current[j].keys():
+							current[j][key] += [values[j]]
+			context['detalhamento']['horários'] = time_detail
+				
 
 	return context
 
@@ -213,7 +215,7 @@ def process_args(queryset, compare=False):
 
 	naturezas = get_value(queryset, 'natureza', limit=5)
 	bairros = get_value(queryset.exclude(bairro=None), 'bairro', limit=5)
-	vias = get_value(queryset.exclude(via=None), 'via', limit=10)
+	vias = get_value(queryset.exclude(via=None), 'via', limit=5)
 	locais = get_values(
 		queryset.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
 	)
@@ -398,3 +400,24 @@ def append_axis(tags, data_lst, names, context):
 			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
 			'color': 'rgb(255,255,0)', 'name': names[1]},
 		]
+
+def return_months_axis(queryset, filters, context):
+	for f in filters:
+		qs = queryset.filter(natureza__icontains=f)
+		months = get_months(qs)
+		xaxis, yaxis = get_month_axis(months)
+		context['axis'][f] = {'x': xaxis, 'y': yaxis}
+	return context
+
+def return_naturezas_axis(queryset, filters):
+	labels, values = [], []
+	for f in filters:
+		if f == 'outros':
+			for filter_ in filters:
+				if filter_ != 'outros':
+					qs = queryset.exclude(natureza__icontains=filter_)
+		else:			
+			qs = queryset.filter(natureza__icontains=f)
+		labels.append(f)
+		values.append(qs.count())
+	return labels, values

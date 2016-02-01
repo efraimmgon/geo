@@ -17,12 +17,15 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
+from principal import urls as principal_urls
 from setup_app import urls as setup_urls
 from analise_criminal import urls as analise_urls
 from accounts import urls as accounts_urls
 
 urlpatterns = [
+    url(r'^', include(principal_urls, namespace='principal')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^setup/', include(setup_urls, namespace="setup")),
     url(r'^analise_criminal/', include(analise_urls, 
@@ -32,8 +35,8 @@ urlpatterns = [
 
 # unsuitable for production; for development only!
 if settings.DEBUG:
-	urlpatterns += static(settings.MEDIA_URL, 
-		document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, 
+        document_root=settings.MEDIA_ROOT)
 
 # for production
 if not settings.DEBUG:

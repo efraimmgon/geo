@@ -48,9 +48,22 @@
 		</ul>
 	</div>
 </nav>
-	
-	{% block body %}
-	{% endblock %}
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">	
+
+			{% block body %}
+			{% endblock %}
+
+			<div class="row">
+				<blockquote class="pull-right">
+					<p>μολὼν λαβέ</p>
+					<small><cite>Λεωνίδας</cite></small>
+				</blockquote>
+			</div>
+		</div>
+	</div>
+</div>
 
 <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
