@@ -11,12 +11,32 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ExternalSources',
+            name='ExternalSource',
             fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
-                ('name', models.CharField(max_length=256)),
-                ('description', models.TextField(default='')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
+                ('name', models.CharField(unique=True, verbose_name='Nome', default='', max_length=256)),
+                ('description', models.TextField(verbose_name='Descrição', default='')),
                 ('link', models.URLField()),
             ],
+            options={
+                'verbose_name_plural': 'Fontes externas',
+                'verbose_name': 'Fonte externa',
+            },
+        ),
+        migrations.CreateModel(
+            name='Tag',
+            fields=[
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
+                ('name', models.CharField(unique=True, verbose_name='Nome', max_length=256)),
+                ('description', models.TextField(verbose_name='Descrição', default='')),
+            ],
+            options={
+                'verbose_name': 'Etiqueta',
+            },
+        ),
+        migrations.AddField(
+            model_name='externalsource',
+            name='tags',
+            field=models.ManyToManyField(to='principal.Tag', verbose_name='Etiquetas'),
         ),
     ]

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Biblioteca{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+	<h1>Biblioteca <small>Links e documentos</small></h1>
+</div>
+
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		<h3 class="panel-title">Grupos</h3>
+	</div>
+</div>
+
+
+{% for tag in tags %}
+<h3>{{ tag.name }}</h3>
+	<ul class="list-group">
+	{% for source in tag.externalsource_set.all %}
+		<li class="list-group-item"><a href="{{ source.link }}">
+			{{ source.name }} - {{ source.description }}</a></li>
+	{% endfor %}
+	</ul>
+{% endfor %}
+
+
+{% endblock %}

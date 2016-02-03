@@ -16,9 +16,6 @@ from .functions import process_map_arguments
 from .report import (process_report_arguments, get_months, get_month_axis, 
 	return_months_axis, return_naturezas_axis)
 
-from reportlab.pdfgen import canvas
-from django.http import HttpResponse
-
 
 def index(request):
 	context = {}
