@@ -11,7 +11,7 @@ class Tag(models.Model):
 
 	class Meta:
 		verbose_name = "Marcador"
-		verbose_name = "Marcadores"
+		verbose_name_plural = "Marcadores"
 
 
 class ExternalSource(models.Model):
@@ -19,8 +19,10 @@ class ExternalSource(models.Model):
 	name = models.CharField("Nome", max_length=256, unique=True,
 		default='')
 	description = models.TextField("Descrição", default='')
-	link = models.URLField()
+	url = models.URLField()
 	tags = models.ManyToManyField(Tag, verbose_name="Etiquetas")
+	views = models.IntegerField("Acessos", default=0)
+
 
 	def __str__(self):
 		return self.name

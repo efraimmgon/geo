@@ -14,9 +14,10 @@ class Migration(migrations.Migration):
             name='ExternalSource',
             fields=[
                 ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
-                ('name', models.CharField(unique=True, verbose_name='Nome', default='', max_length=256)),
-                ('description', models.TextField(verbose_name='Descrição', default='')),
-                ('link', models.URLField()),
+                ('name', models.CharField(max_length=256, verbose_name='Nome', unique=True, default='')),
+                ('description', models.TextField(default='', verbose_name='Descrição')),
+                ('url', models.URLField()),
+                ('views', models.IntegerField(default=0, verbose_name='Acessos')),
             ],
             options={
                 'verbose_name_plural': 'Fontes externas',
@@ -27,16 +28,16 @@ class Migration(migrations.Migration):
             name='Tag',
             fields=[
                 ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
-                ('name', models.CharField(unique=True, verbose_name='Nome', max_length=256)),
-                ('description', models.TextField(verbose_name='Descrição', default='')),
+                ('name', models.CharField(max_length=256, verbose_name='Nome', unique=True)),
+                ('description', models.TextField(default='', verbose_name='Descrição')),
             ],
             options={
-                'verbose_name': 'Etiqueta',
+                'verbose_name': 'Marcadores',
             },
         ),
         migrations.AddField(
             model_name='externalsource',
             name='tags',
-            field=models.ManyToManyField(to='principal.Tag', verbose_name='Etiquetas'),
+            field=models.ManyToManyField(verbose_name='Etiquetas', to='principal.Tag'),
         ),
     ]

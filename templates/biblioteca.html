@@ -19,8 +19,11 @@
 <h3>{{ tag.name }}</h3>
 	<ul class="list-group">
 	{% for source in tag.externalsource_set.all %}
-		<li class="list-group-item"><a href="{{ source.link }}">
-			<strong>{{ source.name }}</strong> - {{ source.description }}</a></li>
+		<li class="list-group-item">
+			{{ forloop.counter }} - <a href="{% url 'principal:goto' source.pk %}">
+			<strong>{{ source.name }}</strong> - {{ source.description }}</a>
+			[Acessos: {{ source.views }}]
+		</li>
 	{% endfor %}
 	</ul>
 {% endfor %}
