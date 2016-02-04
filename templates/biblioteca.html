@@ -20,7 +20,7 @@
 	<ul class="list-group">
 	{% for source in tag.externalsource_set.all %}
 		<li class="list-group-item"><a href="{{ source.link }}">
-			{{ source.name }} - {{ source.description }}</a></li>
+			<strong>{{ source.name }}</strong> - {{ source.description }}</a></li>
 	{% endfor %}
 	</ul>
 {% endfor %}
