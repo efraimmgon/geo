@@ -55,7 +55,7 @@ def process_report_arguments(form_report, form_filter):
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
 		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
-		months1, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
+		months2, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
 
 		# GRAPHS
 		context['axis'] = OrderedDict()
