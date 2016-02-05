@@ -3,6 +3,7 @@ $(function() {
 	var markers = [];
 	var ocorrencias = [];
 	var heatmapData = [];
+	var natTotal = 0;
 	var natRoubo = 0;
 	var natFurto = 0;
 	var natHom = 0;
@@ -35,6 +36,9 @@ $(function() {
 	initialize();
 
 	function initialize() {
+		/* 
+		Initializes the map, and sets the global vars gm, iw, and oms.
+		*/
 		map = new google.maps.Map(document.getElementById('map'), {
 			zoom: 15,
 			center: myLatLng,
@@ -47,9 +51,13 @@ $(function() {
 	}
 
 	$ocorrenciasForm.on('submit', function(e) {
+		/*
+		Main engine of the script. Starts on the submission of the form.
+		*/
 		e.preventDefault();
 		clearLocations();
 
+		natTotal = 0;
 		natRoubo = 0;
 		natFurto = 0;
 		natEnt = 0;
@@ -93,6 +101,7 @@ $(function() {
 							parseFloat(lat),
 							parseFloat(lng)
 						);
+						count_natureza(json_natureza);
 						if (styleType == 'basicMarker') {
 							var address = json_bairro + ', ' + json_via;
 							createMarker(latLng, json_id, json_natureza, address);
@@ -124,6 +133,7 @@ $(function() {
 				sortableTable();
 
 				$html = '<h3>Ocorrências Registradas</h3>';
+				if (natTotal) $html += '<span style="padding-right: 30px">Total: ' + natTotal + '</span>';
 				if (natRoubo) $html += '<span style="padding-right: 30px">Roubos: ' + natRoubo + '</span>';
 				if (natFurto) $html += '<span style="padding-right: 30px">Furtos: ' + natFurto + '</span>';
 				if (natEnt) $html += '<span style="padding-right: 30px">Entorpecentes: ' + natEnt + '</span>';
@@ -140,6 +150,7 @@ $(function() {
 	});
 
 	function createMarker(latlng, id, natureza, address) {
+		/* Creates each indiviual marker of the map */
 		var html = "<b> id: " + id + ' ' + natureza + "</b> <br />" + address;
 		
 		var markerColor, markerText;
@@ -183,7 +194,13 @@ $(function() {
 		markers.push(marker);
 		oms.addMarker(marker);
 
-		var test;
+	} // END OF createMarker()
+
+	function count_natureza(natureza) {
+		/* 
+		Checks what natureza is included in a string, and counts how
+		many times it has appeared.
+		*/
 		if (/roubo/i.test(natureza)) {
 			natRoubo++;
 		} else if (/furto/i.test(natureza)) {
@@ -195,9 +212,13 @@ $(function() {
 		} else {
 			natOutros++;
 		}
-	} // END OF createMarker()
+		natTotal++;
+	}
 
 	function createHeatmap(heatmapData) {
+		/* 
+		Takes an array of latlng values, and sets the tone for the map. 
+		*/
 		heatmap = new google.maps.visualization.HeatmapLayer({
 			data: heatmapData,
 			dissipating: false,
@@ -353,7 +374,9 @@ $(function() {
 	} // sortableTable()
 
 	function clearLocations() {
-		/* Resets the markers and heatmapData array, clearing the map */
+		/* 
+		Resets the markers and heatmapData array, clearing the map 
+		*/
 		iw.close();
 		for (var i = 0; i < markers.length; i++) {
 			markers[i].setMap(null);
