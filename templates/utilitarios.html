@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Utilitários{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+	<h1>Utilitários <small>aplicativos de usos práticos</small></h1>
+</div>
+
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		<h3 class="panel-title">Aplicativos</h3>
+	</div>
+</div>
+
+
+<h3>Cálculo de dias de afastamento</h3>
+<form method='GET' action='{% url "principal:utilitarios" %}'>
+	{{ form_timedelta.as_p }}
+	<input class='btn btn-default' type='submit' value='Computar' />
+</form>
+{% if result_timedelta %}
+<h4>Resultado:</h4>
+<table class='table table-bordered'>
+	<tr>
+		<th>Data inicial</th>
+		<th>Data final</th>
+		<th>Dias</th>
+	</tr>
+	<tr>
+		<td>{{ result_timedelta.inicial }}</td>
+		<td>{{ result_timedelta.final }}</td>
+		<td>{{ result_timedelta.timedelta }}</td>
+	</tr>
+</table>
+{% endif %}
+
+
+{% endblock %}

@@ -20,7 +20,7 @@
 	<ul class="list-group">
 	{% for source in tag.externalsource_set.all %}
 		<li class="list-group-item">
-			{{ forloop.counter }} - <a href="{% url 'principal:goto' source.pk %}" target="_blank">
+			{{ forloop.counter }} - <a href="{% url 'principal:goto' source.pk %}">
 			<strong>{{ source.name }}</strong> - {{ source.description }}</a>
 			[Acessos: {{ source.views }}]
 		</li>

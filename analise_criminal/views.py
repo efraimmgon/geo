@@ -18,6 +18,7 @@ from .report import (process_report_arguments, get_months, get_month_axis,
 
 
 def index(request):
+	"""/analise_criminal/"""
 	context = {}
 	context['axis'] = OrderedDict()
 	o = Ocorrencia.objects.filter(data__year=2015)
