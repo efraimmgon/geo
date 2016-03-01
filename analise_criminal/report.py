@@ -226,17 +226,16 @@ def process_args(queryset, compare=False):
 	)
 	weekdays = get_weekdays(queryset)
 
-	## Comparison A/B
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
 	if compare:
 		comparison = (get_comparison_data(queryset, nat) for nat in NATUREZAS)
 
-	mad, mat, vesp, noturno = generate_horarios(get_time(lst))
-	horarios = [mad, mat, vesp, noturno]
+	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
+	periods = ( Response(tag, len(horario), 'Horário') for horario, tag in zip(
+		get_time(list(queryset)), tags) )
 
-	return [[naturezas, bairros, vias, locais,
-		weekdays], comparison, horarios]
+	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
 
 def make_graphs(months=False):
 	if months:
@@ -315,28 +314,23 @@ def prepare_double_field_data(querylst, field1, field2):
 	return data
 
 def get_time(querylst):
-	"""Returns a list, with the data sorted by time blocks"""
+	"""
+	Takes a querylist and use datetime.time to sort it out
+	by time periods, which are then returned.
+	"""
 	madrugada, matutino, vespertino, noturno = [], [], [], []
 	for ocorrencia in querylst:
 		if ocorrencia.hora is None:
 			continue
-		if time(0) <= ocorrencia.hora < time(6):
+		if ocorrencia.hora < time(6):
 			madrugada.append(ocorrencia)
-		elif time(6) <= ocorrencia.hora < time(12):
+		elif ocorrencia.hora < time(12):
 			matutino.append(ocorrencia)
-		elif time(12) <= ocorrencia.hora < time(18):
+		elif ocorrencia.hora < time(18):
 			vespertino.append(ocorrencia)
 		else:
 			noturno.append(ocorrencia)
 	return madrugada, matutino, vespertino, noturno
-
-def generate_horarios(horarios):
-	"""Takes a lst of horarios and returns a lst in the Response format"""
-	lst = []
-	tags = ['00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59']
-	for horario, tag in zip(horarios, tags):
-		lst.append(Response(tag, len(horario), 'Horário'))
-	return lst
 
 def get_weekdays(queryset):
 	"""Returns a list, with the number of records by weekday"""
