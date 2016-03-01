@@ -1,0 +1,59 @@
+<!--
+Iterates on an object, displaying some graphs.
+-->
+
+{% for tag, periodos in context_obj.items %}
+	{% if tag != 'pie' %}
+	<div class="col-md-12">
+		<div id="{{ periodos.0.id }}" style="width:100%; height:400px;"></div>
+	</div>
+	{% for periodo in periodos %}
+	<script>
+		$(function() {
+			CONTAINER = document.getElementById('{{ periodo.id }}');
+			data = [
+				{
+					type: 'bar',
+					{% autoescape off %}
+					x: {{ periodo.x }},
+					y: {{ periodo.y }},
+					{% endautoescape %}
+					marker: { color: '{{ periodo.color }}' },
+					name: '{{ periodo.name }}'
+				}
+			]
+			layout = {
+				xaxis: { title: '{{ tag|capfirst }}' },
+				yaxis: { title: 'Registros'},
+			}
+			Plotly.plot(CONTAINER, data, layout);
+		});
+	</script>
+	{% endfor %}
+	{% endif %}
+{% endfor %} {# context_obj.items #}
+
+{% for periodo in context_obj.pie %}
+	<div class="col-md-6">
+		<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
+	</div>
+	<script>
+		$(function() {
+			CONTAINER = document.getElementById('{{ periodo.id }}');
+			data = [
+				{
+					type: 'pie',
+					{% autoescape off %}
+					labels: {{ periodo.labels }},
+					values: {{ periodo.values }},
+					{% endautoescape %}
+				}
+			]
+			layout = {
+				xaxis: { title: '{{ tag|capfirst }}' },
+				yaxis: { title: 'Registros'},
+			}
+			Plotly.plot(CONTAINER, data, layout);
+		});
+	</script>
+{% endfor %} {# context_obj.pie #}

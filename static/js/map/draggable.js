@@ -113,7 +113,6 @@ $(function() {
 				if (ocorrencias.length == 0) {
 					return;
 				}
-
 				tableGeneration();
 				sortableTable();
 			}
@@ -126,19 +125,15 @@ $(function() {
 
 	function createMarker(latlng, id, natureza, address) {
 		var html = "<b> id: " + id + ' ' + natureza + "</b> <br />" + address;
-	
-		/* will this drag? */		
 		var marker = new google.maps.Marker({
 			map: map,
 			position: latlng,
 			draggable: true
 		});
-		
 		google.maps.event.addListener(marker, 'click', function() {
 			iw.setContent(html);
 			iw.open(map, marker);
 		});
-
 		google.maps.event.addListener(marker, 'dragend', function(evt) {
 			$('#updateForm').append("<br /><input id='" + id + "' name='" + id + 
 				"' type='text' value='" + id + ' ' + evt.latLng.lat().toFixed(8) + 

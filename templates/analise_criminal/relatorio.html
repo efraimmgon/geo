@@ -12,214 +12,131 @@
 	
 </style>
 
-<div class="container">
+<div class="page-header">
+	<h1>Relatório <small>de registros criminais</small></h1>
+</div>
+
+<p class="text-info">
+	Selecione dois períodos para gerar um relatório de
+	comparação de dados com os respectvos dados, por exemplo: <br /><br />
+	Período A:<br />
+	Data Inicial A: 1/9/2015 - Data Final A: 30/9/2015 <br />
+	Período B:<br />
+	Data Inicial B: 1/10/2015 - Data Final B: 31/10/2015
+</p>
+
+<form class="form-horizontal" method='get' 
+	action="{% url 'analise_criminal:make_report' %}">			
 	<div class="row">
-		<div class="col-md-12">
-
-			<div class="page-header">
-				<h1>Relatório <small>de registros criminais</small></h1>
-			</div>
-
-			<p class="text-info">
-				Selecione dois períodos para gerar um relatório de
-				comparação de dados com os respectvos dados, por exemplo: <br /><br />
-				Período A:<br />
-				Data Inicial A: 1/9/2015 - Data Final A: 30/9/2015 <br />
-				Período B:<br />
-				Data Inicial B: 1/10/2015 - Data Final B: 31/10/2015
-			</p>
-
-			<form class="form-horizontal" method='get' action="{% url 'analise_criminal:make_report' %}">
-				
-				<div class="row">
-					<div class="col-md-6">
-						<fieldset>
-							<legend>Períodos</legend>
-					{% for field in form_report %}
-						<div class="form-group">
-							<label for="{{ field.id_for_label }}" class="control-label col-md-4">
-								{{ field.label|title }}
-							</label>
-							<div class="col-md-8">{{ field }}
-							{% if field.errors %}
-								{% for error in field.errors %}
-								<span class="text-danger">{{ error }}</span>
-								{% endfor %}
-							{% endif %}
-							</div>
-						</div>
-					{% endfor %}
-						</fieldset>
-					</div>
-				
-					<div class="col-md-6">
-						<fieldset>
-							<legend>Filtros</legend>
-					{% for field in form_filter %}
-						<div class="form-group">
-							<label for="{{ field.id_for_label }}" class="control-label col-md-3">
-								{{ field.label|title }}
-							</label>
-							<div class="col-md-9">
-							{% for option in field %}
-								<p>{{ option }}</p>
-							{% endfor %}
-							</div>
-						</div>
-					{% endfor %}
-						</fieldset>
-					</div>
-				</div>
+		<div class="col-md-6">
+			<fieldset>
+				<legend>Períodos</legend>
+				{% for field in forms.report %}
 				<div class="form-group">
-					<div class="col-md-offset-2 col-md-10">
-						<button type="submit" class="btn btn-default">
-							<span class="glyphicon glyphicon-search"></span> Buscar
-						</button>
+					<label for="{{ field.id_for_label }}" 
+						class="control-label col-md-4">
+						{{ field.label|title }}
+					</label>
+					<div class="col-md-8">{{ field }}
+					{% if field.errors %}
+						{% for error in field.errors %}
+						<span class="text-danger">{{ error }}</span>
+						{% endfor %}
+					{% endif %}
 					</div>
 				</div>
-			</form>
-
-			{% if total.a and total.b %}
-			<div id='results'>
-				<div class="row">
-					<div class="col-md-10">
+				{% endfor %}
+			</fieldset>
+		</div>
 				
-						<div class="row">
-							<div class="col-md-6">
-								<h2 class="header">Período A<br />
-									{{ data.a.0|date:"d M Y" }} a {{ data.a.1|date:"d M Y" }}
-								</h2>
-							</div>
-							<div class="col-md-6">
-								<h2 class="header">Período B<br />
-									{{ data.b.0|date:"d M Y" }} a {{ data.b.1|date:"d M Y" }}
-								</h2>
-							</div>
-						</div>
-				{% if basico %}	
-<div id="section-total">
-						<div class="row">
-							<div class="col-md-12">
-								<h3>Total de ocorrências registradas</h3>
-								<table class="table">
-									<tr>
-										<th>Período A</th>
-										<th>Período B</th>
-										<th>Variação</th>
-									</tr>
-									<tr>
-										<td>{{ total.a }}</td>
-										<td>{{ total.b }}</td>
-										{% if total.a < total.b %}
-										<td class="bg-danger">
-											<span class="glyphicon glyphicon-arrow-up"></span> {{ total.variation|floatformat }}%
-										</td>
-										{% elif total.a > total.b %}
-										<td class="bg-success">
-											<span class="glyphicon glyphicon-arrow-down"></span> {{ total.variation|floatformat }}%
-										</td>
-										{% else %}
-										<td>Sem alteração.</td>
-										{% endif %}
-									</tr>
-								</table>
+		<div class="col-md-6">
+			<fieldset>
+				<legend>Filtros</legend>
+			{% for field in forms.filter %}
+			<div class="form-group">
+				<label for="{{ field.id_for_label }}" 
+					class="control-label col-md-3">
+					{{ field.label|title }}
+				</label>
+				<div class="col-md-9">
+				{% for option in field %}
+					<p>{{ option }}</p>
+				{% endfor %}
+				</div>
+			</div>
+			{% endfor %}
+			</fieldset>
+		</div>
+	</div>
+				
+	<div class="form-group">
+		<div class="col-md-offset-2 col-md-10">
+			<button type="submit" class="btn btn-default">
+				<span class="glyphicon glyphicon-search"></span> Buscar
+			</button>
+		</div>
+	</div>
+</form>
 
-							</div>
-						</div>
-</div> <!-- #section-total -->
-					{% for row in basico %}
-						{% for descricao, periodos in row.items %}
-						<h3>{{ descricao }}</h3>
-						<div class="row">
-							{% for periodo in periodos %}
-							<div class="col-md-6">
-								<table class="table table-striped table-bordered table-hover">
-									<thead>
-										<tr>
-											<th>Ord.</th>
-											<th>{{ periodo.0.type|title }}</th>
-											<th>Registros</th>
-										</tr>
-									</thead>
-									{% for item in periodo|dictsortreversed:"num" %}
-									<tr>
-										<td>{{ forloop.counter }}</td>
-									{% if item.type == 'Dia da semana' %}
-										<td>{{ item.field|date:"l" }}</td>
-									{% else %}
-										<td>{{ item.field }}</td>
-									{% endif %}
-										<td>{{ item.num }}</td>
-									</tr>
-									{% endfor %}
-								</table>
-							</div>
-							{% endfor %}
-						</div>
-						{% endfor %} {# periodos #}
-					{% endfor %} {# basico #}
-<div id='section-graphs'> 
-					{% for tag, periodos in axis.items %}
-						{% if tag != 'pie' %}
-						<div class="col-md-12">
-							<div id="{{ periodos.0.id }}" style="width:100%; height:400px;"></div>
-						</div>
-						{% for periodo in periodos %}
-						<script>
-						$(function() {
-							CONTAINER = document.getElementById('{{ periodo.id }}');
-							data = [
-								{
-									type: 'bar',
-									{% autoescape off %}
-									x: {{ periodo.x }},
-									y: {{ periodo.y }},
-									{% endautoescape %}
-									marker: { color: '{{ periodo.color }}' },
-									name: '{{ periodo.name }}'
-								}
-							]
-							layout = {
-								xaxis: { title: '{{ tag|capfirst }}' },
-								yaxis: { title: 'Registros'},
-							}
-							Plotly.plot(CONTAINER, data, layout);
-						});
-						</script>
-						{% endfor %}
-						{% endif %}
-					{% endfor %} {# axis.items #}
-
-					{% for periodo in axis.pie %}
-						<div class="col-md-6">
-							<div id="{{ periodo.id }}" style="width:100%; height:400px;"></div>
-						</div>
-						<script>
-						$(function() {
-							CONTAINER = document.getElementById('{{ periodo.id }}');
-							data = [
-								{
-									type: 'pie',
-									{% autoescape off %}
-									labels: {{ periodo.labels }},
-									values: {{ periodo.values }},
-									{% endautoescape %}
-								}
-							]
-							layout = {
-								xaxis: { title: '{{ tag|capfirst }}' },
-								yaxis: { title: 'Registros'},
-							}
-							Plotly.plot(CONTAINER, data, layout);
-						});
-						</script>
-					{% endfor %} {# axis.pie #}
-</div> <!-- #section-graphs -->
-
-				<h3>Variação de registros por natureza</h3>
+{% if a.total and b.total %}
+<div id='results'>
+	<div class="row">
+		<div class="col-md-10">
+			<div class="row">
+				<div class="col-md-6">
+					<h2 class="header">Período A<br />
+						{{a.start|date:"d M Y" }} a {{a.end|date:"d M Y" }}
+					</h2>
+				</div>
+				<div class="col-md-6">
+					<h2 class="header">Período B<br />
+						{{b.start|date:"d M Y" }} a {{b.end|date:"d M Y" }}
+					</h2>
+				</div>
+			</div>
+		
+		{% if basico %}	
+			<div id="section-total">
 				<div class="row">
 					<div class="col-md-12">
-<div id="section-variacao">
+						<h3>Total de ocorrências registradas</h3>
+						<table class="table">
+							<tr>
+								<th>Período A</th>
+								<th>Período B</th>
+								<th>Variação</th>
+							</tr>
+							<tr>
+								<td>{{ a.total }}</td>
+								<td>{{ b.total }}</td>
+								{% if a.total < b.total %}
+								<td class="bg-danger">
+									<span class="glyphicon glyphicon-arrow-up"></span> {{ variation|floatformat }}%
+								</td>
+								{% elif a.total > b.total %}
+								<td class="bg-success">
+									<span class="glyphicon glyphicon-arrow-down"></span> {{ variation|floatformat }}%
+								</td>
+								{% else %}
+								<td>Sem alteração.</td>
+								{% endif %}
+							</tr>
+						</table>
+
+					</div>
+				</div>
+			</div> <!-- #section-total -->
+
+			{% include "analise_criminal/periods-two-columns.html" with context_obj=basico %}
+
+			<div id='section-graphs'> 
+				{% include "analise_criminal/graphs-single-column.html" with context_obj=axis %}
+			</div> <!-- #section-graphs -->
+
+			<h3>Variação de registros por natureza</h3>
+			<div class="row">
+				<div class="col-md-12">
+					<div id="section-variacao">
 						<table class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
@@ -250,163 +167,68 @@
 							</tr>
 							{% endfor %}
 						</table>
-</div> <!-- #section-variacao -->
-					</div>
+					</div> <!-- #section-variacao -->
 				</div>
-	
+			</div>
 		{% endif %} {# basico #}
 
 		{% if detail %}
-<div id="section-detalhe"></div>
+			<div id="section-detalhe"></div>
 			<h2 class="header">Detalhamento por bairro: {{ bairro_detail|title }}</h2>
-			{% for row in detail %}
-				{% for descricao, periodos in row.items %}
-				<h3>{{ descricao }}</h3>
-				<div class="row">
-					{% for periodo in periodos %}
-					<div class="col-md-6">
-						<table class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<th>Ord.</th>
-									<th>{{ periodo.0.type|title }}</th>
-									<th>Registros</th>
-								</tr>
-							</thead>
-							{% for item in periodo|dictsortreversed:"num" %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-							{% if item.type == 'Dia da semana' %}
-								<td>{{ item.field|date:"l" }}</td>
-							{% else %}
-								<td>{{ item.field }}</td>
-							{% endif %}
-								<td>{{ item.num }}</td>
-							</tr>
-							{% endfor %}
-						</table>
-					</div>
-					{% endfor %}
-				</div>
-				{% endfor %}
-			{% endfor %}
+			{% include "analise_criminal/periods-two-columns.html" with context_obj=detail %}
 		{% endif %} {# detail #}
 
 		{% if filtro %}
 			{% for natureza, rows in filtro.items %}
-<div id="section-{{ natureza|slice:':5' }}">
-			<h2 class="header">{{ natureza }}</h2>
-			{% for row in rows %}
-			{% for descricao, periodos in row.items %}
-			<h3>{{ descricao }}</h3>
-			<div class="row">
-				{% for periodo in periodos %}
-				<div class="col-md-6">
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th>Ord.</th>
-								<th>{{ periodo.0.type|capfirst }}</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for item in periodo|dictsortreversed:"num" %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							{% if item.type == 'Dia da semana' %}
-								<td>{{ item.field|date:"l" }}</td>
-							{% else %}
-								<td>{{ item.field }}</td>
-							{% endif %}
-							<td>{{ item.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-				</div>
-				{% endfor %} {# periodo #}
-			</div>
-			{% endfor %}  {# descricao, periodos #}
-			{% endfor %} {# row in rows #}
-</div> <!-- #section-filtro -->
+			<div id="section-{{ natureza|slugify }}">
+				<h2 class="header">{{ natureza }}</h2>
+				{% include "analise_criminal/periods-two-columns.html" with context_obj=rows %}
+			</div> <!-- #section-filtro -->
 			{% endfor %} {# natureza, rows #}
 		{% endif %} {# filtro #}
 
-	{% if detalhamento %}
-		{% for tag, instances in detalhamento.items %}
-<div id="section-{{ tag|slugify }}"></div> <!-- scrollspy -->
+		{% if detalhamento %}
+			{% for tag, instances in detalhamento.items %}
+			<div id="section-{{ tag|slugify }}"></div> <!-- scrollspy -->
 			{% for instance, rows in instances.items %}
-<div id="section-{{ instance|slugify }}">
-			<h2 class="header">{{ instance|capfirst }}</h2>
-			{% for row in rows %}
-			{% for descricao, periodos in row.items %}
-			<h3>{{ descricao|capfirst }}</h3>
-			<div class="row">
-				{% for periodo in periodos %}
-				<div class="col-md-6">
-					<table class="table table-striped table-bordered table-hover">
-						<thead>
-							<tr>
-								<th>Ord.</th>
-								<th>{{ periodo.0.type|capfirst }}</th>
-								<th>Registros</th>
-							</tr>
-						</thead>
-						{% for item in periodo|dictsortreversed:"num" %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							{% if item.type == 'Dia da semana' %}
-								<td>{{ item.field|date:"l" }}</td>
-							{% else %}
-								<td>{{ item.field }}</td>
-							{% endif %}
-							<td>{{ item.num }}</td>
-						</tr>
-						{% endfor %}
-					</table>
-				</div>
-				{% endfor %}
+			<div id="section-{{ instance|slugify }}">
+				<h2 class="header">{{ instance|capfirst }}</h2>
+				{% include "analise_criminal/periods-two-columns.html" with context_obj=rows %}
 			</div>
-			{% endfor %} {# descricao, periodos #}
-			{% endfor %} {# row in rows #}
-</div>
-			{% endfor %} {# instance, rows #}
-		{% endfor %} {# tag, instances #}
-	{% endif %} {# detalhamento #}
-
-
-					</div>
-					<div class="col-md-2" id="myScrollspy">
-						<ul class="nav nav-tabs nav-stacked" data-spy="affix" data-offset-top="300">
-						{% if basico %}	
-							<li class="active"><a href="#section-total">Total</a></li>
-							<li><a href="#section-graphs">Gráficos</a></li>
-							<li><a href="#section-variacao">Total: Variação</a></li>
-						{% endif %}
-						{% if detail %}
-							<li><a href="#section-detalhe">Detalhamento</a></li>
-						{% endif %}
-						{% if filtro %}
-							{% for natureza in filtro.keys %}
-							<li><a href="#section-{{ natureza|slice:':5' }}">{{ natureza }}
-							{% endfor %}
-						{% endif %}
-					{% if detalhamento %}
-						{% for tag, instances in detalhamento.items %}
-							<li><a href="#section-{{ tag|slugify }}">{{ tag|capfirst }}</a></li>
-							<ol>
-							{% for instance, rows in instances.items %}
-								<li><a href="#section-{{ instance|slugify }}">{{ instance|capfirst }}</a></li>
-							{% endfor %}
-							</ol>
-						{% endfor %}
-					{% endif %}
-						</ul>
-					</div>
-				</div>
-			</div><!-- #results -->
-			{% endif %} {% comment %} total.a and total.b {% endcomment %}
+			{% endfor %}
+			{% endfor %}
+		{% endif %} {# detalhamento #}
+		</div>
+		
+		<div class="col-md-2" id="myScrollspy">
+			<ul class="nav nav-tabs nav-stacked" data-spy="affix" data-offset-top="300">
+			{% if basico %}	
+				<li class="active"><a href="#section-total">Total</a></li>
+				<li><a href="#section-graphs">Gráficos</a></li>
+				<li><a href="#section-variacao">Total: Variação</a></li>
+			{% endif %}
+			{% if detail %}
+				<li><a href="#section-detalhe">Detalhamento</a></li>
+			{% endif %}
+			{% if filtro %}
+				{% for natureza in filtro.keys %}
+				<li><a href="#section-{{ natureza|slugify }}">{{ natureza }}
+				{% endfor %}
+			{% endif %}
+			{% if detalhamento %}
+				{% for tag, instances in detalhamento.items %}
+				<li><a href="#section-{{ tag|slugify }}">{{ tag|capfirst }}</a></li>
+				<ol>
+				{% for instance, rows in instances.items %}
+					<li><a href="#section-{{ instance|slugify }}">{{ instance|capfirst }}</a></li>
+				{% endfor %}
+				</ol>
+				{% endfor %}
+			{% endif %}
+			</ul>
 		</div>
 	</div>
-</div>
+</div><!-- #results -->
+{% endif %} {% comment %} total.a and total.b {% endcomment %}
 
 {% endblock %}

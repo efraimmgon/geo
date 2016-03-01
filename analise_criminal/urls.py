@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from analise_criminal import views
 
+# root: /analise_criminal/
 urlpatterns = [
 	url(r'^$', views.index, name='index'),
 	url(r'^mapa/$', views.map, name='map'),

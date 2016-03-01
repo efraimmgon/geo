@@ -22,15 +22,12 @@
 		{% csrf_token %}
 		<div id="id_feedback">Nada ainda</div>
 		<input id="submitButton" type="submit" name="submit" value="Update" />
-		<input id="id_start" type="hidden" name="start" value="0" />
-		<input id="id_stop" type="hidden" name="stop" value="0" />
-		<input id="id_pks" type="hidden" name="pks" value='' />
 	</form>
 
 	<div id="id_response_data"></div>
 </div>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8" type='text/javascript'></script>
-<script src="{% static 'js/setup_lat_lng.js' %}"></script>
+<script src="{% static 'js/setup-lat-lng.js' %}"></script>
 
 {% endblock %}

@@ -13,9 +13,45 @@
 
 <div id='test'></div>
 
+
 <script>
 $(function() {
+	$id_test = $('#test');
+	var count = 0;
+	
+	$.ajax({
+		url: '/setup/ajaxTest/'
+	})
+	.fail({function(jqXHR, textStatus, errorThrown) {
+		alert("Request failed: "+textStatus+', '+errorThrown);
+	}})
+	.done(function(json) {
+		process_json(json);
+	});
 
+	function process_json(json) {
+		if (count == json.length) {
+			alert('DONE');
+			return;
+		}
+		var id = json[count].pk;
+		var natureza = json[count].fields.natureza;
+		var bairro = json[count].fields.bairro;
+		var via = json[count].fields.via;
+		var numero = json[count].fields.numero;
+		if (via) 	via 	= via + ', ';			
+		else 	 	via 	= '';
+		if (numero) numero 	= numero + ', ';
+		else 		numero 	= '';
+		if (bairro) bairro 	= bairro + ', ';
+		else 		bairro 	= ''; 
+		var addrs = via + numero + bairro;
+
+		$id_test.append('<p>'+addrs+'</p>');
+
+		count++;
+		process_json(json);
+	}
 });
 </script>
 

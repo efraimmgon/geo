@@ -17,6 +17,7 @@ monthnames = {
 	12: 'Dezembro'
 }
 
+## python's weekdays, as int, translated to string
 weekdays = {
 	0: 'Segunda-feira',
 	1: 'Terça-feira',
@@ -27,6 +28,7 @@ weekdays = {
 	6: 'Domingo'
 }
 
+## django's weekdays, as int, translated to string
 weekdays_django = {
 	1: 'Domingo',
 	2: 'Segunda-feira',

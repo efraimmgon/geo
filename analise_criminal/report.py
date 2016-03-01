@@ -11,36 +11,42 @@ from collections import OrderedDict
 from setup_app.models import Ocorrencia
 from .collections import monthnames, weekdays, weekdays_django, Response
 
+NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio doloso', 
+	'homicídio culposo', 'tráfico ilícito de drogas')
+FURTO, ROUBO, USO, HOM_DOL, HOM_CUL, TRAFICO = [normalize('NFKD', nat) 
+	for nat in NATS]
+NATUREZAS = (FURTO, ROUBO, USO, HOM_DOL, HOM_CUL, TRAFICO)
 
 def process_report_arguments(form_report, form_filter):
 	"""
 	Uses user's selections to decide what analysis to process,
 	and what data to present.
 	"""
-	context = {}
+	## context is composed of the following keys:
+	# forms; dates; total; axis; basico; comparison; filtro; bairro; detalhaento
 
-	context['form_report'] = form_report
-	context['form_filter'] = form_filter
+	context = {}
+	context['forms'] = {'report': form_report, 'filter': form_filter}
 
 	data_inicial_a = form_report.cleaned_data['data_inicial_a']
-	data_final_a = form_report.cleaned_data['data_final_a']
+	data_final_a   = form_report.cleaned_data['data_final_a']
 	data_inicial_b = form_report.cleaned_data['data_inicial_b']
-	data_final_b = form_report.cleaned_data['data_final_b']
+	data_final_b   = form_report.cleaned_data['data_final_b']
 
-	context['data'] = {
-		'a': [data_inicial_a, data_final_a],
-		'b': [data_inicial_b, data_final_b],
+	o1 = Ocorrencia.objects.filter(data__gte=data_inicial_a, 
+		data__lte=data_final_a)
+	o2 = Ocorrencia.objects.filter(data__gte=data_inicial_b, 
+		data__lte=data_final_b)
+
+	context['a'] = {
+		'start': data_inicial_a,
+		'end': data_final_a,
+		'total': o1.count()
 	}
-
-	o1 = Ocorrencia.objects.filter(
-		data__gte=data_inicial_a, data__lte=data_final_a
-	)
-	o2 = Ocorrencia.objects.filter(
-		data__gte=data_inicial_b, data__lte=data_final_b
-	)
-
-	context['total'] = {
-		'a': o1.count(), 'b': o2.count()
+	context['b'] = {
+		'start': data_inicial_b,
+		'end': data_final_b,
+		'total': o2.count()
 	}
 
 	# GENERAL ANALYSIS + GRAPHS
@@ -106,7 +112,7 @@ def process_report_arguments(form_report, form_filter):
 		percent_trafico = get_percentage(
 			trafico1['num'], trafico2['num'])
 
-		context['total']['variation'] = percent_total
+		context['variation'] = percent_total
 
 		context['basico'] = [
 			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
@@ -204,7 +210,6 @@ def process_report_arguments(form_report, form_filter):
 						for key in current[j].keys():
 							current[j][key] += [values[j]]
 			context['detalhamento']['horários'] = time_detail
-				
 
 	return context
 
@@ -213,9 +218,9 @@ def process_args(queryset, compare=False):
 	"""Process arguments for a given queryset"""
 	lst = list(queryset)
 
-	naturezas = get_value(queryset, 'natureza', limit=5)
-	bairros = get_value(queryset.exclude(bairro=None), 'bairro', limit=5)
-	vias = get_value(queryset.exclude(via=None), 'via', limit=5)
+	naturezas = get_values(queryset, field1='natureza', limit=5)
+	bairros = get_values(queryset.exclude(bairro=None), field1='bairro', limit=5)
+	vias = get_values(queryset.exclude(via=None), field1='via', limit=5)
 	locais = get_values(
 		queryset.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
 	)
@@ -225,17 +230,7 @@ def process_args(queryset, compare=False):
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
 	if compare:
-		furto = get_comparison_data(queryset, 'Furto')
-		roubo = get_comparison_data(queryset, 'Roubo')
-		uso = get_comparison_data(
-			queryset, normalize('NFKD', 'Uso Ilícito de Drogas'))
-		homicidio_d = get_comparison_data(
-			queryset, normalize('NFKD', 'Homicídio Doloso'))
-		homicidio_c = get_comparison_data(
-			queryset, normalize('NFKD', 'Homicídio Culposo'))
-		trafico = get_comparison_data(
-			queryset, normalize('NFKD', 'Tráfico Ilícito de Drogas'))
-		comparison = [furto, roubo, uso, homicidio_d, homicidio_c, trafico]
+		comparison = (get_comparison_data(queryset, nat) for nat in NATUREZAS)
 
 	mad, mat, vesp, noturno = generate_horarios(get_time(lst))
 	horarios = [mad, mat, vesp, noturno]
@@ -271,19 +266,16 @@ def get_percentage(a, b):
 	else:
 		return calculate_variation(b, a)
 
-def get_value(queryset, field, limit):
+def get_values(queryset, field1, field2=None, limit=5):
 	"""Takes a queryset, filtering it according to the field and
 	limit args, returning a namedtuple, as of prepare_data()"""
-	data = queryset.values(field).annotate(num=Count('id'))
-	data = data.order_by('-num')[:limit]
-	data = prepare_data(data, field)
-	return data
-
-def get_values(queryset, field1, field2, limit):
-	data = queryset.values(field1, field2).annotate(num=Count('id'))
-	data = data.order_by('-num')[:limit]
-	data = prepare_double_field_data(data, field1, field2)
-	return data	
+	if field1 and field2:
+		data = queryset.values(field1, field2).annotate(num=Count('id'))
+		return prepare_double_field_data(data.order_by('-num')[:limit], 
+			field1, field2)
+	else:
+		counted = queryset.values(field1).annotate(num=Count('id'))
+		return prepare_data(counted.order_by('-num')[:limit], field1)
 
 def get_comparison_data(queryset, param):
 	try:

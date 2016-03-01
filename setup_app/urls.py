@@ -2,6 +2,7 @@ from django.conf.urls import url, patterns
 from setup_app import views
 
 urlpatterns = [
+	# index test page
 	url(r'^$', views.index, name='index'),
 	# ajax request from index
 	url(r'^ajaxTest/$', views.ajaxTest, name='ajaxTest'),

@@ -12,7 +12,6 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 			'latitude', 'longitude']}),
 		(None, {'fields': ['natureza']}),
 	]
-
 	list_display = ('natureza', 'bairro', 'via', 'data')
 	list_filter = ['natureza', 'data']
 	search_fields = ['bairro', 'via', 'latitude']
