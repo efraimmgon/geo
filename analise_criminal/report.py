@@ -51,17 +51,17 @@ def process_report_arguments(form_report, form_filter):
 
 	# GENERAL ANALYSIS + GRAPHS
 	if form_report.cleaned_data['opts'] == 'Sim':
-		# A
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
-		furto1, roubo1, uso1, homicidio_d1, homicidio_c1, trafico1 = comparison1
-		months1, xaxis1, yaxis1 = make_graphs(months=get_months(o1))
+		months1 = get_months(o1)
+		xaxis1 = [monthnames[m.field.month] for m in months1]
+		yaxis1 = [m.num for m in months1]
 
-		# B
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
-		furto2, roubo2, uso2, homicidio_d2, homicidio_c2, trafico2 = comparison2
-		months2, xaxis2, yaxis2 = make_graphs(months=get_months(o2))
+		months2 = get_months(o2)
+		xaxis2 = [monthnames[m.field.month] for m in months2]
+		yaxis2 = [m.num for m in months2]
 
 		# GRAPHS
 		context['axis'] = OrderedDict()
@@ -94,25 +94,22 @@ def process_report_arguments(form_report, form_filter):
 		for queryset, id_ in zip([o1, o2], ['pie_a', 'pie_b']):
 			labels, values = return_naturezas_axis(
 				queryset=queryset,
-				filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
+				filters=['roubo', 'furto', normalize('NFKD', 'homicídio'),
 				normalize('NFKD', 'tráfico ilícito de drogas'), 'outros']
 			)
 			context['axis']['pie'].append(
 				{'labels': labels, 'values': values, 'id': id_})
 
 		# Percentage fluctuation from A to B
-		percent_total = get_percentage(o1.count(), o2.count())
-		percent_furto = get_percentage(furto1['num'], furto2['num'])
-		percent_roubo = get_percentage(roubo1['num'], roubo2['num'])
-		percent_uso = get_percentage(uso1['num'], uso2['num'])
-		percent_homicidio_d = get_percentage(
-			homicidio_d1['num'], homicidio_d2['num'])
-		percent_homicidio_c = get_percentage(
-			homicidio_c1['num'], homicidio_c2['num'])
-		percent_trafico = get_percentage(
-			trafico1['num'], trafico2['num'])
+		context['comparison'] = []
+		for a, b in zip(
+			(get_comparison_data(queryset, nat) for nat in NATUREZAS),
+			(get_comparison_data(queryset, nat) for nat in NATUREZAS)):
+			context['comparison'].append({
+				'a': a, 'b': b, 'variation': get_percentage(a['num'], b['num'])
+			})
 
-		context['variation'] = percent_total
+		context['variation'] = get_percentage(o1.count(), o2.count())
 
 		context['basico'] = [
 			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
@@ -121,15 +118,6 @@ def process_report_arguments(form_report, form_filter):
 			{'5 locais com maior registro': [locais1, locais2]},
 			{'Registros por dia da semana': [weekdays1, weekdays2]},
 			{'Registros por horário': [horarios1, horarios2]},
-		]
-
-		context['comparison'] = [
-			{'a': furto1, 'b': furto2, 'variation': percent_furto},
-			{'a': roubo1, 'b': roubo2, 'variation': percent_roubo},
-			{'a': homicidio_d1, 'b': homicidio_d2, 'variation': percent_homicidio_d},
-			{'a': homicidio_c1, 'b': homicidio_c2, 'variation': percent_homicidio_c},
-			{'a': trafico1, 'b': trafico2, 'variation': percent_trafico},
-			{'a': uso1, 'b': uso2, 'variation': percent_uso},
 		]
 
 	if form_filter.cleaned_data['naturezas']:
@@ -215,15 +203,16 @@ def process_report_arguments(form_report, form_filter):
 
 
 def process_args(queryset, compare=False):
-	"""Process arguments for a given queryset"""
-	lst = list(queryset)
-
+	"""
+	Takes a queryset and an optional compare arg; returns generated data.
+	Generates data with the given queryset; if compare is true, also
+	generates comparison data.
+	"""
 	naturezas = get_values(queryset, field1='natureza', limit=5)
 	bairros = get_values(queryset.exclude(bairro=None), field1='bairro', limit=5)
 	vias = get_values(queryset.exclude(via=None), field1='via', limit=5)
 	locais = get_values(
-		queryset.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5
-	)
+		queryset.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5)
 	weekdays = get_weekdays(queryset)
 
 	# data fluctuation of a in relation to b, and vice-versa
@@ -233,11 +222,18 @@ def process_args(queryset, compare=False):
 
 	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
 	periods = ( Response(tag, len(horario), 'Horário') for horario, tag in zip(
-		get_time(list(queryset)), tags) )
+		get_time(list(queryset)), TAGS) )
 
 	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
 
-def make_graphs(months=False):
+def extract_fields(queryset, lst):
+	(naturezas, bairros, vias, locais, weekdays), (furto, roubo, uso, hom_dol,
+		hom_cul, trafico), periods = lst
+	months = get_months(queryset)
+	
+
+
+def make_graphs(months):
 	if months:
 		xaxis, yaxis = get_month_axis(months)
 		return months, xaxis, yaxis
@@ -249,32 +245,31 @@ def calculate_variation(a, b):
 	a < b: percent. of Increase, if a > b: percent. of decrease
 	"""
 	if (b == 0):
-		percentage = 0
-	else:
-		percentage = (abs(a - b) / b) * 100
-	return percentage
+		return 0
+	return (abs(a - b) / b) * 100
 
 
 def get_percentage(a, b):
-	"""Gets percentage using calculate_variation(), taking into
-	account which args should go where"""
-	a = int(a)
-	b = int(b)
+	"""
+	Gets percentage using calculate_variation(), taking into
+	account which args should go where.
+	"""
+	a, b = int(a), int(b)
 	if a < b:
 		return calculate_variation(a, b)
-	else:
-		return calculate_variation(b, a)
+	return calculate_variation(b, a)
 
 def get_values(queryset, field1, field2=None, limit=5):
-	"""Takes a queryset, filtering it according to the field and
-	limit args, returning a namedtuple, as of prepare_data()"""
+	"""
+	Takes a queryset, filtering it according to the field and
+	limit args, returning a namedtuple, as of prepare_data().
+	"""
 	if field1 and field2:
 		data = queryset.values(field1, field2).annotate(num=Count('id'))
 		return prepare_double_field_data(data.order_by('-num')[:limit], 
 			field1, field2)
-	else:
-		counted = queryset.values(field1).annotate(num=Count('id'))
-		return prepare_data(counted.order_by('-num')[:limit], field1)
+	counted = queryset.values(field1).annotate(num=Count('id'))
+	return prepare_data(counted.order_by('-num')[:limit], field1)
 
 def get_comparison_data(queryset, param):
 	try:
@@ -333,15 +328,17 @@ def get_time(querylst):
 	return madrugada, matutino, vespertino, noturno
 
 def get_weekdays(queryset):
-	"""Returns a list, with the number of records by weekday"""
+	"""
+	Takes a queryset; counts records by weekday and returns them.
+	"""
 	weekdays = []
 	for i in range(1, 8):
-		d = queryset.filter(data__week_day=i)
+		w = queryset.filter(data__week_day=i)
 		try:
-			d = Response(d[0].data, d.count(), 'Dia da semana')
+			w = Response(w[0].data, w.count(), 'Dia da semana')
 		except IndexError:
 			continue
-		weekdays.append(d)
+		weekdays.append(w)
 	return weekdays
 
 def get_months(queryset):
@@ -357,9 +354,9 @@ def get_months(queryset):
 
 def get_month_axis(months):
 	xaxis, yaxis = [], []
-	for month in months:
-		xaxis.append(monthnames[month.field.month])
-		yaxis.append(month.num)
+	for m in months:
+		xaxis.append(monthnames[m.field.month])
+		yaxis.append(m.num)
 	return xaxis, yaxis
 
 def get_weekday_axis(wds):

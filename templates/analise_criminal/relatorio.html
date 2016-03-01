@@ -127,6 +127,8 @@
 				</div>
 			</div> <!-- #section-total -->
 
+			{# naturezas, bairros, vias, locais, weekdays #}
+
 			{% include "analise_criminal/periods-two-columns.html" with context_obj=basico %}
 
 			<div id='section-graphs'> 
@@ -147,19 +149,19 @@
 									<th>Variação</th>
 								</tr>
 							</thead>
-							{% for natureza in comparison %}
+							{% for row in comparison %}
 							<tr>
 								<td>{{ forloop.counter }}</td>
-								<td>{{ natureza.a.natureza }}</td>
-								<td>{{ natureza.a.num }}</td>
-								<td>{{ natureza.b.num }}</td>
-								{% if natureza.a.num < natureza.b.num %}
+								<td>{{ row.a.natureza }}</td>
+								<td>{{ row.a.num }}</td>
+								<td>{{ row.b.num }}</td>
+								{% if row.a.num < row.b.num %}
 								<td class="bg-danger">
-									<span class="glyphicon glyphicon-arrow-up"></span> {{ natureza.variation|floatformat }}%
+									<span class="glyphicon glyphicon-arrow-up"></span> {{ row.variation|floatformat }}%
 								</td>
-								{% elif natureza.a.num > natureza.b.num %}
+								{% elif row.a.num > row.b.num %}
 								<td class="bg-success">
-									<span class="glyphicon glyphicon-arrow-down"></span> {{ natureza.variation|floatformat }}%
+									<span class="glyphicon glyphicon-arrow-down"></span> {{ row.variation|floatformat }}%
 								</td>
 								{% else %}
 								<td>Sem alteração.</td>
