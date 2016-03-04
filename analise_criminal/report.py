@@ -11,11 +11,10 @@ from collections import OrderedDict
 from setup_app.models import Ocorrencia
 from .collections import monthnames, weekdays, weekdays_django, Response
 
-NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio doloso', 
-	'homicídio culposo', 'tráfico ilícito de drogas')
-FURTO, ROUBO, USO, HOM_DOL, HOM_CUL, TRAFICO = [normalize('NFKD', nat) 
-	for nat in NATS]
-NATUREZAS = (FURTO, ROUBO, USO, HOM_DOL, HOM_CUL, TRAFICO)
+NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio', 
+	'tráfico ilícito de drogas')
+FURTO, ROUBO, USO, HOM, TRAFICO = [normalize('NFKD', nat) for nat in NATS]
+NATUREZAS = (FURTO, ROUBO, USO, HOM, TRAFICO)
 
 def process_report_arguments(form_report, form_filter):
 	"""
@@ -24,7 +23,6 @@ def process_report_arguments(form_report, form_filter):
 	"""
 	## context is composed of the following keys:
 	# forms; dates; total; axis; basico; comparison; filtro; bairro; detalhaento
-
 	context = {}
 	context['forms'] = {'report': form_report, 'filter': form_filter}
 
@@ -72,7 +70,6 @@ def process_report_arguments(form_report, form_filter):
 				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_a',
 				'color': 'rgb(255,255,0)', 'name': 'Período B'}
 			]
-
 		append_axis(
 			tags=['naturezas', 'bairros', 'vias', 'horários'],
 			data_lst=[(naturezas1, naturezas2), (bairros1, bairros2),
@@ -92,23 +89,18 @@ def process_report_arguments(form_report, form_filter):
 
 		context['axis']['pie'] = []
 		for queryset, id_ in zip([o1, o2], ['pie_a', 'pie_b']):
-			labels, values = return_naturezas_axis(
-				queryset=queryset,
-				filters=['roubo', 'furto', normalize('NFKD', 'homicídio'),
-				normalize('NFKD', 'tráfico ilícito de drogas'), 'outros']
-			)
+			labels, values = return_naturezas_axis(queryset)
 			context['axis']['pie'].append(
 				{'labels': labels, 'values': values, 'id': id_})
 
 		# Percentage fluctuation from A to B
 		context['comparison'] = []
 		for a, b in zip(
-			(get_comparison_data(queryset, nat) for nat in NATUREZAS),
-			(get_comparison_data(queryset, nat) for nat in NATUREZAS)):
+			(get_comparison_data(o1, nat) for nat in NATUREZAS),
+			(get_comparison_data(o2, nat) for nat in NATUREZAS)):
 			context['comparison'].append({
 				'a': a, 'b': b, 'variation': get_percentage(a['num'], b['num'])
 			})
-
 		context['variation'] = get_percentage(o1.count(), o2.count())
 
 		context['basico'] = [
@@ -208,11 +200,11 @@ def process_args(queryset, compare=False):
 	Generates data with the given queryset; if compare is true, also
 	generates comparison data.
 	"""
-	naturezas = get_values(queryset, field1='natureza', limit=5)
-	bairros = get_values(queryset.exclude(bairro=None), field1='bairro', limit=5)
-	vias = get_values(queryset.exclude(via=None), field1='via', limit=5)
+	naturezas = get_values(queryset, ['natureza'], limit=5)
+	bairros = get_values(queryset.exclude(bairro=None), ['bairro'], limit=5)
+	vias = get_values(queryset.exclude(via=None), ['via'], limit=5)
 	locais = get_values(
-		queryset.exclude(bairro=None).exclude(via=None), 'bairro', 'via', 5)
+		queryset.exclude(bairro=None).exclude(via=None), ['bairro', 'via'], 5)
 	weekdays = get_weekdays(queryset)
 
 	# data fluctuation of a in relation to b, and vice-versa
@@ -221,17 +213,11 @@ def process_args(queryset, compare=False):
 		comparison = (get_comparison_data(queryset, nat) for nat in NATUREZAS)
 
 	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	periods = ( Response(tag, len(horario), 'Horário') for horario, tag in zip(
-		get_time(list(queryset)), TAGS) )
+	periods = [Response(field=tag, num=len(horario), type='Horário') for 
+			horario, tag in zip(get_time(list(queryset)), TAGS)]
 
 	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
-
-def extract_fields(queryset, lst):
-	(naturezas, bairros, vias, locais, weekdays), (furto, roubo, uso, hom_dol,
-		hom_cul, trafico), periods = lst
-	months = get_months(queryset)
 	
-
 
 def make_graphs(months):
 	if months:
@@ -259,25 +245,26 @@ def get_percentage(a, b):
 		return calculate_variation(a, b)
 	return calculate_variation(b, a)
 
-def get_values(queryset, field1, field2=None, limit=5):
+def get_values(queryset, fields, limit=5):
 	"""
 	Takes a queryset, filtering it according to the field and
 	limit args, returning a namedtuple, as of prepare_data().
 	"""
-	if field1 and field2:
-		data = queryset.values(field1, field2).annotate(num=Count('id'))
+	if len(fields) == 2:
+		data = queryset.values(fields[0], fields[1]).annotate(num=Count('id'))
 		return prepare_double_field_data(data.order_by('-num')[:limit], 
-			field1, field2)
-	counted = queryset.values(field1).annotate(num=Count('id'))
-	return prepare_data(counted.order_by('-num')[:limit], field1)
+			fields[0], fields[1])
+	counted = queryset.values(fields[0]).annotate(num=Count('id'))
+	return prepare_data(counted.order_by('-num')[:limit], fields[0])
 
 def get_comparison_data(queryset, param):
 	try:
-		data = queryset.filter(natureza__contains=param).values(
-			'natureza').annotate(num=Count('id'))[0]
+		data = queryset.filter(natureza__icontains=param).values(
+			'natureza').annotate(num=Count('id'))
+		acc = [row['num'] for row in data]
+		return {'natureza': param, 'num': sum(acc)}
 	except IndexError:
-		data = {'natureza': param, 'num': 0}
-	return data
+		return {'natureza': param, 'num': 0}
 
 def get_natureza(querylst):
 	"""Return a list of data sorted by natureza"""
@@ -295,18 +282,12 @@ def get_natureza(querylst):
 
 def prepare_data(querylst, field):
 	"""Wraps the data for iteration on the template"""
-	data = []
-	for row in querylst:
-		data.append(Response(row[field], row['num'], field))
-	return data
+	return [Response(field=row[field], num=row['num'], type=field) for row in querylst]
 
 def prepare_double_field_data(querylst, field1, field2):
 	"""Wraps the data for iteration on the template"""
-	data = []
-	for row in querylst:
-		data.append(Response(row[field1] + ', ' + row[field2], row['num'],
-			field1 + ', ' + field2))
-	return data
+	return [Response(row[field1]+', '+row[field2], row['num'], 
+		row[field1]+', '+row[field2]) for row in querylst]
 
 def get_time(querylst):
 	"""
@@ -329,13 +310,14 @@ def get_time(querylst):
 
 def get_weekdays(queryset):
 	"""
-	Takes a queryset; counts records by weekday and returns them.
+	Takes a queryset; counts records by weekday and returns 
+	them inside a Response namedtuple.
 	"""
 	weekdays = []
 	for i in range(1, 8):
 		w = queryset.filter(data__week_day=i)
 		try:
-			w = Response(w[0].data, w.count(), 'Dia da semana')
+			w = Response(field=w[0].data, num=w.count(), type='Dia da semana')
 		except IndexError:
 			continue
 		weekdays.append(w)
@@ -346,7 +328,7 @@ def get_months(queryset):
 	for i in range(1, 13):
 		m = queryset.filter(data__month=i)
 		try:
-			m = Response(m[0].data, m.count(), 'Mês')
+			m = Response(field=m[0].data, num=m.count(), type='Mês')
 		except IndexError:
 			continue
 		months.append(m)
@@ -360,17 +342,13 @@ def get_month_axis(months):
 	return xaxis, yaxis
 
 def get_weekday_axis(wds):
-	xaxis, yaxis = [], []
-	for wd in wds:
-		xaxis.append(weekdays[wd.field.weekday()][:3])
-		yaxis.append(wd.num)
+	xaxis = [weekdays[wd.field.weekday()][:3] for wd in wds]
+	yaxis = [wd.num for wd in wds]
 	return xaxis, yaxis
 
-def get_axis(namedtpl):
-	xaxis, yaxis = [], []
-	for item in namedtpl:
-		xaxis.append(item.field)
-		yaxis.append(item.num)
+def get_axis(objs):
+	xaxis = [obj.field for obj in objs]
+	yaxis = [obj.num for obj in objs]
 	return xaxis, yaxis
 
 def append_axis(tags, data_lst, names, context):
@@ -392,15 +370,15 @@ def return_months_axis(queryset, filters, context):
 		context['axis'][f] = {'x': xaxis, 'y': yaxis}
 	return context
 
-def return_naturezas_axis(queryset, filters):
+def return_naturezas_axis(queryset):
+	"""
+	Takes a queryset and filters it for each item in NATUREZAS.
+	Returns the natures capitalized, along with a list of their counts.
+	"""
 	labels, values = [], []
-	for f in filters:
-		if f == 'outros':
-			for filter_ in filters:
-				if filter_ != 'outros':
-					qs = queryset.exclude(natureza__icontains=filter_)
-		else:			
-			qs = queryset.filter(natureza__icontains=f)
-		labels.append(f)
+	for nat in NATUREZAS:	
+		qs = queryset.filter(natureza__icontains=nat)
+		labels.append(nat.capitalize())
 		values.append(qs.count())
 	return labels, values
+

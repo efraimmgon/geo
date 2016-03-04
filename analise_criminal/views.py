@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Min, Max
+from django.db.models import Min, Max, Count
 from django.contrib.auth.decorators import login_required
 
 import json
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from unicodedata import normalize
 
 from setup_app.models import Ocorrencia
@@ -12,7 +12,7 @@ from .forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
 	ReportForm, ReportFilterForm,
 )
-from .functions import process_map_arguments
+from .functions import process_map_arguments, make_graph, sort_date, sort_hour
 from .report import (process_report_arguments, get_months, get_month_axis, 
 	return_months_axis, return_naturezas_axis)
 
@@ -31,14 +31,39 @@ def index(request):
 		normalize('NFKD', 'tráfico ilícito de drogas')],
 		context=context
 	)
-	labels, values = return_naturezas_axis(
-		queryset=queryset,
-		filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
-		normalize('NFKD', 'tráfico ilícito de drogas'), 'outros']
-	)
+	labels, values = return_naturezas_axis(queryset)
+
 	context['axis']['pie'] = {'labels': labels, 'values': values}
 	return render(request, 'analise_criminal/index.html', context)
 
+def lab(request):
+	context = {}
+	context['axis'] = OrderedDict()
+	qs_days = Ocorrencia.objects.filter(data__gte='2016-01-01')
+	context['axis']['dias'] = make_graph(fn=sort_date, queryset=qs_days,
+		params=['data'], plot='scatter', title='Registros por Dia')
+
+	qs = Ocorrencia.objects.filter(data__gte='2016-01-01')
+	lst = qs.values('data', 'hora').annotate(num=Count('id')).order_by('data', 'hora')
+
+	lst = qs.values('hora').annotate(num=Count('id')).order_by('hora')
+	container = {}
+	for row in lst:
+		if not row['hora']: continue
+		key = row['hora'].hour
+		val = row['num']
+		if container.get(key):
+			container[key] += val
+		else:
+			container[key] = val
+	horas, occurrences = [], []
+	for key, val in container.items():
+		horas.append(key)
+		occurrences.append(val)
+	context['axis']['horas'] = {'x': horas, 'y': occurrences, 'type': 'bar',
+	'title': 'Ocorrências por Hora'}
+
+	return render(request, 'analise_criminal/lab.html', context)
 
 @login_required
 def map(request):

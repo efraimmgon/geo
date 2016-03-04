@@ -9,4 +9,5 @@ urlpatterns = [
 	url(r'^relatorio/$', views.report, name='report'),
 	url(r'^make_report/$', views.make_report, name='make_report'),
 	url(r'^draggable/$', views.draggable, name='draggable'),
+	url(r'^lab/$', views.lab, name='lab'),
 ]

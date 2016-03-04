@@ -7,9 +7,11 @@ from django.core import serializers
 from datetime import date
 import json
 from unicodedata import normalize
+from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
 from .collections import weekdays
+from .report import get_values
 
 
 def format_data(objs):
@@ -92,3 +94,30 @@ def normalize_strings():
 			obj.via = normalize('NFKD', obj.via)
 		obj.natureza = normalize('NFKD', obj.natureza)
 		obj.save()
+
+def make_graph(fn, queryset, params, plot, title, color='rgb(16,32,77)'):
+	response = get_values(queryset, params, limit=31)
+	field, occurrences = fn(response, params[0])
+	return {'x': field, 'y': occurrences, 'type': plot,
+			'title': title, 'color': color}
+
+def sort_date(response, param):
+	field = [str(row[param]) for row in response]
+	occurrences = [row['num'] for row in response]
+	return field, occurrences
+
+def sort_hour(response, param):
+	container = OrderedDict()
+	for row in response:
+		if not row[param]: continue
+		key = row[param].hour
+		val = row['num']
+		if container.get(key):
+			container[key] += val
+		else:
+			container[key] = val
+	field = [hora for hora in container.keys()]
+	occurrences = [val for val in container.values()]
+	return field, occurrences
+
+

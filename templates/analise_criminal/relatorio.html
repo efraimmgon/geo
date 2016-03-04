@@ -128,7 +128,6 @@
 			</div> <!-- #section-total -->
 
 			{# naturezas, bairros, vias, locais, weekdays #}
-
 			{% include "analise_criminal/periods-two-columns.html" with context_obj=basico %}
 
 			<div id='section-graphs'> 
@@ -152,7 +151,7 @@
 							{% for row in comparison %}
 							<tr>
 								<td>{{ forloop.counter }}</td>
-								<td>{{ row.a.natureza }}</td>
+								<td>{{ row.a.natureza|capfirst }}</td>
 								<td>{{ row.a.num }}</td>
 								<td>{{ row.b.num }}</td>
 								{% if row.a.num < row.b.num %}

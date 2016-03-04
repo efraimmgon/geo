@@ -1,6 +1,10 @@
 from collections import namedtuple
 
-Response = namedtuple('Response', ['field', 'num', 'type'])
+class Response:
+	def __init__(self, field, num, type):
+		self.field = field
+		self.num   = num
+		self.type  = type
 
 monthnames = {
 	1: 'Janeiro',

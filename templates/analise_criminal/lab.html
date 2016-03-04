@@ -2,21 +2,11 @@
 
 {% load staticfiles %}
 
-{% block title %}Análise Criminal{% endblock %}
+{% block title %}Lab{% endblock %}
 
 {% block body %}
 
 <script src="{% static 'js/plotly.min.js' %}"></script>
-
-<h1>Análise Criminal <small>Índice</small></h1>
-
-<h3>Mapa <br /><small><a href="{% url 'analise_criminal:map' %}">
-	Visualização interarativa e dinâmica
-	 de registros criminais</a></small></h3>
-
-<h3>Relatório <br /><small><a href="{% url 'analise_criminal:report' %}">
-		Análise e comparação de registros criminais
-	</a></small></h3>
 
 		{% for key, values in axis.items %}
 			<div id="{{ key|slugify }}" style="width:100%; height:500px;"></div>
@@ -25,14 +15,14 @@
 				TESTER = document.getElementById('{{ key|slugify }}');
 				data = [
 					{
-					{% if key == 'pie' %}
+					{% if values.type == 'pie' %}
 						type: 'pie',
 						{% autoescape off %}
 						labels: {{ values.labels }},
 						values: {{ values.values }},
 						{% endautoescape %}
 					{% else %}
-						type: 'scatter',
+						type: '{{ values.type }}',
 						{% autoescape off %}
 						x: {{ values.x }},
 						y: {{ values.y }},
@@ -43,8 +33,8 @@
 				]
 				layout = {
 					title: '<b>11º BPM - Sinop</b><br />' +
-						'{{ key|capfirst }} - 2015',
-					xaxis: { title: 'Mês' },
+						'{{ key|capfirst }}',
+					xaxis: { title: '{{key|capfirst}}' },
 					yaxis: { title: 'Registros'},
 				}
 
