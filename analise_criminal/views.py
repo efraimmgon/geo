@@ -13,8 +13,8 @@ from .forms import (
 	ReportForm, ReportFilterForm,
 )
 from .functions import process_map_arguments, make_graph, sort_date, sort_hour
-from .report import (process_report_arguments, count_months, get_month_axis, 
-	return_months_axis, return_naturezas_axis)
+from .report import (process_report_arguments, count_months, 
+	nature_per_month_axis, return_naturezas_axis, ROUBO, HOM, TRAFICO)
 
 
 def index(request):
@@ -22,15 +22,11 @@ def index(request):
 	context = {}
 	context['axis'] = OrderedDict()
 	queryset = Ocorrencia.objects.filter(data__year=2015)
-	xaxis, yaxis = get_month_axis(get_months(queryset))
+	xaxis, yaxis = get_axis(count_months(queryset))
 	context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
 
-	context = return_months_axis(
-		queryset=queryset,
-		filters=['roubo', 'furto', normalize('NFKD', 'homicídio'), 
-		normalize('NFKD', 'tráfico ilícito de drogas')],
-		context=context
-	)
+	context = nature_per_month_axis(
+		queryset=queryset, nats=[ROUBO, HOM, TRAFICO])
 	labels, values = return_naturezas_axis(queryset)
 
 	context['axis']['pie'] = {'labels': labels, 'values': values}

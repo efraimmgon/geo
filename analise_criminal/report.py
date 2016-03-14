@@ -61,25 +61,14 @@ def process_report_arguments(form_report, form_filter):
 	if form_report.cleaned_data['opts'] == 'Sim':
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
-		months1 = count_months(o1)
-		xaxis1 = [MONTHNAMES[m.field.month] for m in months1]
-		yaxis1 = [m.num for m in months1]
+		xaxis1, yaxis1 = get_axis(count_months(o1))
 
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
-		months2 = count_months(o2)
-		xaxis2 = [MONTHNAMES[m.field.month] for m in months2]
-		yaxis2 = [m.num for m in months2]
+		xaxis2, yaxis2 = get_axis(count_months(o2))
 
 		# GRAPHS
 		context['axis'] = OrderedDict()
-		if len(months1) > 2 or len(months2) > 2:
-			context['axis']['total'] = [
-				{'x': xaxis1, 'y': yaxis1, 'id': 'id_total_graph_a',
-				'color': 'rgb(255,0,0)', 'name': 'Período A'},
-				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_a',
-				'color': 'rgb(255,255,0)', 'name': 'Período B'}
-			]
 		context['axis'].update( 
 			append_axis(
 				tags=['naturezas', 'bairros', 'vias', 'horários'],
@@ -295,6 +284,9 @@ def prepare_double_field_data(querylst, field1, field2):
 	return [Response(field=row[field1]+', '+row[field2], num=row['num'], 
 		type=row[field1]+', '+row[field2]) for row in querylst]
 
+
+### Count occurrences of specific objects
+
 def get_time(querylst):
 	"""
 	Takes a querylist and use datetime.time to sort it out
@@ -345,16 +337,11 @@ def count_months(queryset):
 	Takes a queryset; counts records by months and returns 
 	them inside a Response namedtuple.
 	"""
-	months = []
-	for i in range(1, 13):
-		m = queryset.filter(data__month=i)
-		try:
-			m = Response(field=m[0].data, num=m.count(), type='Mês')
-		except IndexError:
-			continue
-		months.append(m)
-	return months
-
+	return count_objs(
+		queryset, delimitor=range(1, 13), type="Mês",
+		funcqs=lambda qs, i: qs.filter(data__month=i),
+		funcfield=lambda qs: MONTHNAMES[qs[0].data.month])
+	
 
 ### Ploting functions
 
@@ -368,22 +355,15 @@ def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
 	yaxis = [funcy(obj) for obj in objs]
 	return xaxis, yaxis
 
-def get_month_axis(months):
-	"Uses get_axis with a custom funcx to return the months axis."
-	return get_axis(months, funcx=lambda x: MONTHNAMES[x.field.month])
-
-## not being used anymore
-def get_weekday_axis(wds):
-	"Uses get_axis with a custom funcx to return the weekdays axis."
-	return get_axis(wds, funcx=lambda x: WEEKDAYS[x.field.weekday()][:3])
-
-def return_months_axis(queryset, filters, context):
-	for f in filters:
-		qs = queryset.filter(natureza__icontains=f)
-		months = count_months(qs)
-		xaxis, yaxis = get_month_axis(months)
-		context['axis'][f] = {'x': xaxis, 'y': yaxis}
-	return context
+def nature_per_month_axis(queryset, nats):
+	""
+	context_dct = OrderedDict()
+	for nat in nats:
+		xaxis, yaxis = get_axis(
+						count_months(
+							queryset.filter(natureza__icontains=nat)))
+		context_dct[nat] = {'x': xaxis, 'y': yaxis}
+	return context_dct
 
 def return_naturezas_axis(queryset):
 	"""
