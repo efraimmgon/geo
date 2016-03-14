@@ -61,13 +61,13 @@ def process_report_arguments(form_report, form_filter):
 	if form_report.cleaned_data['opts'] == 'Sim':
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
-		months1 = get_months(o1)
+		months1 = count_months(o1)
 		xaxis1 = [MONTHNAMES[m.field.month] for m in months1]
 		yaxis1 = [m.num for m in months1]
 
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
-		months2 = get_months(o2)
+		months2 = count_months(o2)
 		xaxis2 = [MONTHNAMES[m.field.month] for m in months2]
 		yaxis2 = [m.num for m in months2]
 
@@ -80,16 +80,19 @@ def process_report_arguments(form_report, form_filter):
 				{'x': xaxis2, 'y': yaxis2, 'id': 'id_total_graph_a',
 				'color': 'rgb(255,255,0)', 'name': 'Período B'}
 			]
-		append_axis(
-			tags=['naturezas', 'bairros', 'vias', 'horários'],
-			data_lst=[(naturezas1, naturezas2), (bairros1, bairros2),
-				(vias1, vias2), (horarios1, horarios2)],
-			names=['Período A', 'Período B'],
-			context=context
+		context['axis'].update( 
+			append_axis(
+				tags=['naturezas', 'bairros', 'vias', 'horários'],
+				data_lst=[{'a': naturezas1, 'b': naturezas2}, 
+						  {'a': bairros1, 'b': bairros2},
+						  {'a': vias1, 'b': vias2}, 
+						  {'a': horarios1, 'b': horarios2}],
+				names={'a': 'Período A', 'b': 'Período B'}
+			)
 		)
 
-		wd_xaxis1, wd_yaxis1 = get_weekday_axis(weekdays1)
-		wd_xaxis2, wd_yaxis2 = get_weekday_axis(weekdays2)
+		wd_xaxis1, wd_yaxis1 = get_axis(weekdays1)
+		wd_xaxis2, wd_yaxis2 = get_axis(weekdays2)
 		context['axis']['Dias da semana'] = [
 			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,0,0)', 'name': 'Período A'},
@@ -215,7 +218,7 @@ def process_args(queryset, compare=False):
 	vias = get_values(queryset.exclude(via=None), ['via'], limit=5)
 	locais = get_values(
 		queryset.exclude(bairro=None).exclude(via=None), ['bairro', 'via'], 5)
-	weekdays = get_weekdays(queryset)
+	weekdays = count_weekdays(queryset)
 
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
@@ -311,22 +314,37 @@ def get_time(querylst):
 			noturno.append(ocorrencia)
 	return madrugada, matutino, vespertino, noturno
 
-def get_weekdays(queryset):
+def count_objs(queryset, delimitor, type, funcqs, funcfield):
 	"""
-	Takes a queryset; counts records by weekday and returns 
-	them inside a Response namedtuple.
+	Takes a queryset, a function to be applied to the queryset,
+	which also takes an index, and a function to be applied to
+	the field, returning a Response object with the identification
+	of the obj and how many occurrences of it were found.
 	"""
-	weekdays = []
-	for i in range(1, 8):
-		w = queryset.filter(data__week_day=i)
+	acc = []
+	for i in delimitor:
+		qs = funcqs(queryset, i)
 		try:
-			w = Response(field=w[0].data, num=w.count(), type='Dia da semana')
+			acc.append(Response(field=funcfield(qs), num=qs.count(), type=type))
 		except IndexError:
 			continue
-		weekdays.append(w)
-	return weekdays
+	return acc
 
-def get_months(queryset):
+def count_weekdays(queryset):
+	"""
+	Takes a queryset and counts the ocurrences of each weekday,
+	using count_objs and custom functions for funcqs and funcfield.
+	"""
+	return count_objs(
+		queryset, delimitor=range(1, 8), type="Dia da semana",
+		funcqs=lambda qs, i: qs.filter(data__week_day=i),
+		funcfield=lambda qs: WEEKDAYS[qs[0].data.weekday()])
+
+def count_months(queryset):
+	"""
+	Takes a queryset; counts records by months and returns 
+	them inside a Response namedtuple.
+	"""
 	months = []
 	for i in range(1, 13):
 		m = queryset.filter(data__month=i)
@@ -354,25 +372,15 @@ def get_month_axis(months):
 	"Uses get_axis with a custom funcx to return the months axis."
 	return get_axis(months, funcx=lambda x: MONTHNAMES[x.field.month])
 
+## not being used anymore
 def get_weekday_axis(wds):
 	"Uses get_axis with a custom funcx to return the weekdays axis."
 	return get_axis(wds, funcx=lambda x: WEEKDAYS[x.field.weekday()][:3])
 
-def append_axis(tags, data_lst, names, context):
-	for tag, data in zip(tags, data_lst):
-		xaxis1, yaxis1 = get_axis(data[0])
-		xaxis2, yaxis2 = get_axis(data[1])
-		context['axis'][tag] = [
-			{'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
-			'color': 'rgb(255,0,0)', 'name': names[0]},
-			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
-			'color': 'rgb(255,255,0)', 'name': names[1]},
-		]
-
 def return_months_axis(queryset, filters, context):
 	for f in filters:
 		qs = queryset.filter(natureza__icontains=f)
-		months = get_months(qs)
+		months = count_months(qs)
 		xaxis, yaxis = get_month_axis(months)
 		context['axis'][f] = {'x': xaxis, 'y': yaxis}
 	return context
@@ -388,4 +396,17 @@ def return_naturezas_axis(queryset):
 		labels.append(nat.capitalize())
 		values.append(qs.count())
 	return labels, values
+
+def append_axis(tags, data_lst, names):
+	context_dct = OrderedDict()
+	for tag, data in zip(tags, data_lst):
+		xaxis1, yaxis1 = get_axis(data['a'])
+		xaxis2, yaxis2 = get_axis(data['b'])
+		context_dct[tag] = [
+			{'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
+			'color': 'rgb(255,0,0)', 'name': names['a']},
+			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
+			'color': 'rgb(255,255,0)', 'name': names['b']},
+		]
+	return context_dct
 

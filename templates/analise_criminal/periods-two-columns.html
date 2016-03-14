@@ -19,11 +19,7 @@ other.
 				{% for item in periodo|dictsortreversed:"num" %}
 				<tr>
 					<td>{{ forloop.counter }}</td>
-				{% if item.type == 'Dia da semana' %}
-					<td>{{ item.field|date:"l" }}</td>
-				{% else %}
 					<td>{{ item.field }}</td>
-				{% endif %}
 					<td>{{ item.num }}</td>
 				</tr>
 				{% endfor %}

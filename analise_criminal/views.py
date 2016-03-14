@@ -13,7 +13,7 @@ from .forms import (
 	ReportForm, ReportFilterForm,
 )
 from .functions import process_map_arguments, make_graph, sort_date, sort_hour
-from .report import (process_report_arguments, get_months, get_month_axis, 
+from .report import (process_report_arguments, count_months, get_month_axis, 
 	return_months_axis, return_naturezas_axis)
 
 
