@@ -9,7 +9,8 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import monthnames, weekdays, weekdays_django, Response
+from .collections import MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Response
+
 
 NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio', 
 	'tráfico ilícito de drogas')
@@ -21,6 +22,15 @@ def process_report_arguments(form_report, form_filter):
 	Uses user's selections to decide what analysis to process,
 	and what data to present.
 	"""
+	TAGS = {
+		'natures': '5 naturezas com maior registro',
+		'records': '5 ocorrências com maior registro',
+		'neighborhoods': '5 bairros com maior registro',
+		'roads': '5 vias com maior registro',
+		'places': '5 locais com maior registro',
+		'weekdays': 'Registros por dia da semana',
+		'time': 'Registros por horário'
+	}
 	## context is composed of the following keys:
 	# forms; dates; total; axis; basico; comparison; filtro; bairro; detalhaento
 	context = {}
@@ -52,13 +62,13 @@ def process_report_arguments(form_report, form_filter):
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
 		months1 = get_months(o1)
-		xaxis1 = [monthnames[m.field.month] for m in months1]
+		xaxis1 = [MONTHNAMES[m.field.month] for m in months1]
 		yaxis1 = [m.num for m in months1]
 
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
 		months2 = get_months(o2)
-		xaxis2 = [monthnames[m.field.month] for m in months2]
+		xaxis2 = [MONTHNAMES[m.field.month] for m in months2]
 		yaxis2 = [m.num for m in months2]
 
 		# GRAPHS
@@ -104,12 +114,12 @@ def process_report_arguments(form_report, form_filter):
 		context['variation'] = get_percentage(o1.count(), o2.count())
 
 		context['basico'] = [
-			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
-			{'5 bairros com maior registro': [bairros1, bairros2]},
-			{'5 vias com maior registro': [vias1, vias2]},
-			{'5 locais com maior registro': [locais1, locais2]},
-			{'Registros por dia da semana': [weekdays1, weekdays2]},
-			{'Registros por horário': [horarios1, horarios2]},
+			{TAGS['records']: [naturezas1, naturezas2]},
+			{TAGS['neighborhoods']: [bairros1, bairros2]},
+			{TAGS['roads']: [vias1, vias2]},
+			{TAGS['places']: [locais1, locais2]},
+			{TAGS['weekdays']: [weekdays1, weekdays2]},
+			{TAGS['time']: [horarios1, horarios2]},
 		]
 
 	if form_filter.cleaned_data['naturezas']:
@@ -117,11 +127,11 @@ def process_report_arguments(form_report, form_filter):
 		for natureza in form_filter.cleaned_data['naturezas']:
 			natureza = normalize('NFKD', natureza)
 			context['filtro'][natureza] = [
-				{'5 bairros com maior registro': []},
-				{'5 vias com maior registro': []},
-				{'5 locais com maior registro': []},
-				{'Registros por dia da semana': []},
-				{'Registros por horário': []}
+				{TAGS['neighborhoods']: []},
+				{TAGS['roads']: []},
+				{TAGS['places']: []},
+				{TAGS['weekdays']: []},
+				{TAGS['time']: []}
 			]
 			current = context['filtro'][natureza]
 			for registros in [o1.filter(natureza__contains=natureza),
@@ -142,24 +152,24 @@ def process_report_arguments(form_report, form_filter):
 
 		context['bairro_detail'] = bairro
 		context['detail'] = [
-			{'5 ocorrências com maior registro': [naturezas1, naturezas2]},
-			{'5 vias com maior registro': [vias1, vias2]},
-			{'Registros por dia da semana': [weekdays1, weekdays2]},
-			{'Registros por horário': [horarios1, horarios2]},
+			{TAGS['records']: [naturezas1, naturezas2]},
+			{TAGS['roads']: [vias1, vias2]},
+			{TAGS['weekdays']: [weekdays1, weekdays2]},
+			{TAGS['time']: [horarios1, horarios2]},
 		]
 	if form_filter.cleaned_data['details']:
 		context['detalhamento'] = OrderedDict()
 		if 'weekdays' in form_filter.cleaned_data['details']:
 			weekday_detail = OrderedDict()
 			for i in range(1, 8):
-				weekday_detail[weekdays_django[i]] = [
-					{'5 naturezas com maior registro': []},
-					{'5 bairros com maior registro': []},
-					{'5 vias com maior registro': []},
-					{'5 locais com maior registro': []},
-					{'Registros por horário': []}
+				weekday_detail[WEEKDAYS_DJANGO[i]] = [
+					{TAGS['natures']: []},
+					{TAGS['neighborhoods']: []},
+					{TAGS['roads']: []},
+					{TAGS['places']: []},
+					{TAGS['time']: []}
 				]
-				current = weekday_detail[weekdays_django[i]]
+				current = weekday_detail[WEEKDAYS_DJANGO[i]]
 				for periodo in [o1, o2]:
 					(naturezas, bairros, vias, locais, _), _, horarios = process_args(
 						periodo.filter(data__week_day=i), compare=False)
@@ -173,11 +183,11 @@ def process_report_arguments(form_report, form_filter):
 			for hora in ['00:00 - 05:59', '06:00 - 11:59', 
 			'12:00 - 17:59', '18:00 - 23:59']:
 				time_detail[hora] = [
-					{'5 naturezas com maior registro': []},
-					{'5 bairros com maior registro': []},
-					{'5 vias com maior registro': []},
-					{'5 locais com maior registro': []},
-					{'Registros por dia da semana': []}
+					{TAGS['natures']: []},
+					{TAGS['neighborhoods']: []},
+					{TAGS['roads']: []},
+					{TAGS['places']: []},
+					{TAGS['weekdays']: []}
 				]
 				current = time_detail[hora]
 				for periodo in [o1, o2]:
@@ -213,17 +223,10 @@ def process_args(queryset, compare=False):
 		comparison = (get_comparison_data(queryset, nat) for nat in NATUREZAS)
 
 	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	periods = [Response(field=tag, num=len(horario), type='Horário') for 
-			horario, tag in zip(get_time(list(queryset)), TAGS)]
+	periods = [Response(field=tag, num=len(horario), type='Horário') 
+	for horario, tag in zip(get_time(list(queryset)), TAGS)]
 
 	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
-	
-
-def make_graphs(months):
-	if months:
-		xaxis, yaxis = get_month_axis(months)
-		return months, xaxis, yaxis
-
 
 def calculate_variation(a, b):
 	"""
@@ -254,8 +257,8 @@ def get_values(queryset, fields, limit=5):
 		data = queryset.values(fields[0], fields[1]).annotate(num=Count('id'))
 		return prepare_double_field_data(data.order_by('-num')[:limit], 
 			fields[0], fields[1])
-	counted = queryset.values(fields[0]).annotate(num=Count('id'))
-	return prepare_data(counted.order_by('-num')[:limit], fields[0])
+	data = queryset.values(fields[0]).annotate(num=Count('id'))
+	return prepare_data(data.order_by('-num')[:limit], fields[0])
 
 def get_comparison_data(queryset, param):
 	try:
@@ -286,8 +289,8 @@ def prepare_data(querylst, field):
 
 def prepare_double_field_data(querylst, field1, field2):
 	"""Wraps the data for iteration on the template"""
-	return [Response(row[field1]+', '+row[field2], row['num'], 
-		row[field1]+', '+row[field2]) for row in querylst]
+	return [Response(field=row[field1]+', '+row[field2], num=row['num'], 
+		type=row[field1]+', '+row[field2]) for row in querylst]
 
 def get_time(querylst):
 	"""
@@ -334,22 +337,26 @@ def get_months(queryset):
 		months.append(m)
 	return months
 
-def get_month_axis(months):
-	xaxis, yaxis = [], []
-	for m in months:
-		xaxis.append(monthnames[m.field.month])
-		yaxis.append(m.num)
+
+### Ploting functions
+
+def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
+	"""
+	Takes a list of objects and two functions that will be used to
+	define how the obj will be returned.
+	Returns a tuple containing lists with an xaxis, and yaxis.
+	"""
+	xaxis = [funcx(obj) for obj in objs]
+	yaxis = [funcy(obj) for obj in objs]
 	return xaxis, yaxis
+
+def get_month_axis(months):
+	"Uses get_axis with a custom funcx to return the months axis."
+	return get_axis(months, funcx=lambda x: MONTHNAMES[x.field.month])
 
 def get_weekday_axis(wds):
-	xaxis = [weekdays[wd.field.weekday()][:3] for wd in wds]
-	yaxis = [wd.num for wd in wds]
-	return xaxis, yaxis
-
-def get_axis(objs):
-	xaxis = [obj.field for obj in objs]
-	yaxis = [obj.num for obj in objs]
-	return xaxis, yaxis
+	"Uses get_axis with a custom funcx to return the weekdays axis."
+	return get_axis(wds, funcx=lambda x: WEEKDAYS[x.field.weekday()][:3])
 
 def append_axis(tags, data_lst, names, context):
 	for tag, data in zip(tags, data_lst):

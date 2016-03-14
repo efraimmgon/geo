@@ -3,6 +3,7 @@ General purpose functions from the analise_criminal module.
 """
 
 from django.core import serializers
+from django.db.models import Count
 
 from datetime import date
 import json
@@ -10,7 +11,7 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import weekdays
+from .collections import WEEKDAYS, Response
 from .report import get_values
 
 
@@ -31,7 +32,7 @@ def format_data(objs):
 		d = date(int(date_lst[0]), int(date_lst[1]), int(date_lst[2]))
 		
 		obj['fields']['formatted_date'] = d.strftime('%d/%m/%Y')
-		obj['fields']['weekday'] = weekdays[ d.weekday() ]
+		obj['fields']['weekday'] = WEEKDAYS[ d.weekday() ]
 		
 		if obj['fields']['hora'] is None:
 			continue
@@ -43,7 +44,7 @@ def format_data(objs):
 def make_weekdays(objs):
 	o = objs[:]
 	for obj in o:
-		obj.weekday = weekdays[ obj.data.weekday() ]
+		obj.weekday = WEEKDAYS[ obj.data.weekday() ]
 	return o
 
 def process_map_arguments(form, form_advanced):
@@ -95,23 +96,24 @@ def normalize_strings():
 		obj.natureza = normalize('NFKD', obj.natureza)
 		obj.save()
 
-def make_graph(fn, queryset, params, plot, title, color='rgb(16,32,77)'):
-	response = get_values(queryset, params, limit=31)
-	field, occurrences = fn(response, params[0])
+def make_graph(fn, queryset, params, plot, title, color=''):
+	objs = queryset.values(params[0]).annotate(num=Count('id'))
+	field, occurrences = fn(objs, params[0])
 	return {'x': field, 'y': occurrences, 'type': plot,
 			'title': title, 'color': color}
 
-def sort_date(response, param):
-	field = [str(row[param]) for row in response]
-	occurrences = [row['num'] for row in response]
+def sort_date(objs, params):
+	field = [str(obj.get(params)) for obj in objs]
+	occurrences = [obj.get('num') for obj in objs]
 	return field, occurrences
 
-def sort_hour(response, param):
+def sort_hour(objs, params):
 	container = OrderedDict()
-	for row in response:
-		if not row[param]: continue
-		key = row[param].hour
-		val = row['num']
+	for obj in objs:
+		if not obj.get(params):
+			continue
+		key = obj.get(params).hour
+		val = obj.get('num')
 		if container.get(key):
 			container[key] += val
 		else:

@@ -27,14 +27,13 @@
 						x: {{ values.x }},
 						y: {{ values.y }},
 						{% endautoescape %}
-						marker: { color: 'rgb(16,32,77)'},
+						marker: {color: '{{ values.color }}' }
 					{% endif %}
 					}
 				]
 				layout = {
-					title: '<b>11º BPM - Sinop</b><br />' +
-						'{{ key|capfirst }}',
-					xaxis: { title: '{{key|capfirst}}' },
+					title: '<b>{{ values.title|capfirst }}</b>',
+					xaxis: { title: '{{ key|capfirst }}' },
 					yaxis: { title: 'Registros'},
 				}
 

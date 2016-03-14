@@ -39,29 +39,22 @@ def index(request):
 def lab(request):
 	context = {}
 	context['axis'] = OrderedDict()
+
 	qs_days = Ocorrencia.objects.filter(data__gte='2016-01-01')
 	context['axis']['dias'] = make_graph(fn=sort_date, queryset=qs_days,
-		params=['data'], plot='scatter', title='Registros por Dia')
+		params=['data'], plot='bar', title='Registros por Dia')
+
+	qs = Ocorrencia.objects.filter(data__month=11)
+	context['axis']['horas-nov'] = make_graph(fn=sort_hour, queryset=qs,
+		params=['hora'], plot='bar', title='Registros por hora Nov/15')
+
+	qs = Ocorrencia.objects.filter(data__lte='2016-01-01', data__gte='2015-12-01')
+	context['axis']['horas-dez'] = make_graph(fn=sort_hour, queryset=qs,
+		params=['hora'], plot='bar', title='Registros por hora Dez/15')
 
 	qs = Ocorrencia.objects.filter(data__gte='2016-01-01')
-	lst = qs.values('data', 'hora').annotate(num=Count('id')).order_by('data', 'hora')
-
-	lst = qs.values('hora').annotate(num=Count('id')).order_by('hora')
-	container = {}
-	for row in lst:
-		if not row['hora']: continue
-		key = row['hora'].hour
-		val = row['num']
-		if container.get(key):
-			container[key] += val
-		else:
-			container[key] = val
-	horas, occurrences = [], []
-	for key, val in container.items():
-		horas.append(key)
-		occurrences.append(val)
-	context['axis']['horas'] = {'x': horas, 'y': occurrences, 'type': 'bar',
-	'title': 'Ocorrências por Hora'}
+	context['axis']['horas-jan'] = make_graph(fn=sort_hour, queryset=qs,
+		params=['hora'], plot='bar', title='Registros por hora Jan/16')
 
 	return render(request, 'analise_criminal/lab.html', context)
 

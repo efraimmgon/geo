@@ -17,9 +17,8 @@ def insert_data(filename, date_format, verbose=False):
 	- If no date or time are available, the field must be empty.
 	"""
 	with open(filename, 'rt', encoding='utf-8') as fin:
-		cin = csv.reader(fin)
-		table = [row for row in cin]
-
+		table = [row for row in csv.reader(fin)]
+	
 	for row in table:
 		obj = Ocorrencia(
 			data=resolve_date(row[1], date_format), 
@@ -67,5 +66,5 @@ def if_exists(val):
 if __name__ == '__main__':
 	print("Insira o arquivo para popular o BD:")
 	filepath = input("> ")
-	insert_data(filepath, date_format='br')
+	insert_data(filepath, date_format='br', verbose=True)
 	print("Done")
