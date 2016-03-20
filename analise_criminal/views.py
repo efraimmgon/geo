@@ -13,7 +13,7 @@ from .forms import (
 	ReportForm, ReportFilterForm,
 )
 from .functions import process_map_arguments, make_graph, sort_date, sort_hour
-from .report import (process_report_arguments, count_months, 
+from .report import (process_report_arguments, count_months, get_axis,
 	nature_per_month_axis, return_naturezas_axis, ROUBO, HOM, TRAFICO)
 
 
@@ -25,8 +25,9 @@ def index(request):
 	xaxis, yaxis = get_axis(count_months(queryset))
 	context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
 
-	context = nature_per_month_axis(
-		queryset=queryset, nats=(ROUBO, HOM, TRAFICO))
+	## Something is wrong... it's not showing the plotting.
+	context.update(nature_per_month_axis(
+			queryset=queryset, nats=(ROUBO, HOM, TRAFICO)))
 	labels, values = return_naturezas_axis(queryset)
 
 	context['axis']['pie'] = {'labels': labels, 'values': values}
