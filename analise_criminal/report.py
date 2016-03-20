@@ -61,11 +61,9 @@ def process_report_arguments(form_report, form_filter):
 	if form_report.cleaned_data['opts'] == 'Sim':
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
-		xaxis1, yaxis1 = get_axis(count_months(o1))
 
 		b, comparison2, horarios2 = process_args(o2, compare=True)
 		naturezas2, bairros2, vias2, locais2, weekdays2 = b
-		xaxis2, yaxis2 = get_axis(count_months(o2))
 
 		# GRAPHS
 		context['axis'] = OrderedDict()
@@ -192,7 +190,7 @@ def process_report_arguments(form_report, form_filter):
 						for key in current[j].keys():
 							current[j][key] += [values[j]]
 			context['detalhamento']['horários'] = time_detail
-
+			
 	return context
 
 
@@ -260,20 +258,6 @@ def get_comparison_data(queryset, param):
 		return {'natureza': param, 'num': sum(acc)}
 	except IndexError:
 		return {'natureza': param, 'num': 0}
-
-def get_natureza(querylst):
-	"""Return a list of data sorted by natureza"""
-	roubo, furto, trafico, homicidio = [], [], [], []
-	for ocorrencia in querylst:
-		if 'roubo' in ocorrencia.natureza.lower():
-			roubo.append(ocorrencia)
-		elif 'furto' in ocorrencia.natureza.lower():
-			furto.append(ocorrencia)
-		elif normalize('NFKD', 'tráfico de drogas') in ocorrencia.natureza.lower():
-			trafico.append(ocorrencia)
-		elif normalize('NFKD', 'homicídio') in ocorrencia.natureza.lower():
-			homicidio.append(ocorrencia)
-	return [roubo, furto, trafico, homicidio]
 
 def prepare_data(querylst, field):
 	"""Wraps the data for iteration on the template"""
@@ -356,7 +340,10 @@ def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
 	return xaxis, yaxis
 
 def nature_per_month_axis(queryset, nats):
-	""
+	"""
+	Takes a queryset and a list of natures. Returns a dict of
+	natures (keys) per month (x, y axis).
+	"""
 	context_dct = OrderedDict()
 	for nat in nats:
 		xaxis, yaxis = get_axis(

@@ -26,7 +26,7 @@ def index(request):
 	context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
 
 	context = nature_per_month_axis(
-		queryset=queryset, nats=[ROUBO, HOM, TRAFICO])
+		queryset=queryset, nats=(ROUBO, HOM, TRAFICO))
 	labels, values = return_naturezas_axis(queryset)
 
 	context['axis']['pie'] = {'labels': labels, 'values': values}
