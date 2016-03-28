@@ -1,10 +1,29 @@
-from collections import namedtuple
+
 
 class Response:
 	def __init__(self, field, num, type):
 		self.field = field
 		self.num   = num
 		self.type  = type
+
+
+class BarGraph:
+	def __init__(self, x, y, plot_type, title, color):
+		self.x = x
+		self.y = y
+		self.type = plot_type
+		self.title = title
+		self.color = color
+
+class Graph:
+	def __init__(self, plot, title, color):
+		self.type = plot
+		self.title = title
+		self.color = color
+
+
+
+
 
 MONTHNAMES = {
 	1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 

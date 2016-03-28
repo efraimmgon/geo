@@ -11,7 +11,7 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import WEEKDAYS, Response
+from .collections import WEEKDAYS, Response, Graph
 from .report import get_values
 
 
@@ -84,9 +84,9 @@ def normalize_strings():
 	I'm still fucking it when inserting data to the DB, so I have
 	to loop through the inserted data to normalize them...
 	"""
-	o = Ocorrencia.objects.all()
+	queryset = Ocorrencia.objects.all()
 
-	for obj in o:
+	for obj in queryset:
 		if obj.local:
 			obj.local = normalize('NFKD', obj.local)
 		if obj.bairro:
@@ -96,23 +96,75 @@ def normalize_strings():
 		obj.natureza = normalize('NFKD', obj.natureza)
 		obj.save()
 
-def make_graph(fn, queryset, params, plot, title, color=''):
-	objs = queryset.values(params[0]).annotate(num=Count('id'))
-	field, occurrences = fn(objs, params[0])
-	return {'x': field, 'y': occurrences, 'type': plot,
-			'title': title, 'color': color}
+def make_graph(func, queryset, fields, plot, title, color=''):
+	"""
+	Takes several args required to make a Plotly graph, plus a function,
+	which will do the work of generating the fields required.
+	Returns a Graph object.
+	"""
+	field, occurrences = func(
+		queryset.values(fields[0]).annotate(num=Count('id')), fields[0])
+	return Graph(x=field, y=occurrences, plot_type=plot,
+		title=title, color=color)
 
-def sort_date(objs, params):
-	field = [str(obj.get(params)) for obj in objs]
+def make_days_graph(queryset, plot, title, color=''):
+	"""
+	Returnes a Graph object with the necessary properties 
+	to make a Plotly graph with days.
+	"""
+	return make_graph(func=fetch_graph_data, queryset=queryset,
+		fields=['data'], plot=plot, title=title, color=color)
+
+def make_neighborhood_graph(queryset, plot, title, color=''):
+	"""
+	Returnes a Graph object with the necessary properties 
+	to make a Plotly graph with days.
+	"""
+	return make_graph(func=fetch_graph_data, queryset=queryset,
+		fields=['bairro'], plot=plot, title=title, color=color)
+
+def make_street_graph(queryset, plot, title, color=''):
+	"""
+	Returnes a Graph object with the necessary properties 
+	to make a Plotly graph with days.
+	"""
+	return make_graph(func=fetch_graph_data, queryset=queryset,
+		fields=['via'], plot=plot, title=title, color=color)
+
+def make_nature_graph(queryset, plot, title, color=''):
+	"""
+	Returnes a Graph object with the necessary properties 
+	to make a Plotly graph with days.
+	"""
+	return make_graph(func=fetch_graph_data, queryset=queryset,
+		fields=['natureza'], plot=plot, title=title, color=color)
+
+def make_hours_graph(queryset, plot, title, color=''):
+	"""
+	Returnes a Graph object with the necessary properties 
+	to make a Plotly graph with hours.
+	"""
+	return make_graph(func=fetch_graph_hour, queryset=queryset,
+		fields=['hora'], plot=plot, title=title, color=color)
+
+def fetch_graph_data(objs, fields):
+	"Returns two lists"
+	field = [str(obj.get(fields)) for obj in objs]
 	occurrences = [obj.get('num') for obj in objs]
 	return field, occurrences
 
-def sort_hour(objs, params):
+def fetch_graph_hour(objs, fields):
+	"Fetchs occurrences per hour."
+	# It's slightly more complicated than the others, because the hour fields
+	# are duplicated, since they can have happened in different minutes inside
+	# the hours. Hence, we have to loop through the qs, accumulating the occur-
+	# rences per hour before we can loop again, generating the final list of
+	# fields and occurrences.
 	container = OrderedDict()
 	for obj in objs:
-		if not obj.get(params):
+		if not obj.get(fields):
 			continue
-		key = obj.get(params).hour
+		key = obj.get(fields).hour
 		val = obj.get('num')
 		if container.get(key):
 			container[key] += val
@@ -121,5 +173,6 @@ def sort_hour(objs, params):
 	field = [hora for hora in container.keys()]
 	occurrences = [val for val in container.values()]
 	return field, occurrences
+
 
 

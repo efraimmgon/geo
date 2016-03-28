@@ -12,7 +12,9 @@ from .forms import (
 	MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
 	ReportForm, ReportFilterForm,
 )
-from .functions import process_map_arguments, make_graph, sort_date, sort_hour
+from .functions import (process_map_arguments, make_days_graph, 
+	make_hours_graph, make_neighborhood_graph, make_street_graph,
+	make_nature_graph)
 from .report import (process_report_arguments, count_months, get_axis,
 	nature_per_month_axis, return_naturezas_axis, ROUBO, HOM, TRAFICO)
 
@@ -25,33 +27,35 @@ def index(request):
 	xaxis, yaxis = get_axis(count_months(queryset))
 	context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
 
-	## Something is wrong... it's not showing the plotting.
+	## Something is wrong... it's not displaying the plotting.
 	context.update(nature_per_month_axis(
 			queryset=queryset, nats=(ROUBO, HOM, TRAFICO)))
 	labels, values = return_naturezas_axis(queryset)
 
 	context['axis']['pie'] = {'labels': labels, 'values': values}
-	return render(request, 'analise_criminal/index.html', context)
+	return render(request, 'index.html', context)
 
 def lab(request):
 	context = {}
 	context['axis'] = OrderedDict()
 
 	qs_days = Ocorrencia.objects.filter(data__gte='2016-01-01')
-	context['axis']['dias'] = make_graph(fn=sort_date, queryset=qs_days,
-		params=['data'], plot='bar', title='Registros por Dia')
+	context['axis']['dias'] = make_days_graph(queryset=qs_days,
+		plot='bar', title='Registros por Dia', color='rgb(255,0,0)')
 
 	qs = Ocorrencia.objects.filter(data__month=11)
-	context['axis']['horas-nov'] = make_graph(fn=sort_hour, queryset=qs,
-		params=['hora'], plot='bar', title='Registros por hora Nov/15')
+	context['axis']['horas-nov'] = make_hours_graph(queryset=qs,
+		plot='bar', title='Registros por hora Nov/15', color='rgb(0,255,0)')
 
 	qs = Ocorrencia.objects.filter(data__lte='2016-01-01', data__gte='2015-12-01')
-	context['axis']['horas-dez'] = make_graph(fn=sort_hour, queryset=qs,
-		params=['hora'], plot='bar', title='Registros por hora Dez/15')
+	context['axis']['horas-dez'] = make_hours_graph(queryset=qs,
+		plot='bar', title='Registros por hora Dez/15', color='rgb(0,0,255)')
 
 	qs = Ocorrencia.objects.filter(data__gte='2016-01-01')
-	context['axis']['horas-jan'] = make_graph(fn=sort_hour, queryset=qs,
-		params=['hora'], plot='bar', title='Registros por hora Jan/16')
+	context['axis']['horas-jan'] = make_hours_graph(queryset=qs,
+		plot='bar', title='Registros por hora Jan/16', color='rgb(255,255,0)')
+
+	lst = [()]
 
 	return render(request, 'analise_criminal/lab.html', context)
 
