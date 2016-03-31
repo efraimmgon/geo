@@ -1,18 +1,23 @@
 from django import forms
 
 from setup_app.models import Ocorrencia
+from .report import FURTO, ROUBO, USO, HOM, TRAFICO
+
 
 class MapOptionForm(forms.Form):
 
-	naturezas = Ocorrencia.objects.values('natureza').distinct()
 	choices = (
-		('selecione', 'Selecione'),
+		('', 'Selecione'),
 		('todas', 'Todas'),
+		(FURTO, 'Furto'),
+		(ROUBO, 'Roubo'),
+		('drogas', 'Entorpecentes'),
+		(USO, 'Uso de Entorpecentes'),
+		(TRAFICO, 'Tráfico de Entorpecentes'),
+		(HOM, 'Homicídio'),
+		(HOM+' culposo', 'Homicídio Culposo'),
+		(HOM+' doloso', 'Homicídio Doloso'),
 	)
-
-	for n in naturezas:
-		choices += ( (n['natureza'], n['natureza']), )
-
 
 	natureza = forms.ChoiceField(
 		label='Natureza', choices=choices, required=True)

@@ -59,9 +59,10 @@ def lab(request):
 
 	return render(request, 'analise_criminal/lab.html', context)
 
-@login_required
+#@login_required
 def map(request):
 	"""/analise_criminal/mapa/"""
+	return render(request, 'mapa.html')
 	queryset = Ocorrencia.objects.all()
 	## Min and max date where search is available:
 	mindata = queryset.aggregate(Min('data'))

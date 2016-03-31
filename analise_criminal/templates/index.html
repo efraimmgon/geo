@@ -10,13 +10,15 @@
 
 <h1>Análise Criminal <small>Índice</small></h1>
 
-<h3>Mapa <br /><small><a href="{% url 'analise_criminal:map' %}">
-	Visualização interarativa e dinâmica
-	 de registros criminais</a></small></h3>
+<h3>Mapa</h3>
+<a href="{% url 'analise_criminal:map' %}">
+	Visualização interativa e dinâmica de registros criminais</a>
 
-<h3>Relatório <br /><small><a href="{% url 'analise_criminal:report' %}">
-		Análise e comparação de registros criminais
-	</a></small></h3>
+<h3>Relatório</h3>
+<a href="{% url 'analise_criminal:report' %}">
+		Análise e comparação de registros criminais</a>
+
+<h2>Síntese de registros</h2>
 
 		{% for key, values in axis.items %}
 			<div id="{{ key|slugify }}" style="width:100%; height:500px;"></div>

@@ -64,7 +64,7 @@ def process_map_arguments(form, form_advanced):
 			data__gte=data_inicial, data__lte=data_final)
 	else:
 		o = Ocorrencia.objects.filter(
-			natureza=natureza, data__gte=data_inicial, data__lte=data_final)
+			natureza__icontains=natureza, data__gte=data_inicial, data__lte=data_final)
 
 	if bairro:
 		o = o.filter(bairro__icontains=bairro)
