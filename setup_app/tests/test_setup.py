@@ -32,7 +32,7 @@ class OcorrenciaModelTest(TestCase):
 		self.assertEqual(ocorr.numero, None)
 		self.assertEqual(ocorr.latitude, 0)
 		self.assertEqual(ocorr.longitude, 0)
-		self.assertEqual(ocorr.natureza, None)
+		self.assertEqual(ocorr.natureza, '')
 		self.assertEqual(ocorr.hora, None)
 
 	def test_cannot_save_empty_item(self):

@@ -62,20 +62,20 @@ def lab(request):
 #@login_required
 def map(request):
 	"""/analise_criminal/mapa/"""
-	return render(request, 'mapa.html')
+	## range of dates available for searching
 	queryset = Ocorrencia.objects.all()
-	## Min and max date where search is available:
-	mindata = queryset.aggregate(Min('data'))
-	maxdata = queryset.aggregate(Max('data'))
+	mindate = queryset.aggregate(Min('data'))['data__min']
+	maxdate = queryset.aggregate(Max('data'))['data__max']
 	context = {
-		'form_options': MapOptionForm(),
-		'form_styles': MapMarkerStyleForm(),
-		'form_advanced': AdvancedOptionsForm(),
-		'min': mindata['data__min'].strftime('%d/%m/%Y'), 
-		'max': maxdata['data__max'].strftime('%d/%m/%Y')
+		'forms': {
+			'basic_options': MapOptionForm(),
+			'advanced_options': AdvancedOptionsForm(),
+			'marker_styles': MapMarkerStyleForm()
+		},
+		'min': mindate.strftime('%d/%m/%Y'),
+		'max': maxdate.strftime('%d/%m/%Y'),
 	}
-	return render(request, 'analise_criminal/mapa.html', context)
-
+	return render(request, 'mapa.html', context)
 
 def mapAjax(request):
 	"""
