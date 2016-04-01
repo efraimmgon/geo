@@ -2,7 +2,7 @@ from django.db import models
 
 import datetime
 
-
+from analise_criminal.collections import WEEKDAYS
 
 class Ocorrencia(models.Model):
 
@@ -21,4 +21,7 @@ class Ocorrencia(models.Model):
 
 	def date2string(self):
 		return self.data.strftime('%d/%m/%Y')
+
+	def weekday(self):
+		return WEEKDAYS[ self.data.weekday() ]
 
