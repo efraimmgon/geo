@@ -20,7 +20,7 @@
 
 			<div id="map" class="center-block"></div>
 
-			<div id="appSetings">
+			<div id="appSettings">
 				<div id="control"><h3>Configurações</h3></div>
 				<form id="styleForm" class="form-horizontal" method="post" action="{% url 'analise_criminal:mapAjax' %}">
 					{% csrf_token %}
@@ -91,8 +91,8 @@
 
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8&libraries=geometry,visualization" type='text/javascript'></script> 
-<script src="{% static 'js/map/styledMarkers.js' %}"></script>
-<script src="{% static 'js/map/oms.js' %}"></script>
-<script src="{% static 'js/map/map.js' %}"></script>
+<script src="{% static 'analise_criminal/styledMarkers.js' %}"></script>
+<script src="{% static 'analise_criminal/oms.js' %}"></script>
+<script src="{% static 'analise_criminal/map.js' %}"></script>
 
 {% endblock %}

@@ -58,7 +58,24 @@ class MapPageTest(TestCase):
 
 # end of MapPageTest
 
-
-
 class MapAjaxTest(TestCase):
-	pass
+
+	def post_basic_data(self):
+		return self.client.post('/analise_criminal/mapAjax/', data={
+			'natureza': 'todas',
+			'data_inicial': datetime.date(day=1, month=1, year=2015),
+			'data_final': datetime.date(day=31, month=1, year=2015)
+		})
+	
+	def test_returns_http_response(self):
+		response = self.post_basic_data()
+		self.assertEqual(response.status_code, 200)
+
+	def test_returns_json(self):
+		response = self.post_basic_data()
+		#print(help(response))
+		self.assertIn(b'application/json', response.serialize_headers())
+
+
+
+

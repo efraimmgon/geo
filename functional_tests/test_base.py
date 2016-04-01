@@ -59,12 +59,12 @@ class CriminalAnalysisRootTest(FunctionalTest):
 		self.assertIn('Relatório', [header.text for header in apps])
 
 
+
 class GeoreferringTest(FunctionalTest):
 
 	def test_can_access_and_run_map_app(self):
 		# He decides he'll start by checking out the georeferring app
-		self.browser.get(self.server_url+'/analise_criminal/mapa/')
-
+		self.browser.get('http://localhost:8000/analise_criminal/mapa/')
 		# He sees a heading informing him of his current place and a google 
 		# map of the city of Sinop
 		main_header = self.browser.find_element_by_tag_name('h1').text
@@ -76,27 +76,28 @@ class GeoreferringTest(FunctionalTest):
 		map_settings = self.browser.find_element_by_id('appSettings').text
 		self.assertIn('Configurações', map_settings)
 
-		# Further down he sees a form, with basic and advanced options
+		# Further down he sees a form, with basic options
 		options = self.browser.find_elements_by_tag_name('h4')
 		self.assertIn('Básicas', [header.text for header in options])
+
+		# Beneath it is a header saying 'Avançadas', that drops down as
+		# he clicks on it, showing other optional options
 		self.assertIn('Avançadas', [header.text for header in options])
 
 		# He skips the advanced options, and goes straight to the basic 
 		# options, where he needs to input a date, and a type of crime 
-		nature = self.browser.find_element_by_id('id_natureza')
+		nature = self.browser.find_element_by_id('id_natureza').text.split('\n')
 		init_date = self.browser.find_element_by_id('id_data_inicial')
 		end_date = self.browser.find_element_by_id('id_data_final')
-
+		print(nature)
 		# These fields show some helpful messages about the input format
-		self.assertEqual(
-			nature.find.find_element_by_tag_name('option').text,
-			'Selecione')
+		self.assertIn('Selecione', nature)
 		self.assertEqual(
 			init_date.get_attribute('placeholder'),
-			'dd/mm/yyyy')
+			'dd/mm/aaaa')
 		self.assertEqual(
 			end_date.get_attribute('placeholder'),
-			'dd/mm/yyyy')
+			'dd/mm/aaaa')
 
 		# He sees he can also pass some optional filtering data, such as
 		# street, neighborhood, and hours
@@ -114,21 +115,27 @@ class GeoreferringTest(FunctionalTest):
 			'hh:mm')
 
 		# He selects all records
-		options = self.browser.find_elements_by_tag_name('option')
-		all_records = [opt for opt in options if opt.text == 'Todas']
-		all_records[0].send_keys(Keys.ENTER)
-		import time
-		time.sleep(5)
+		nature = self.browser.find_element_by_id('id_natureza')
+		nature.find_element_by_xpath('.//option[@value="todas"]').click()
 
 		# So he fills the date box with '01/01/2016' and '31/01/2016',
 		# and hits enter
+		data_inicial_input = self.browser.find_element_by_id('id_data_inicial')
+		data_inicial_input.send_keys('01/01/2016')
+		data_final_input = self.browser.find_element_by_id('id_data_final')
+		data_final_input.send_keys('31/01/2016')
 
+		elForm = self.browser.find_element_by_id('ocorrenciasForm')
+		elForm.submit()
 
 		# He sees that the map is updated with the records of the given period
+		## <How the fuck do I check that?>
 
 		# He also notices that a table has been generated with details from the
-		# records of the period, and above it a summary of records in the period
-		# showing the total of records
+		# records of the period, and above it a summary of records in the 
+		# period showing the total of records
+		table = self.browser.find_element_by_class_name('sortable')
+		summary = self.browser.find_element_by_id('id_info')
+		self.assertNotEqual(len(summary.text), 0)
 
 		# Satisfied, he goes back to sleep.
-		self.fail('finish the test!')

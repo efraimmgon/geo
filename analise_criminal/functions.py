@@ -23,8 +23,7 @@ def format_data(objs):
 	and street.
 	Returns data as JSON
 	"""
-	copy = objs[:]
-	data = serializers.serialize('json', copy)
+	data = serializers.serialize('json', objs[:])
 	struct = json.loads(data)
 
 	for obj in struct:

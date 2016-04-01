@@ -83,6 +83,7 @@ def mapAjax(request):
 	Returns the necessary data, via AJAX, to generate the markers
 	at /analise_criminal/mapa/.
 	"""
+	return HttpResponse(request, content_type='application/json')
 	if request.method == 'POST':
 		form_options = MapOptionForm(data=request.POST)
 		form_advanced = AdvancedOptionsForm(data=request.POST)
@@ -91,7 +92,7 @@ def mapAjax(request):
 		else:
 			## refactor forms.py to have errors in portuguese.
  	 		json_data = json.dumps({'errors': form_options.errors})
-	return HttpResponse(json_data, content_type='application/json')
+		return HttpResponse(json_data, content_type='application/json')
 
 
 @login_required
