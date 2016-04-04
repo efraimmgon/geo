@@ -81,38 +81,27 @@ $(function() {
 
 				$.each(json, function() {
 
-					var json_id = this.pk;
-					var json_natureza = this.fields.natureza;
-					var json_bairro = this.fields.bairro;
-					var json_via = this.fields.via;
-					var json_numero = this.fields.numero;
-					var json_data = this.fields.formatted_date;
-					var json_weekday = this.fields.weekday;
-					var json_hora = this.fields.hora;
-					var lat = this.fields.latitude;
-					var lng = this.fields.longitude;
-
-					if (json_numero) {
-						json_via += ', ' + json_numero;
+					if (this.numero) {
+						this.via += ', ' + this.numero;
 					}
 					
-					if (lat && lng) {
+					if (this.latitude && this.longitude) {
 						var latLng = new google.maps.LatLng(
-							parseFloat(lat),
-							parseFloat(lng)
+							parseFloat(this.latitude),
+							parseFloat(this.longitude)
 						);
-						count_natureza(json_natureza);
+						count_natureza(this.natureza);
 						if (styleType == 'basicMarker') {
-							var address = json_bairro + ', ' + json_via;
-							createMarker(latLng, json_id, json_natureza, address);
+							var address = this.bairro + ', ' + this.via;
+							createMarker(latLng, this.pk, this.natureza, address);
 						} else {
 							heatmapData.push(latLng);	
 						}
-						ocorrencias.push({natureza: json_natureza, bairro: json_bairro, 
-							via: json_via, data: json_data, hora: json_hora, weekday: json_weekday});
+						ocorrencias.push({natureza: this.natureza, bairro: this.bairro, 
+							via: this.via, data: this.formatted_date, hora: this.hora, weekday: this.weekday});
 					} else {
-						var notFound = '<br>' + json_id + ': ' + json_bairro + ', ' + 
-						json_via + ': not found';
+						var notFound = '<br>' + this.pk + ': ' + this.bairro + ', ' + 
+						this.via + ': not found';
 						$info.append(notFound);
 					}
 				}); 

@@ -1,3 +1,17 @@
+def update(x, **entries):
+	if isinstance(x, dict)
+		x.update(entries)
+	else:
+		x.__dict__.update(entries)
+	return x
+
+class Struct:
+	def __init__(self, **entries):
+		self.__dict__.update(entries)
+
+	def __repr__(self):
+		args = ['%s=%r' % (k, v) for k, v in vars(self).items()]
+		return 'Struct(%s)' % ', '.join(args)
 
 
 class Response:
@@ -20,10 +34,6 @@ class Graph:
 		self.type = plot
 		self.title = title
 		self.color = color
-
-
-
-
 
 MONTHNAMES = {
 	1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 

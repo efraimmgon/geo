@@ -15,31 +15,6 @@ from .collections import WEEKDAYS, Response, Graph
 from .report import get_values
 
 
-def format_data(objs):
-	"""
-	- Adds a fields with a date in the format dd/mm/yyyy;
-	- Adds a weekday string; strips seconds from time
-	- Splits the address and creates a fields for the neighborhood
-	and street.
-	Returns data as JSON
-	"""
-	data = serializers.serialize('json', objs[:])
-	struct = json.loads(data)
-
-	for obj in struct:
-		date_lst = obj['fields']['data'].split('-')
-		d = date(int(date_lst[0]), int(date_lst[1]), int(date_lst[2]))
-		
-		obj['fields']['formatted_date'] = d.strftime('%d/%m/%Y')
-		obj['fields']['weekday'] = WEEKDAYS[ d.weekday() ]
-		
-		if obj['fields']['hora'] is None:
-			continue
-		else:
-			obj['fields']['hora'] = obj['fields']['hora'][:-3]
-			
-	return json.dumps(struct)
-
 def make_weekdays(objs):
 	o = objs[:]
 	for obj in o:
@@ -47,53 +22,61 @@ def make_weekdays(objs):
 	return o
 
 def process_map_arguments(form, form_advanced):
-	"""Uses the selections from the user to decide which objects
-	from Ocorrencia to return"""
-	natureza = normalize(
-			'NFKD', form.cleaned_data['natureza']
-	)
+	"""
+	Uses the user's selections to decide which objects
+	from Ocorrencia to return.
+	"""
+	natureza = form.cleaned_data['natureza']
 	data_inicial = form.cleaned_data['data_inicial']
 	data_final = form.cleaned_data['data_final']
 	hora_inicial = form_advanced.cleaned_data['hora_inicial']
 	hora_final = form_advanced.cleaned_data['hora_final']
 	bairro = normalize('NFKD', form_advanced.cleaned_data['bairro'])
 	via = normalize('NFKD', form_advanced.cleaned_data['via'])
+	
 	if natureza == 'todas':
-		o = Ocorrencia.objects.filter(
+		qs = Ocorrencia.objects.filter(
 			data__gte=data_inicial, data__lte=data_final)
 	else:
-		o = Ocorrencia.objects.filter(
+		qs = Ocorrencia.objects.filter(
 			natureza__icontains=natureza, data__gte=data_inicial, data__lte=data_final)
 
 	if bairro:
-		o = o.filter(bairro__icontains=bairro)
+		qs = qs.filter(bairro__icontains=bairro)
 	if via:
-		o = o.filter(via__icontains=via)
+		qs = qs.filter(via__icontains=via)
 	if hora_inicial:
-		o = o.filter(hora__gte=hora_inicial)
+		qs = qs.filter(hora__gte=hora_inicial)
 	if hora_final:
-		o = o.filter(hora__lte=hora_final)
+		qs = qs.filter(hora__lte=hora_final)
 
-	o = o.exclude(latitude=None).exclude(latitude=0.0)
-	o = format_data(o) # return JSON
-	return o
+	## prepare data for returning
+	return format_data(qs.exclude(latitude=None).exclude(latitude=0.0))
 
-def normalize_strings():
+def format_data(queryset):
 	"""
-	I'm still fucking it when inserting data to the DB, so I have
-	to loop through the inserted data to normalize them...
+	- Adds a fields with a date in the format dd/mm/yyyy;
+	- Adds a weekday string; strips seconds from time
+	- Splits the address and creates a fields for the neighborhood
+	and street.
+	Returns a list of dicts.
 	"""
-	queryset = Ocorrencia.objects.all()
-
+	struct = []
 	for obj in queryset:
-		if obj.local:
-			obj.local = normalize('NFKD', obj.local)
-		if obj.bairro:
-			obj.bairro = normalize('NFKD', obj.bairro)
-		if obj.via:
-			obj.via = normalize('NFKD', obj.via)
-		obj.natureza = normalize('NFKD', obj.natureza)
-		obj.save()
+		dct = {
+			'pk': obj.id,
+			'natureza': obj.natureza,
+			'bairro': obj.bairro,
+			'via': obj.via,
+			'numero': obj.numero,
+			'formatted_date': obj.date2string(),
+			'weekday': obj.weekday(),
+			'hora': str(obj.hora)[:-3] if obj.hora else None,
+			'latitude': obj.latitude,
+			'longitude': obj.longitude
+		}
+		struct.append(dct)
+	return struct
 
 def make_graph(func, queryset, fields, plot, title, color=''):
 	"""
