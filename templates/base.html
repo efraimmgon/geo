@@ -43,9 +43,9 @@
 			<li><a href="#TODO">
 				<span class="glyphicon glyphicon-user"></span> {{ user }}
 			</a></li>
-			<li><a href="{% url 'accounts:logout' %}">Logout</a></li>
+			<li><a id="id_logout" href="{% url 'accounts:logout' %}">Logout</a></li>
 		{% else %}
-			<li><a href="{% url 'accounts:login' %}">Login</a></li>
+			<li><a id="id_login" href="{% url 'accounts:login' %}">Login</a></li>
 		{% endif %}
 		</ul>
 	</div>

@@ -1,5 +1,5 @@
 def update(x, **entries):
-	if isinstance(x, dict)
+	if isinstance(x, dict):
 		x.update(entries)
 	else:
 		x.__dict__.update(entries)

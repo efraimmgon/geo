@@ -33,7 +33,7 @@ def index(request):
     labels, values = return_naturezas_axis(queryset)
 
     context['axis']['pie'] = {'labels': labels, 'values': values}
-    return render(request, 'index.html', context)
+    return render(request, 'analise_criminal/index.html', context)
 
 def lab(request):
     context = {}
@@ -59,7 +59,7 @@ def lab(request):
 
     return render(request, 'analise_criminal/lab.html', context)
 
-#@login_required
+@login_required
 def map(request):
     """/analise_criminal/mapa/"""
     ## range of dates available for searching
@@ -75,7 +75,7 @@ def map(request):
         'min': mindate.strftime('%d/%m/%Y'),
         'max': maxdate.strftime('%d/%m/%Y'),
     }
-    return render(request, 'mapa.html', context)
+    return render(request, 'analise_criminal/mapa.html', context)
 
 def mapAjax(request):
     """

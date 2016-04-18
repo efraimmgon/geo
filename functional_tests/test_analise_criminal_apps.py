@@ -3,6 +3,9 @@ from .base import FunctionalTest
 
 class CriminalAnalysisRootTest(FunctionalTest):
 
+	def test_someshit(self):
+		self.browser.get(self.server_url+'/analise_criminal/')
+	
 	def test_can_access_criminal_analysis_root_page(self):
 		# Leonidas heard about a cool new online criminal analysis app.
 		# He goes to check out its page
@@ -27,7 +30,7 @@ class CriminalAnalysisRootTest(FunctionalTest):
 
 
 class GeoreferringTest(FunctionalTest):
-
+	
 	def test_can_access_and_run_map_app(self):
 		# He decides he'll start by checking out the georeferring app
 		self.browser.get('http://localhost:8000/analise_criminal/mapa/')

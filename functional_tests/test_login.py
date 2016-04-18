@@ -22,10 +22,11 @@ class LoginTest(FunctionalTest):
 		# The link takes him to a login page, where he logs in with
 		# his username and password
 		login_header = self.browser.find_element_by_tag_name('h1').text
-		self.assertEqual(login_header, 'Login')
+		self.assertIn('Login', login_header)
 		self.browser.find_element_by_id('id_username').send_keys('mockuser')
 		self.browser.find_element_by_id('id_password').send_keys('123456')
-		self.browser.find_element_by_tag_name('button').click()
+		elButton = self.browser.find_element_by_css_selector('.btn')
+		elButton.click()
 
 		# He is redirected to the homepage, and he can see he is logged in
 		self.assertEqual(self.browser.current_url, '/')

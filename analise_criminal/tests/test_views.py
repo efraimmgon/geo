@@ -14,7 +14,7 @@ class CriminalAnalysisPageTest(TestCase):
 
 	def test_criminal_analysis_page_renders_index_template(self):
 		response = self.client.get('/analise_criminal/')
-		self.assertTemplateUsed(response, 'index.html')
+		self.assertTemplateUsed(response, 'analise_criminal/index.html')
 
 
 class LabPageTest(TestCase):
@@ -33,7 +33,7 @@ class MapPageTest(TestCase):
 
 	def test_map_page_renders_map_template(self):
 		response = self.get_map_page()
-		self.assertTemplateUsed(response, 'mapa.html')
+		self.assertTemplateUsed(response, 'analise_criminal/mapa.html')
 
 	def test_uses_MapOptionForm(self):
 		response = self.get_map_page()
