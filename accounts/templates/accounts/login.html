@@ -13,6 +13,11 @@
 
 			<form class="form-horizontal" method='post' action='{% url "accounts:login" %}'>
 				{% csrf_token %}
+				
+				{% if error %}
+					<p class="text-danger col-md-offset-2"><strong>{{ error }}</strong></p>
+				{% endif %}
+				
 				{% for field in form %}
 				<div class="form-group">
 					<label for="{{ field.id_for_label }}" class="control-label col-md-2">

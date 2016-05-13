@@ -12,27 +12,41 @@ from .forms import (
     MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
     ReportForm, ReportFilterForm,
 )
-from .functions import (process_map_arguments, make_days_graph, 
-    make_hours_graph, make_neighborhood_graph, make_street_graph,
-    make_nature_graph)
-from .report import (process_report_arguments, count_months, get_axis,
-    nature_per_month_axis, return_naturezas_axis, ROUBO, HOM, TRAFICO)
+from .functions import (
+    process_map_arguments, make_days_graph, make_hours_graph,
+)
+from .report import (
+    process_report_arguments, count_months, get_axis, return_naturezas_axis, 
+)
 
 
 def index(request):
     """/analise_criminal/"""
     context = {}
     context['axis'] = OrderedDict()
-    queryset = Ocorrencia.objects.filter(data__year=2015)
-    xaxis, yaxis = get_axis(count_months(queryset))
-    context['axis']['todas as ocorrências'] = {'x': xaxis, 'y': yaxis}
+    ## scatter 2015
+    qs2015 = Ocorrencia.objects.filter(data__year=2015)
+    xaxis, yaxis = get_axis(count_months(qs2015))
+    context['axis']['todas as ocorrências - 2015'] = {
+        'x': list(xaxis), 'y': list(yaxis)
+    }
+    ## scatter 2016
+    qs2016 = Ocorrencia.objects.filter(data__year=2016)
+    xaxis, yaxis = get_axis(count_months(qs2016))
+    context['axis']['todas as ocorrências - 2016'] = {
+        'x': list(xaxis), 'y': list(yaxis)
+    }
 
-    ## Something is wrong... it's not displaying the plotting.
-    context.update(nature_per_month_axis(
-            queryset=queryset, nats=(ROUBO, HOM, TRAFICO)))
-    labels, values = return_naturezas_axis(queryset)
-
-    context['axis']['pie'] = {'labels': labels, 'values': values}
+    ## pie 2015
+    labels, values = return_naturezas_axis(qs2015)
+    context['axis']['Porcentagem Ocorrências - 2015'] = {
+        'labels': labels, 'values': values
+    }
+    ## pie 2016
+    labels, values = return_naturezas_axis(qs2016)
+    context['axis']['Porcentagem Ocorrências - 2016'] = {
+        'labels': labels, 'values': values
+    }
     return render(request, 'analise_criminal/index.html', context)
 
 def lab(request):
@@ -120,7 +134,9 @@ def make_report(request):
     if form_report.is_valid() and form_filter.is_valid():
         context = process_report_arguments(form_report, form_filter)
     else:
-        context = {'form_report': form_report, 'form_filter': form_filter}
+        context = {
+            'forms': {'report': form_report, 'filter': form_filter}
+        }
     return render(request, 'analise_criminal/relatorio.html', context)
 
 @login_required

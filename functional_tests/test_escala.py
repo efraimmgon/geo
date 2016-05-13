@@ -10,7 +10,6 @@ class EscalaTest(FunctionalTest):
 		# He's presented with a dashboard from where he can controls
 		# the escala's actions
 		header = self.browser.find_element_by_tag_name('h1')
-		print(dir(header))
 		self.assertIn('Centro de Controle', header.text)
 
 		# He starts by populating the database with the name of the troopers.

@@ -11,7 +11,7 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import WEEKDAYS, Response, Graph
+from .collections import WEEKDAYS, Struct
 from .report import get_values
 
 
@@ -78,6 +78,9 @@ def format_data(queryset):
 		struct.append(dct)
 	return struct
 
+
+### GRAPHS
+
 def make_graph(func, queryset, fields, plot, title, color=''):
 	"""
 	Takes several args required to make a Plotly graph, plus a function,
@@ -86,8 +89,8 @@ def make_graph(func, queryset, fields, plot, title, color=''):
 	"""
 	field, occurrences = func(
 		queryset.values(fields[0]).annotate(num=Count('id')), fields[0])
-	return Graph(x=field, y=occurrences, plot_type=plot,
-		title=title, color=color)
+	return Struct(x=field, y=occurrences, plot_type=plot,
+				  title=title, color=color)
 
 def make_days_graph(queryset, plot, title, color=''):
 	"""

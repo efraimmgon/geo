@@ -4,6 +4,7 @@ from unittest.mock import patch
 from unittest import skip
 
 from accounts.forms import LoginForm
+from accounts.views import INVALID_LOGIN_MESSAGE
 
 User = get_user_model()
 
@@ -65,11 +66,14 @@ class LoginViewTest(TestCase):
 		self.assertRedirects(response, '/analise_criminal/')
 
 	@patch('accounts.views.authenticate')
-	def test_redirects_to_next_url_if_available(self, mock_authenticate):
-		url = '/accounts/login/?next=/analise_criminal/relatorio/'
-		user = self.create_user_and_mock_authenticate(mock_authenticate)
-		response = self.client.post(
-			url,
-			data={'username': user.username, 'password': user.password}
-		)
-		self.assertRedirects(response, '/analise_criminal/relatorio/')
+	def test_does_not_get_logged_in_if_authenticate_returns_None(
+		self, mock_authenticate):
+		mock_authenticate.return_value = None
+		self.login_user('non-existing-user', 'non-existing-pass')
+		self.assertNotIn(SESSION_KEY, self.client.session)
+
+	@patch('accounts.views.authenticate')
+	def test_shows_error_if_authentication_failed(self, mock_authenticate):
+		mock_authenticate.return_value = None
+		response = self.login_user('non-existing-user', 'non-existing-pass')
+		self.assertIn(INVALID_LOGIN_MESSAGE, response.content.decode())

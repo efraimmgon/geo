@@ -43,6 +43,8 @@ INSTALLED_APPS = (
     'analise_criminal',
     'accounts',
     'principal',
+    'escala',
+    "debug_toolbar",
 )
 
 MIDDLEWARE_CLASSES = (

@@ -9,7 +9,9 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Response
+from .collections import (
+	MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Response, Struct
+)
 
 
 NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio', 
@@ -31,34 +33,45 @@ def process_report_arguments(form_report, form_filter):
 		'weekdays': 'Registros por dia da semana',
 		'time': 'Registros por horário'
 	}
+	
+	context = {}
+	A = Struct()
+	B = Struct()
+
 	## context is composed of the following keys:
 	# forms; dates; total; axis; basico; comparison; filtro; bairro; detalhaento
-	context = {}
 	context['forms'] = {'report': form_report, 'filter': form_filter}
 
-	data_inicial_a = form_report.cleaned_data['data_inicial_a']
-	data_final_a   = form_report.cleaned_data['data_final_a']
-	data_inicial_b = form_report.cleaned_data['data_inicial_b']
-	data_final_b   = form_report.cleaned_data['data_final_b']
+	A.start = form_report.cleaned_data['data_inicial_a']
+	A.end   = form_report.cleaned_data['data_final_a']
+	B.start = form_report.cleaned_data['data_inicial_b']
+	B.end   = form_report.cleaned_data['data_final_b']
 
-	o1 = Ocorrencia.objects.filter(data__gte=data_inicial_a, 
-		data__lte=data_final_a)
-	o2 = Ocorrencia.objects.filter(data__gte=data_inicial_b, 
-		data__lte=data_final_b)
+	o1 = Ocorrencia.objects.filter(data__gte=A.start, 
+								   data__lte=A.end)
+	o2 = Ocorrencia.objects.filter(data__gte=B.start, 
+								   data__lte=B.end)
 
 	context['a'] = {
-		'start': data_inicial_a,
-		'end': data_final_a,
+		'start': A.start,
+		'end': A.end,
 		'total': o1.count()
 	}
 	context['b'] = {
-		'start': data_inicial_b,
-		'end': data_final_b,
+		'start': B.start,
+		'end': B.end,
 		'total': o2.count()
 	}
 
 	# GENERAL ANALYSIS + GRAPHS
 	if form_report.cleaned_data['opts'] == 'Sim':
+#		natures  = get_natures(o)
+#		hoods 	 = get_neighborhoods(o)
+#		routes 	 = get_routes(o)
+#		spots 	 = get_spots(o)
+#		weekdays = get_weekdays(o)
+#		horaries = get_horaries(o)
+
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
 
@@ -205,7 +218,7 @@ def process_args(queryset, compare=False):
 	vias = get_values(queryset.exclude(via=None), ['via'], limit=5)
 	locais = get_values(
 		queryset.exclude(bairro=None).exclude(via=None), ['bairro', 'via'], 5)
-	weekdays = count_weekdays(queryset)
+	weekdays = get_weekdays(queryset)
 
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
@@ -217,6 +230,47 @@ def process_args(queryset, compare=False):
 	for horario, tag in zip(get_time(list(queryset)), TAGS)]
 
 	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
+
+
+### Specialized DB parameter fetching functions; return ints
+
+def get_natures(queryset, limit=5):
+	return get_values(queryset, ['natureza'], limit=limit)
+
+def get_neighborhoods(queryset, limit=5):
+	return get_values(queryset.exclude(bairro=None), ['bairro'], limit=limit)
+
+def get_routes(queryset, limit=5):
+	return get_values(queryset.exclude(via=None), ['via'], limit=limit)
+
+def get_spots(queryset, limit=5):
+	return get_values(
+		queryset.exclude(bairro=None).exclude(via=None), 
+		['bairro', 'via'], limit=limit
+	)
+
+def get_weekdays(queryset):
+	"""
+	Takes a queryset.
+	Returns a Response object, with 'field', 'num', and 'type' properties.
+	"""
+	return count_objs(
+		queryset, delimitor=range(1, 8), type="Dia da semana",
+		funcqs=lambda qs, i: qs.filter(data__week_day=i),
+		## fill in the respective descriptive weekday name
+		funcfield=lambda qs: WEEKDAYS[qs[0].data.weekday()])
+
+def get_horaries(queryset):
+	"""
+	Takes a queryset.
+	Returns a Response object, with 'field', 'num', and 'type' properties.
+	"""
+	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
+	return [ Response(field=tag, num=len(horary), type='Horário')
+				for horary, tag in zip(get_time(list(queryset)), TAGS) ]
+
+
+### Other functions
 
 def calculate_variation(a, b):
 	"""
@@ -292,10 +346,15 @@ def get_time(querylst):
 
 def count_objs(queryset, delimitor, type, funcqs, funcfield):
 	"""
-	Takes a queryset, a function to be applied to the queryset,
-	which also takes an index, and a function to be applied to
-	the field, returning a Response object with the identification
-	of the obj and how many occurrences of it were found.
+	Returns a Response object, containing a field, num, and type properties.
+
+	INPUTS
+	queryset: a queryset
+	delimitor: a delimiting range, serving as the iteration's index; 
+	type: a type label for the Response object;
+	funcqs: a function that takes the queryset and index as input;
+	funcfield: a function that takes the queryset, prior to saving it in
+	Response.field;
 	"""
 	acc = []
 	for i in delimitor:
@@ -306,7 +365,7 @@ def count_objs(queryset, delimitor, type, funcqs, funcfield):
 			continue
 	return acc
 
-def count_weekdays(queryset):
+def get_weekdays(queryset):
 	"""
 	Takes a queryset and counts the ocurrences of each weekday,
 	using count_objs and custom functions for funcqs and funcfield.
@@ -331,12 +390,14 @@ def count_months(queryset):
 
 def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
 	"""
-	Takes a list of objects and two functions that will be used to
+	Processes 'objs' inside a genexp as to get the x and y axis.
+	- Takes a list of objects and two functions that will be used to
 	define how the obj will be returned.
-	Returns a tuple containing lists with an xaxis, and yaxis.
+	- The functions default to return x.field and y.num.
+	- Returns a tuple of lists of 'xaxis' and 'yaxis'.
 	"""
-	xaxis = [funcx(obj) for obj in objs]
-	yaxis = [funcy(obj) for obj in objs]
+	xaxis = (funcx(obj) for obj in objs)
+	yaxis = (funcy(obj) for obj in objs)
 	return xaxis, yaxis
 
 def nature_per_month_axis(queryset, nats):

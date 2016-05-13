@@ -27,7 +27,7 @@
 				TESTER = document.getElementById('{{ key|slugify }}');
 				data = [
 					{
-					{% if key == 'pie' %}
+					{% if 'Porcentagem' in key %}
 						type: 'pie',
 						{% autoescape off %}
 						labels: {{ values.labels }},
@@ -45,7 +45,7 @@
 				]
 				layout = {
 					title: '<b>11º BPM - Sinop</b><br />' +
-						'{{ key|capfirst }} - 2015',
+						'{{ key|capfirst }}',
 					xaxis: { title: 'Mês' },
 					yaxis: { title: 'Registros'},
 				}

@@ -13,6 +13,7 @@
 </style>
 
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
 
 			<div class="page-header">
 				<h1>Georreferenciamento <small>de registros criminais</small></h1>
@@ -94,5 +95,38 @@
 <script src="{% static 'analise_criminal/styledMarkers.js' %}"></script>
 <script src="{% static 'analise_criminal/oms.js' %}"></script>
 <script src="{% static 'analise_criminal/map.js' %}"></script>
+<script src="{% static 'analise_criminal/jquery.datetimepicker.full.min.js' %}"></script>
+<script type="text/javascript">
+$('document').ready(function() {
+	jQuery.datetimepicker.setLocale('pt');
+
+	var months = [
+		'Janeiro', 'Fevereiro', 'Março', 'Abril',
+		'Maio', 'Junho', 'Julho', 'Agosto',
+		'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+	]
+
+	var daysOfWeek = [
+		'Dom', 'Seg', 'Ter', 'Qua',
+		'Qui', 'Sex', 'Sab',
+	]
+
+	$('#id_data_inicial, #id_data_final').datetimepicker({
+		i18n: {
+			pt: {
+				months: months,
+				daysOfWeek: daysOfWeek
+			}
+		},
+		timepicker: false,
+		format: 'd/m/Y'
+	});
+
+	$('#id_hora_inicial, #id_hora_final').datetimepicker({
+		datepicker: false,
+		format: 'H:i'
+	});
+});
+</script>
 
 {% endblock %}

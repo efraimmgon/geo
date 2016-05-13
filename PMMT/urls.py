@@ -22,6 +22,7 @@ from django.views.static import serve
 from principal import urls as principal_urls
 from setup_app import urls as setup_urls
 from analise_criminal import urls as analise_urls
+from escala import urls as escala_urls
 from accounts import urls as accounts_urls
 
 urlpatterns = [
@@ -30,6 +31,7 @@ urlpatterns = [
     url(r'^setup/', include(setup_urls, namespace="setup")),
     url(r'^analise_criminal/', include(analise_urls, 
         namespace="analise_criminal")),
+    url(r'^escala/', include(escala_urls, namespace='escala')),
     url(r'^accounts/', include(accounts_urls, namespace='accounts')),
 ]
 

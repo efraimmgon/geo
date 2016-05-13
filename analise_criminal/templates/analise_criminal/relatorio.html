@@ -8,6 +8,7 @@
 
 <script src="{% static 'js/plotly.min.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
 <style>
 	
 </style>
@@ -231,5 +232,36 @@
 	</div>
 </div><!-- #results -->
 {% endif %} {% comment %} total.a and total.b {% endcomment %}
+
+<script src="{% static 'analise_criminal/jquery.datetimepicker.full.min.js' %}"></script>
+<script type="text/javascript">
+
+$('document').ready(function() {
+	jQuery.datetimepicker.setLocale('pt');
+
+	var months = [
+		'Janeiro', 'Fevereiro', 'Março', 'Abril',
+		'Maio', 'Junho', 'Julho', 'Agosto',
+		'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+	]
+
+	var daysOfWeek = [
+		'Dom', 'Seg', 'Ter', 'Qua',
+		'Qui', 'Sex', 'Sab',
+	]
+
+	$('#id_data_inicial_a, #id_data_final_a, \
+		#id_data_inicial_b, #id_data_final_b').datetimepicker({
+		i18n: {
+			pt: {
+				months: months,
+				daysOfWeek: daysOfWeek
+			}
+		},
+		timepicker: false,
+		format: 'd/m/Y'
+	});
+});
+</script>
 
 {% endblock %}
