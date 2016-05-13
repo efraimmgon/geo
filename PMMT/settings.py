@@ -27,7 +27,7 @@ DEBUG = True
 
 ADMINS = [('Efraim', 'efraim@pm.mt.gov.br'),]
 
-ALLOWED_HOSTS = ['efraimmgon.pythonanywhere.com', 'pmmt.pythonanywhere.com']
+ALLOWED_HOSTS = ['pmmt.pythonanywhere.com']
 
 
 # Application definition
