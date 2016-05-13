@@ -22,7 +22,6 @@ from django.views.static import serve
 from principal import urls as principal_urls
 from setup_app import urls as setup_urls
 from analise_criminal import urls as analise_urls
-from escala import urls as escala_urls
 from accounts import urls as accounts_urls
 
 urlpatterns = [
