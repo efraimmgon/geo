@@ -31,7 +31,6 @@ urlpatterns = [
     url(r'^setup/', include(setup_urls, namespace="setup")),
     url(r'^analise_criminal/', include(analise_urls, 
         namespace="analise_criminal")),
-    url(r'^escala/', include(escala_urls, namespace='escala')),
     url(r'^accounts/', include(accounts_urls, namespace='accounts')),
 ]
 
