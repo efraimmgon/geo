@@ -24,27 +24,29 @@ class MapOptionForm(forms.Form):
 	data_inicial = forms.DateField(
 		label='Data inicial',
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final = forms.DateField(
 		label='Data final',
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 
 class AdvancedOptionsForm(forms.Form):
 	
 	bairro = forms.CharField(label='Bairro', required=False,
-		help_text="Campo opcional.")
+		help_text="Campo opcional.",
+		widget=forms.TextInput(attrs={'class': 'form-control'}))
 	via = forms.CharField(label='Via', required=False, 
-		help_text="Campo opcional.")
+		help_text="Campo opcional.",
+		widget=forms.TextInput(attrs={'class': 'form-control'}))
 	hora_inicial = forms.TimeField(
 		label='Hora inicial', required=False, input_formats=['%H:%M'],
 		help_text="Campo opcional.",
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'}))
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
 	hora_final = forms.TimeField(
 		label='Hora final', required=False, input_formats=['%H:%M'],
 		help_text="Campo opcional.",
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm'}))
+		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
 
 
 class MapMarkerStyleForm(forms.Form):
@@ -61,17 +63,17 @@ class ReportForm(forms.Form):
 
 	data_inicial_a = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final_a = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 	data_inicial_b = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final_b = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa'}))
+		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 	choices = (
 		('Sim', 'Sim'),
@@ -92,7 +94,8 @@ class ReportFilterForm(forms.Form):
 
 	naturezas = forms.MultipleChoiceField(required=False,
 		widget=forms.CheckboxSelectMultiple, choices=choices)
-	bairro = forms.CharField(label='Bairro', required=False)
+	bairro = forms.CharField(label='Bairro', required=False,
+		widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 	choices_opts = (
 		('weekdays', 'Dias da semana'),

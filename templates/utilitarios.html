@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load staticfiles %}
+
 {% block title %}Utilitários{% endblock %}
 
 {% block body %}
@@ -14,11 +16,25 @@
 	</div>
 </div>
 
+<form class="form-horizontal well" method='GET' action='{% url "principal:utilitarios" %}'>
+	<fieldset>
+		<legend>Cálculo de dias de afastamento</legend>
 
-<h3>Cálculo de dias de afastamento</h3>
-<form method='GET' action='{% url "principal:utilitarios" %}'>
+	<div class="row">
+		{% for field in form.timedelta %}
+		<div class="col-md-6 form-group">
+			<label for="{{ field.id_for_label }}" class="control-label col-md-5">
+				{{ field.label }}
+			</label>
+			<div class="col-md-5">{{ field }}</div>
+		</div>
+		{% endfor %}
+	</div>
 	{{ form_timedelta.as_p }}
-	<input class='btn btn-default' type='submit' value='Calcular' />
+	<div class="col-md-offset-1">
+		<input class='btn btn-default' type='submit' value='Calcular' />
+	</div>
+	</fieldset>
 </form>
 {% if result_timedelta %}
 <h4>Resultado:</h4>
@@ -36,5 +52,35 @@
 </table>
 {% endif %}
 
+<link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
+<script src="{% static 'analise_criminal/jquery.datetimepicker.full.min.js' %}"></script>
+<script type="text/javascript">
+$('document').ready(function() {
+	jQuery.datetimepicker.setLocale('pt');
+
+	var months = [
+		'Janeiro', 'Fevereiro', 'Março', 'Abril',
+		'Maio', 'Junho', 'Julho', 'Agosto',
+		'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+	];
+
+	var daysOfWeek = [
+		'Dom', 'Seg', 'Ter', 'Qua',
+		'Qui', 'Sex', 'Sab',
+	];
+
+	$('#id_data_inicial').datetimepicker({
+		i18n: {
+			pt: {
+				months: months,
+				daysOfWeek: daysOfWeek
+			}
+		},
+		timepicker: false,
+		format: 'd/m/Y'
+	});
+
+});
+</script>
 
 {% endblock %}

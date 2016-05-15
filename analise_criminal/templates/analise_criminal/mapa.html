@@ -15,80 +15,121 @@
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
 
-			<div class="page-header">
-				<h1>Georreferenciamento <small>de registros criminais</small></h1>
-			</div>
+<div class="page-header">
+	<h1>Georreferenciamento <small>de registros criminais</small></h1>
+</div>
 
-			<div id="map" class="center-block"></div>
+<div id="map" class="center-block"></div>
 
-			<div id="appSettings">
-				<div id="control"><h3>Configurações</h3></div>
-				<form id="styleForm" class="form-horizontal" method="post" action="{% url 'analise_criminal:mapAjax' %}">
-					{% csrf_token %}
-					{% for field in forms.marker_styles %}
-					<div class="form-group">
-						<label for="{{ field.id_for_label }}" class="control-label col-md-2">
-							{{ field.label }}
-						</label>
-						<div class="col-md-10">{{ field }}</div>
-					</div>
-					{% endfor %}
-				</form>
-			</div>
+<br />
+<ul class="nav nav-pills">
+	<li><a aria-expanded="false" data-toggle="tab" href="#howto">Como usar?</a></li>
+</ul>
 
-			<h3>Opções de seleção</h3>
-			<h4 class="col-md-offset-2 col-md-10">Básicas</h4>
-			<form id="ocorrenciasForm" class="form-horizontal" method="post" action="{% url 'analise_criminal:map' %}">
-				{% csrf_token %}
-				{% for field in forms.basic_options %}
-				<div class="form-group">
-					<label for="{{ field.id_for_label}}" class="control-label col-md-2">
-						{{ field.label }}
-					</label>
-					<div class="col-md-10">{{ field }}</div>
-					{% if field.help_text %}
-					<div class="col-md-offset-2 col-md-10 text-info">
-						{{ field.help_text }}
-					</div>
-					{% endif %}
+<!-- howto -->
+<div class="tab-content">
+	<div class="tab-pane fade" id="howto">
+		<p>
+			Selecione uma data inicial e uma data final para gerar com os dados de ocorrências
+			do período selecionado.
+		</p>
+		<p>
+			As seleções avançadas - opcionais - podem ser usadas para propiciar um maior
+			controle sobre as ocorrências selecionadas
+		</p>
+		<p>
+			O tipo de marcador pode ser selecionado em <u>Configurações</u>. As opções são:<br />
+			Marcador básico: é a opção padrão, e marca o ponto geográfico exato da respectiva ocorrência no mapa.
+			<br />
+			Mapa de calor: Uma camada mapa de calor é uma visualização que demonstra a intensidade dos 
+			dados em pontos geográficos. Quando a camada de mapa de calor é ativada, uma sobreposição 
+			colorida é exibida sobre o mapa. Por padrão, as áreas de maior intensidade são coloridas em 
+			vermelho e as de menor intensidade em verde.
+		</p>
+	</div>
+</div>
+<!-- //howto -->
+
+<div id="appSettings">
+	<div id="control"><h3>Configurações</h3></div>
+	<form id="styleForm" class="form-horizontal well" method="post" action="{% url 'analise_criminal:mapAjax' %}">
+		{% csrf_token %}
+		{% for field in forms.marker_styles %}
+		<div class="form-group">
+			<label for="{{ field.id_for_label }}" class="control-label col-md-2">
+				{{ field.label }}
+			</label>
+			<div class="col-md-10">{{ field }}</div>
+		</div>
+		{% endfor %}
+	</form>
+</div>
+
+<h3>Opções de seleção</h3>
+<form id="ocorrenciasForm" class="form-horizontal well" method="post" action="{% url 'analise_criminal:map' %}">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-md-6">
+			<fieldset>
+			<legend class="col-md-offset-1 col-md-11">Básicas</legend>
+			{% for field in forms.basic_options %}
+			<div class="form-group">
+				<label for="{{ field.id_for_label}}" class="control-label col-md-3">
+					{{ field.label }}
+				</label>
+				<div class="col-md-9">{{ field }}</div>
+				{% if field.help_text %}
+				<div class="col-md-offset-3 col-md-9 help-block">
+					{{ field.help_text }}
 				</div>
-				{% endfor %}
-
-				<h4 class="col-md-offset-2 col-md-10">Avançadas</h4>
-				{% for field in forms.advanced_options %}
-				<div class="form-group">
-					<label for="{{ field.id_for_label }}" class="control-label col-md-2">
-						{{ field.label }}
-					</label>
-					<div class="col-md-10">{{ field }}</div>
-					{% if field.help_text %}
-					<div class="col-md-offset-2 col-md-10 text-info">
-						{{ field.help_text }}
-					</div>
-					{% endif %}
-				</div>
-				{% endfor %}
+				{% endif %}
+			</div>
+			{% endfor %}
+			
+			<div class="col-md-offset-3 col-md-9">
+				<p class="help-block">Buscas disponíveis de {{ min }} a {{ max }}.</p>
+				<p class="text-warning">É obrigatória a seleção de uma natureza, e as datas
+					inicial e final.</p>
 
 				<div class="form-group">
-					<div class="col-md-offset-2 col-md-10">
 						<button class="btn btn-default" type="submit"> 
 							<span class="glyphicon glyphicon-search"></span> Buscar
 						</button>
-					</div>
 				</div>
-				<p class="text-info">Buscas disponíveis de {{ min }} a {{ max }}.</p>
-				<p class="text-warning">É obrigatória a seleção de uma natureza, e as datas
-					inicial e final.</p>
-			</form>
+			</div>
+			</fieldset>
+		</div>
 
-			<!-- Síntese do número das ocorrências -->
-			<div id="id_info">
+		<div class="col-md-6">
+			<fieldset>
+			<legend class="col-md-offset-1 col-md-11">Avançadas</legend>
+			{% for field in forms.advanced_options %}
+			<div class="form-group">
+				<label for="{{ field.id_for_label }}" class="control-label col-md-3">
+					{{ field.label }}
+				</label>
+				<div class="col-md-9">{{ field }}</div>
+				{% if field.help_text %}
+				<span class="col-md-offset-3 col-md-9">
+					{{ field.help_text }}
+				</span>
+				{% endif %}
 			</div>
-			<!-- Tabela com dados das ocorrências -->
-			<div id="dados-ocorrencias">
-			</div>
-			<!-- Falhas; dados não encontrados -->
-			<div id="errors" class="text-danger"></div>
+			{% endfor %}
+			</fieldset>
+		</div>
+	</div>
+	
+</form>
+
+<!-- Síntese do número das ocorrências -->
+<div id="id_info">
+</div>
+<!-- Tabela com dados das ocorrências -->
+<div id="dados-ocorrencias">
+</div>
+<!-- Falhas; dados não encontrados -->
+<div id="errors" class="text-danger"></div>
 
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7ekvGGHxVTwTVcpi073GOERnktqvmYz8&libraries=geometry,visualization" type='text/javascript'></script> 

@@ -17,17 +17,31 @@
 	<h1>Relatório <small>de registros criminais</small></h1>
 </div>
 
-<p class="text-info">
-	Selecione dois períodos para gerar um relatório de
-	comparação de dados com os respectvos dados, por exemplo: <br /><br />
-	Período A:<br />
-	Data Inicial A: 1/9/2015 - Data Final A: 30/9/2015 <br />
-	Período B:<br />
-	Data Inicial B: 1/10/2015 - Data Final B: 31/10/2015
-</p>
+<ul class="nav nav-pills">
+	<li><a aria-expanded="false" data-toggle="tab" href="#howto">Como usar?</a></li>
+</ul>
 
-<form class="form-horizontal" method='get' 
-	action="{% url 'analise_criminal:make_report' %}">			
+<div class="tab-content">
+	<div class="tab-pane fade" id="howto">
+		<p>
+			Selecione dois períodos para gerar um relatório de
+			comparação de dados.
+		</p>
+		<p>
+			Um período é composto por uma data inicial e uma data final.
+		</p>
+		<p>
+			A seleção de dois períodos é obrigatória em decorrência da
+			natureza comparativa do aplicativo.
+		</p>
+	</div>
+</div>
+
+<br />
+
+
+<form class="form-horizontal well" method='get' 
+	  action="{% url 'analise_criminal:make_report' %}">
 	<div class="row">
 		<div class="col-md-6">
 			<fieldset>
@@ -61,7 +75,7 @@
 				</label>
 				<div class="col-md-9">
 				{% for option in field %}
-					<p>{{ option }}</p>
+					{{ option }}{% if not forloop.last %} - {% endif %}
 				{% endfor %}
 				</div>
 			</div>
@@ -77,6 +91,7 @@
 			</button>
 		</div>
 	</div>
+	</fieldset>
 </form>
 
 {% if a.total and b.total %}

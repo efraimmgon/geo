@@ -94,9 +94,9 @@ def process_report_arguments(form_report, form_filter):
 		wd_xaxis1, wd_yaxis1 = get_axis(weekdays1)
 		wd_xaxis2, wd_yaxis2 = get_axis(weekdays2)
 		context['axis']['Dias da semana'] = [
-			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a',
+			{'x': list(wd_xaxis1), 'y': list(wd_yaxis1), 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_a',
+			{'x': list(wd_xaxis2), 'y': list(wd_yaxis2), 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
@@ -431,9 +431,9 @@ def append_axis(tags, data_lst, names):
 		xaxis1, yaxis1 = get_axis(data['a'])
 		xaxis2, yaxis2 = get_axis(data['b'])
 		context_dct[tag] = [
-			{'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
+			{'x': list(xaxis1), 'y': list(yaxis1), 'id': 'id_%s_graph' % tag,
 			'color': 'rgb(255,0,0)', 'name': names['a']},
-			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
+			{'x': list(xaxis2), 'y': list(yaxis2), 'id': 'id_%s_graph' % tag,
 			'color': 'rgb(255,255,0)', 'name': names['b']},
 		]
 	return context_dct
