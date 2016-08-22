@@ -1,14 +1,17 @@
-{% extends "setup_app/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Setup{% endblock %}
+{% block title %}Gerenciar banco de dados{% endblock %}
 
 {% block body %}
 
-<h1>Setup</h1>
+<h1>Gerenciar banco de dados</h1>
 
-<h3>Navigation</h3>
+<p>Total de ocorrências no BD: {{num_rows}}</p>
+
+<h3>Sumário</h3>
 <ul>
-	<li><a href="{% url 'setup:update_lat_lng' %}">Update database.</a></li>
+	<li><a href="{% url 'setup:insert_records' %}">Incluir ocorrências no BD</a></li>
+	<li><a href="{% url 'setup:update_lat_lng' %}">Sincronizar latitude e longitude</a></li>
 </ul>
 
 <div id='test'></div>
@@ -18,7 +21,7 @@
 $(function() {
 	$id_test = $('#test');
 	var count = 0;
-	
+/*	
 	$.ajax({
 		url: '/setup/ajaxTest/'
 	})
@@ -52,6 +55,7 @@ $(function() {
 		count++;
 		process_json(json);
 	}
+*/
 });
 </script>
 

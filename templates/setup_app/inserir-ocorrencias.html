@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Inserir ocorrências no BD{% endblock %}
+
+{% block body %}
+
+<h1>Inserir ocorrências no BD</h1>
+<p class="info">
+	Selecione um arquivo em format csv com os dados das
+	ocorrências para inseri-los no Banco de Dados.
+	<br />
+	Selecione também a cidade de referência das ocorrências a serem inseridas.
+</p>
+<form method="POST" enctype="multipart/form-data" action="{% url 'setup:insert_records' %}">
+	{% csrf_token %}
+	<table>
+		{{ form }}
+	</table>
+	<input class="btn btn-default" type="submit" value="Inserir dados">
+</form>
+
+{% if result %}
+<h3>Resultado:</h3>
+<ol>
+	{% for info in result %}
+	<li>{{ info }}</li>
+	{% endfor %}
+</ol>
+{% endif %}
+
+
+{% endblock %}

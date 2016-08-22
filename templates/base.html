@@ -35,6 +35,9 @@
 			<li><a href="{% url 'analise_criminal:report' %}">Relatório</a></li>
 			<li><a href="{% url 'principal:biblioteca' %}">Biblioteca</a></li>
 			<li><a href="{% url 'principal:utilitarios' %}">Utilitários</a></li>
+			{% if user.is_staff %}
+			<li><a href="{% url 'setup:index' %}">Gerenciar banco de dados</a></li>
+			{% endif %}
 		</ul>
 		<ul class="nav navbar-nav navbar-right">
 		{% if user.is_authenticated %}

@@ -1,19 +1,22 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.core import serializers
+from django import forms
 
-import json
+import json, csv
+from io import StringIO
 
-from setup_app.models import Ocorrencia
+from setup_app.models import Ocorrencia, Cidade
 from setup_app.functions import dump_object
+from setup_app.utils import populate_db
 
 
 def index(request):
-	"/setup/ || Home for testing code."
-	return render(request, 'setup_app/index.html')
+	context = {'num_rows': Ocorrencia.objects.count()}
+	return render(request, 'setup_app/index.html', context)
+
 
 def ajaxTest(request):
-	"/setup/ajaxTest/ || Testing code."
 	queryset = Ocorrencia.objects.filter(latitude=0.0)[:20]
 	if queryset.count() > 0:
 		data = serializers.serialize('json', queryset)	
@@ -21,18 +24,28 @@ def ajaxTest(request):
 		data = json.dumps({'end': 'Não existem mais lat e lng nulos.'})
 	return HttpResponse(data, content_type='application/json')
 
+
+def insert_records(request):
+	context = {}
+	form = RecordsFileForm()
+	if request.method == 'POST':
+		form = RecordsFileForm(request.POST, request.FILES)
+		if form.is_valid():
+			csv_data = process_file(request.FILES["arquivo"])
+			result = populate_db(csv_data, form.cleaned_data['cidade'], 
+						date_format='br', verbose=True)
+			# TODO: redirect
+			context["result"] = result
+	context["form"] = form
+	return render(request, 'setup_app/inserir-ocorrencias.html', context)
+
+
 def update_lat_lng(request):
-	"""
-	/setup/update_lat_lng/
-	Renders the template to begin the update
-	"""
 	return render(request, 'setup_app/update_lat_lng.html')
 
+
 def get_address(request):
-	"""
-	/setup/get_address/
-	Fetches Ocorrencia objects; returns them as json.
-	"""
+	"Fetches Ocorrencia objects; returns them as json."
 	queryset = Ocorrencia.objects.filter(latitude=0.0)[:100]
 	if queryset.count() > 0:
 		data = serializers.serialize('json', queryset)	
@@ -40,6 +53,7 @@ def get_address(request):
 		data = json.dumps({'end': 'Não existem mais lat e lng nulos.'})
 	return HttpResponse(data, content_type='application/json')
 	
+
 def update_db(request):
 	"/setup/update_db/ || Updates the Ocorrencia model."
 	if request.method == 'POST':
@@ -58,3 +72,23 @@ def update_db(request):
 				continue
 		return HttpResponse(json.dumps(response_text),
 			content_type="application/json")
+
+
+### helper functions
+
+def process_file(f):
+	csv_data = csv.reader(
+		StringIO(
+			f.read().decode("utf-8")),
+		delimiter=",")
+	return csv_data
+
+
+### Forms
+
+class RecordsFileForm(forms.Form):
+	cities = Cidade.objects.all()
+
+	cidade = forms.ModelChoiceField(queryset=cities, required=True)
+	arquivo = forms.FileField(required=True)
+

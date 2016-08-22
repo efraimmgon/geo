@@ -1,6 +1,6 @@
 from django import forms
 
-from setup_app.models import Ocorrencia
+from setup_app.models import Ocorrencia, Cidade
 from .report import FURTO, ROUBO, USO, HOM, TRAFICO
 
 
@@ -24,11 +24,13 @@ class MapOptionForm(forms.Form):
 	data_inicial = forms.DateField(
 		label='Data inicial',
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final = forms.DateField(
 		label='Data final',
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 
 class AdvancedOptionsForm(forms.Form):
@@ -42,11 +44,13 @@ class AdvancedOptionsForm(forms.Form):
 	hora_inicial = forms.TimeField(
 		label='Hora inicial', required=False, input_formats=['%H:%M'],
 		help_text="Campo opcional.",
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
+		widget=forms.TimeInput(
+			attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
 	hora_final = forms.TimeField(
 		label='Hora final', required=False, input_formats=['%H:%M'],
 		help_text="Campo opcional.",
-		widget=forms.TimeInput(attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
+		widget=forms.TimeInput(
+			attrs={'placeholder': 'hh:mm', 'class': 'form-control'}))
 
 
 class MapMarkerStyleForm(forms.Form):
@@ -63,17 +67,21 @@ class ReportForm(forms.Form):
 
 	data_inicial_a = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final_a = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 	data_inicial_b = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 	data_final_b = forms.DateField(
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
-		widget=forms.DateInput(attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
 
 	choices = (
 		('Sim', 'Sim'),
@@ -92,6 +100,9 @@ class ReportFilterForm(forms.Form):
 		('Homicídio', 'Homicídio'),
 	)
 
+	cities = Cidade.objects.all()
+
+	cidade = forms.ModelChoiceField(queryset=cities, required=True)
 	naturezas = forms.MultipleChoiceField(required=False,
 		widget=forms.CheckboxSelectMultiple, choices=choices)
 	bairro = forms.CharField(label='Bairro', required=False,

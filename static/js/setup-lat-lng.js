@@ -14,7 +14,7 @@ $(function() {
 	/* Fetches the data from the DB, finds its lat lng, and updates the info */
 		// a hack to get the html to be uploaded
 		var $request = $.ajax({
-			url: '/setup/get_address/'
+			url: '/setup/get-address/'
 		})
 		.fail( function(jqXHR, textStatus, errorThrown) {
 			alert("Request failed: " + textStatus + ', ' + errorThrown);
@@ -100,7 +100,7 @@ $(function() {
 		$form.on('submit', function(e) {
 			e.preventDefault();
 			var $request = $.ajax({
-				url: '/setup/update_db/',
+				url: '/setup/update-db/',
 				method: 'POST',
 				data: $form.serialize()
 			})

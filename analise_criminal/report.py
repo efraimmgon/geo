@@ -46,32 +46,31 @@ def process_report_arguments(form_report, form_filter):
 	A.end   = form_report.cleaned_data['data_final_a']
 	B.start = form_report.cleaned_data['data_inicial_b']
 	B.end   = form_report.cleaned_data['data_final_b']
+	
+	city = form_filter.cleaned_data['cidade']
 
 	o1 = Ocorrencia.objects.filter(data__gte=A.start, 
-								   data__lte=A.end)
+								   data__lte=A.end,
+								   cidade=city)
 	o2 = Ocorrencia.objects.filter(data__gte=B.start, 
-								   data__lte=B.end)
+								   data__lte=B.end,
+								   cidade=city)
+
+	total_a, total_b = o1.count(), o2.count()
 
 	context['a'] = {
 		'start': A.start,
 		'end': A.end,
-		'total': o1.count()
+		'total': total_a
 	}
 	context['b'] = {
 		'start': B.start,
 		'end': B.end,
-		'total': o2.count()
+		'total': total_b
 	}
 
 	# GENERAL ANALYSIS + GRAPHS
 	if form_report.cleaned_data['opts'] == 'Sim':
-#		natures  = get_natures(o)
-#		hoods 	 = get_neighborhoods(o)
-#		routes 	 = get_routes(o)
-#		spots 	 = get_spots(o)
-#		weekdays = get_weekdays(o)
-#		horaries = get_horaries(o)
-
 		a, comparison1, horarios1 = process_args(o1, compare=True)
 		naturezas1, bairros1, vias1, locais1, weekdays1 = a
 
@@ -100,21 +99,19 @@ def process_report_arguments(form_report, form_filter):
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
-		context['axis']['pie'] = []
-		for queryset, id_ in zip([o1, o2], ['pie_a', 'pie_b']):
-			labels, values = return_naturezas_axis(queryset)
-			context['axis']['pie'].append(
-				{'labels': labels, 'values': values, 'id': id_})
+
+		def map_helper(qs, id):
+			labels, values = return_naturezas_axis(qs)
+			return {'labels': list(labels), 'values': list(values), 'id': id}
+
+		context['axis']['pie'] = map(map_helper, [o1, o2], ['pie_a', 'pie_b'])
 
 		# Percentage fluctuation from A to B
-		context['comparison'] = []
-		for a, b in zip(
-			(get_comparison_data(o1, nat) for nat in NATUREZAS),
-			(get_comparison_data(o2, nat) for nat in NATUREZAS)):
-			context['comparison'].append({
-				'a': a, 'b': b, 'variation': get_percentage(a['num'], b['num'])
-			})
-		context['variation'] = get_percentage(o1.count(), o2.count())
+		context['comparison'] = map(lambda a, b: \
+			{'a': a, 'b': b, 'variation': get_percentage(a['num'], b['num'])},
+			comparison1, comparison2)
+
+		context['variation'] = get_percentage(total_a, total_b)
 
 		context['basico'] = [
 			{TAGS['records']: [naturezas1, naturezas2]},
@@ -124,6 +121,7 @@ def process_report_arguments(form_report, form_filter):
 			{TAGS['weekdays']: [weekdays1, weekdays2]},
 			{TAGS['time']: [horarios1, horarios2]},
 		]
+	# End of General Analysis + Graphs
 
 	if form_filter.cleaned_data['naturezas']:
 		context['filtro'] = {}
@@ -229,7 +227,7 @@ def process_args(queryset, compare=False):
 	periods = [Response(field=tag, num=len(horario), type='Horário') 
 	for horario, tag in zip(get_time(list(queryset)), TAGS)]
 
-	return ((naturezas, bairros, vias, locais, weekdays), comparison, periods)
+	return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
 
 ### Specialized DB parameter fetching functions; return ints
@@ -308,7 +306,7 @@ def get_comparison_data(queryset, param):
 	try:
 		data = queryset.filter(natureza__icontains=param).values(
 			'natureza').annotate(num=Count('id'))
-		acc = [row['num'] for row in data]
+		acc = map(lambda row: row['num'], data)
 		return {'natureza': param, 'num': sum(acc)}
 	except IndexError:
 		return {'natureza': param, 'num': 0}
@@ -396,8 +394,8 @@ def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
 	- The functions default to return x.field and y.num.
 	- Returns a tuple of lists of 'xaxis' and 'yaxis'.
 	"""
-	xaxis = (funcx(obj) for obj in objs)
-	yaxis = (funcy(obj) for obj in objs)
+	xaxis = map(funcx, objs)
+	yaxis = map(funcy, objs)
 	return xaxis, yaxis
 
 def nature_per_month_axis(queryset, nats):
@@ -413,17 +411,17 @@ def nature_per_month_axis(queryset, nats):
 		context_dct[nat] = {'x': xaxis, 'y': yaxis}
 	return context_dct
 
-def return_naturezas_axis(queryset):
+
+def return_naturezas_axis(qs):
 	"""
 	Takes a queryset and filters it for each item in NATUREZAS.
 	Returns the natures capitalized, along with a list of their counts.
 	"""
-	labels, values = [], []
-	for nat in NATUREZAS:	
-		qs = queryset.filter(natureza__icontains=nat)
-		labels.append(nat.capitalize())
-		values.append(qs.count())
+	labels = map(lambda n: n.capitalize(), NATUREZAS)
+	values = map(lambda n: qs.filter(natureza__icontains=n).count(), 
+				 NATUREZAS)
 	return labels, values
+
 
 def append_axis(tags, data_lst, names):
 	context_dct = OrderedDict()
