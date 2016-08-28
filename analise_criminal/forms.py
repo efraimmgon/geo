@@ -1,23 +1,19 @@
 from django import forms
 
 from setup_app.models import Ocorrencia, Cidade
-from .report import FURTO, ROUBO, USO, HOM, TRAFICO
+from .report import NATUREZAS
 
 
 class MapOptionForm(forms.Form):
 
-	choices = (
-		('', 'Selecione'),
-		('todas', 'Todas'),
-		(FURTO, 'Furto'),
-		(ROUBO, 'Roubo'),
-		('drogas', 'Entorpecentes'),
-		(USO, 'Uso de Entorpecentes'),
-		(TRAFICO, 'Tráfico de Entorpecentes'),
-		(HOM, 'Homicídio'),
-		(HOM+' culposo', 'Homicídio Culposo'),
-		(HOM+' doloso', 'Homicídio Doloso'),
-	)
+	choices = [
+		("", "Selecione"),
+		("todas", "Todas"),
+		("drogas", "Entorpecentes"),
+		("homic", "Homicídio"),
+	]
+
+	choices += list( map(lambda n: (n.nome, n.nome), NATUREZAS) )
 
 	natureza = forms.ChoiceField(
 		label='Natureza', choices=choices, required=True)

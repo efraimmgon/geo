@@ -1,23 +1,32 @@
-"""
-- Functions from the report and make_report func from analise_criminal.views
-"""
-
 from django.db.models import Count
 
 from datetime import time
 from unicodedata import normalize
 from collections import OrderedDict
+from functools import reduce
 
-from setup_app.models import Ocorrencia
-from .collections import (
-	MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Response, Struct
+from setup_app.models import Ocorrencia, Natureza
+from .utils import (
+	MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Struct,
+	update, lmap
 )
 
+## furto, roubo, uso, homicídio, tráfico; excluding associação
+nats = [
+ (3, 'Furto'),
+ (4, 'Homicídio Culposo'),
+ (5, 'Homicídio Doloso'),
+ (6, 'Roubo'),
+ (7, 'Tráfico Ilícito de Drogas'),
+ (8, 'Uso Ilícito de Drogas')
+]
 
-NATS = ('furto', 'roubo', 'uso ilícito de drogas', 'homicídio', 
-	'tráfico ilícito de drogas')
-FURTO, ROUBO, USO, HOM, TRAFICO = [normalize('NFKD', nat) for nat in NATS]
-NATUREZAS = (FURTO, ROUBO, USO, HOM, TRAFICO)
+NATUREZAS = lmap(lambda n: Natureza.objects.get(pk=n[0]), nats)
+NATUREZAS_ID = reduce(lambda acc, n: update(acc, {n.pk: n.nome}),
+					  NATUREZAS, {})
+NATUREZAS_ID_ALL = reduce(lambda acc, n: update(acc, {n.pk: n.nome}),
+					   Natureza.objects.all(), {})
+
 
 def process_report_arguments(form_report, form_filter):
 	"""
@@ -33,7 +42,7 @@ def process_report_arguments(form_report, form_filter):
 		'weekdays': 'Registros por dia da semana',
 		'time': 'Registros por horário'
 	}
-	
+
 	context = {}
 	A = Struct()
 	B = Struct()
@@ -46,15 +55,13 @@ def process_report_arguments(form_report, form_filter):
 	A.end   = form_report.cleaned_data['data_final_a']
 	B.start = form_report.cleaned_data['data_inicial_b']
 	B.end   = form_report.cleaned_data['data_final_b']
-	
+
 	city = form_filter.cleaned_data['cidade']
 
-	o1 = Ocorrencia.objects.filter(data__gte=A.start, 
-								   data__lte=A.end,
-								   cidade=city)
-	o2 = Ocorrencia.objects.filter(data__gte=B.start, 
-								   data__lte=B.end,
-								   cidade=city)
+	o1 = Ocorrencia.objects.select_related('cidade').filter(
+		data__gte=A.start, data__lte=A.end, cidade=city)
+	o2 = Ocorrencia.objects.select_related('cidade').filter(
+		data__gte=B.start, data__lte=B.end, cidade=city)
 
 	total_a, total_b = o1.count(), o2.count()
 
@@ -79,13 +86,12 @@ def process_report_arguments(form_report, form_filter):
 
 		# GRAPHS
 		context['axis'] = OrderedDict()
-		context['axis'].update( 
+		context['axis'].update(
 			append_axis(
-				tags=['naturezas', 'bairros', 'vias', 'horários'],
-				data_lst=[{'a': naturezas1, 'b': naturezas2}, 
-						  {'a': bairros1, 'b': bairros2},
-						  {'a': vias1, 'b': vias2}, 
-						  {'a': horarios1, 'b': horarios2}],
+				data_lst=[{'tag': 'naturezas', 'a': naturezas1, 'b': naturezas2},
+						  {'tag': 'bairros', 'a': bairros1, 'b': bairros2},
+						  {'tag': 'vias', 'a': vias1, 'b': vias2},
+						  {'tag': 'horários', 'a': horarios1, 'b': horarios2}],
 				names={'a': 'Período A', 'b': 'Período B'}
 			)
 		)
@@ -93,21 +99,22 @@ def process_report_arguments(form_report, form_filter):
 		wd_xaxis1, wd_yaxis1 = get_axis(weekdays1)
 		wd_xaxis2, wd_yaxis2 = get_axis(weekdays2)
 		context['axis']['Dias da semana'] = [
-			{'x': list(wd_xaxis1), 'y': list(wd_yaxis1), 'id': 'id_weekday_graph_a',
+			{'x': wd_xaxis1, 'y': wd_yaxis1, 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,0,0)', 'name': 'Período A'},
-			{'x': list(wd_xaxis2), 'y': list(wd_yaxis2), 'id': 'id_weekday_graph_a',
+			{'x': wd_xaxis2, 'y': wd_yaxis2, 'id': 'id_weekday_graph_a',
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
 
 		def map_helper(qs, id):
 			labels, values = return_naturezas_axis(qs)
-			return {'labels': list(labels), 'values': list(values), 'id': id}
+			return {'labels': labels, 'values': values, 'id': id}
 
-		context['axis']['pie'] = map(map_helper, [o1, o2], ['pie_a', 'pie_b'])
+		context['axis']['pie'] = lmap(map_helper,
+									[o1, o2], ['pie_a', 'pie_b'])
 
 		# Percentage fluctuation from A to B
-		context['comparison'] = map(lambda a, b: \
+		context['comparison'] = lmap(lambda a, b: \
 			{'a': a, 'b': b, 'variation': get_percentage(a['num'], b['num'])},
 			comparison1, comparison2)
 
@@ -135,8 +142,8 @@ def process_report_arguments(form_report, form_filter):
 				{TAGS['time']: []}
 			]
 			current = context['filtro'][natureza]
-			for registros in [o1.filter(natureza__contains=natureza),
-				o2.filter(natureza__contains=natureza)]:
+			for registros in [o1.filter(naturezas__nome__icontains=natureza),
+							  o2.filter(naturezas__nome__icontains=natureza)]:
 				(_, bairros, vias, locais, wd), _, horarios = process_args(
 					registros, compare=False)
 				values = [bairros, vias, locais, wd, horarios]
@@ -181,7 +188,7 @@ def process_report_arguments(form_report, form_filter):
 			context['detalhamento']['semana'] = weekday_detail
 		if 'time' in form_filter.cleaned_data['details']:
 			time_detail = OrderedDict()
-			for hora in ['00:00 - 05:59', '06:00 - 11:59', 
+			for hora in ['00:00 - 05:59', '06:00 - 11:59',
 			'12:00 - 17:59', '18:00 - 23:59']:
 				time_detail[hora] = [
 					{TAGS['natures']: []},
@@ -201,31 +208,40 @@ def process_report_arguments(form_report, form_filter):
 						for key in current[j].keys():
 							current[j][key] += [values[j]]
 			context['detalhamento']['horários'] = time_detail
-			
+
 	return context
 
 
-def process_args(queryset, compare=False):
+def process_args(qs, compare=False):
 	"""
-	Takes a queryset and an optional compare arg; returns generated data.
-	Generates data with the given queryset; if compare is true, also
+	Takes a qs and an optional compare arg; returns generated data.
+	Generates data with the given qs; if compare is true, also
 	generates comparison data.
 	"""
-	naturezas = get_values(queryset, ['natureza'], limit=5)
-	bairros = get_values(queryset.exclude(bairro=None), ['bairro'], limit=5)
-	vias = get_values(queryset.exclude(via=None), ['via'], limit=5)
-	locais = get_values(
-		queryset.exclude(bairro=None).exclude(via=None), ['bairro', 'via'], 5)
-	weekdays = get_weekdays(queryset)
+	qs_for_naturezas = qs.select_related('cidade', 'naturezas')
+	naturezas = get_qslist(qs_for_naturezas, 'naturezas')
+	qs_for_bairros = qs.exclude(bairro=None).select_related('cidade')
+	bairros = get_qslist(qs_for_bairros, 'bairro')
+	qs_for_vias = qs.exclude(via=None).select_related('cidade')
+	vias = get_qslist(qs_for_vias, 'via')
+	qs_for_local = qs.exclude(bairro=None).exclude(via=None)
+	locais = get_qslist(qs_for_local, 'bairro', 'via')
+	weekdays = get_weekdays(qs)
 
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
 	if compare:
-		comparison = (get_comparison_data(queryset, nat) for nat in NATUREZAS)
+		comparison = lmap(lambda n: get_comparison_data(qs, n),
+						 NATUREZAS)
 
 	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	periods = [Response(field=tag, num=len(horario), type='Horário') 
-	for horario, tag in zip(get_time(list(queryset)), TAGS)]
+	## TODO: create a field `periodos` in the `Ocorrencia` model
+	periods = [
+		{'field':tag, 'num':len(horario), 'type':'Horário'}
+		for horario, tag in zip(get_time(list(qs)), TAGS)]
+#	periods = [
+#		Response(field=tag, num=len(horario), type='Horário')
+#		for horario, tag in zip(get_time(list(qs)), TAGS) ]
 
 	return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
@@ -243,14 +259,14 @@ def get_routes(queryset, limit=5):
 
 def get_spots(queryset, limit=5):
 	return get_values(
-		queryset.exclude(bairro=None).exclude(via=None), 
+		queryset.exclude(bairro=None).exclude(via=None),
 		['bairro', 'via'], limit=limit
 	)
 
 def get_weekdays(queryset):
 	"""
 	Takes a queryset.
-	Returns a Response object, with 'field', 'num', and 'type' properties.
+	Returns a dict, with 'field', 'num', and 'type' keys.
 	"""
 	return count_objs(
 		queryset, delimitor=range(1, 8), type="Dia da semana",
@@ -261,10 +277,10 @@ def get_weekdays(queryset):
 def get_horaries(queryset):
 	"""
 	Takes a queryset.
-	Returns a Response object, with 'field', 'num', and 'type' properties.
+	Returns a dict, with 'field', 'num', and 'type' keys.
 	"""
 	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	return [ Response(field=tag, num=len(horary), type='Horário')
+	return [ dict(field=tag, num=len(horary), type='Horário')
 				for horary, tag in zip(get_time(list(queryset)), TAGS) ]
 
 
@@ -290,35 +306,37 @@ def get_percentage(a, b):
 		return calculate_variation(a, b)
 	return calculate_variation(b, a)
 
-def get_values(queryset, fields, limit=5):
-	"""
-	Takes a queryset, filtering it according to the field and
-	limit args, returning a namedtuple, as of prepare_data().
-	"""
-	if len(fields) == 2:
-		data = queryset.values(fields[0], fields[1]).annotate(num=Count('id'))
-		return prepare_double_field_data(data.order_by('-num')[:limit], 
-			fields[0], fields[1])
-	data = queryset.values(fields[0]).annotate(num=Count('id'))
-	return prepare_data(data.order_by('-num')[:limit], fields[0])
+def get_qslist(qs, *fields, limit=5):
+	qs = qs.select_related("cidade").values(*fields).annotate(num=Count("id"))
+	## pass only as many as specified in `limit`
+	qs = qs.order_by('-num')[:limit]
+	## pass only the pre-selected naturezas
+	#if 'naturezas' in fields:
+	#	qs = filter(lambda row: row["naturezas"] in NATUREZAS_ID.keys(), qs)
+
+	def helper(field, row):
+		## returns the pk of naturezas, so we need to map it to its name
+		if field == 'naturezas':
+			return NATUREZAS_ID_ALL.get(row.get(field))
+		return row.get(field)
+
+	return lmap(lambda row: {
+		#"field": " | ".join(fields),
+		"field": ", ".join(lmap(lambda f: helper(f, row), fields)),
+		"num": row.get("num"),
+		"type": " & ".join(fields)
+		},
+		## returns a list of dicts with the keys `id` and the ones on `fields`
+		qs)
 
 def get_comparison_data(queryset, param):
 	try:
-		data = queryset.filter(natureza__icontains=param).values(
-			'natureza').annotate(num=Count('id'))
-		acc = map(lambda row: row['num'], data)
+		data = queryset.filter(naturezas=param).values(
+			'naturezas').annotate(num=Count('id'))
+		acc = lmap(lambda row: row['num'], data)
 		return {'natureza': param, 'num': sum(acc)}
 	except IndexError:
 		return {'natureza': param, 'num': 0}
-
-def prepare_data(querylst, field):
-	"""Wraps the data for iteration on the template"""
-	return [Response(field=row[field], num=row['num'], type=field) for row in querylst]
-
-def prepare_double_field_data(querylst, field1, field2):
-	"""Wraps the data for iteration on the template"""
-	return [Response(field=row[field1]+', '+row[field2], num=row['num'], 
-		type=row[field1]+', '+row[field2]) for row in querylst]
 
 
 ### Count occurrences of specific objects
@@ -344,21 +362,21 @@ def get_time(querylst):
 
 def count_objs(queryset, delimitor, type, funcqs, funcfield):
 	"""
-	Returns a Response object, containing a field, num, and type properties.
+	Returns a dict, containing a field, num, and type keys.
 
 	INPUTS
 	queryset: a queryset
-	delimitor: a delimiting range, serving as the iteration's index; 
-	type: a type label for the Response object;
+	delimitor: a delimiting range, serving as the iteration's index;
+	type: a type label for the dict response;
 	funcqs: a function that takes the queryset and index as input;
 	funcfield: a function that takes the queryset, prior to saving it in
-	Response.field;
+	field;
 	"""
 	acc = []
 	for i in delimitor:
 		qs = funcqs(queryset, i)
 		try:
-			acc.append(Response(field=funcfield(qs), num=qs.count(), type=type))
+			acc.append(dict(field=funcfield(qs), num=qs.count(), type=type))
 		except IndexError:
 			continue
 	return acc
@@ -375,18 +393,19 @@ def get_weekdays(queryset):
 
 def count_months(queryset):
 	"""
-	Takes a queryset; counts records by months and returns 
-	them inside a Response namedtuple.
+	Takes a queryset; counts records by months and returns
+	them inside a dict.
 	"""
 	return count_objs(
 		queryset, delimitor=range(1, 13), type="Mês",
 		funcqs=lambda qs, i: qs.filter(data__month=i),
 		funcfield=lambda qs: MONTHNAMES[qs[0].data.month])
-	
+
 
 ### Ploting functions
 
-def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
+def get_axis(
+	objs, fn_x=lambda x: x.get('field'), fn_y=lambda y: y.get('num')):
 	"""
 	Processes 'objs' inside a genexp as to get the x and y axis.
 	- Takes a list of objects and two functions that will be used to
@@ -394,8 +413,8 @@ def get_axis(objs, funcx=lambda x: x.field, funcy=lambda y: y.num):
 	- The functions default to return x.field and y.num.
 	- Returns a tuple of lists of 'xaxis' and 'yaxis'.
 	"""
-	xaxis = map(funcx, objs)
-	yaxis = map(funcy, objs)
+	xaxis = lmap(fn_x, objs)
+	yaxis = lmap(fn_y, objs)
 	return xaxis, yaxis
 
 def nature_per_month_axis(queryset, nats):
@@ -407,7 +426,7 @@ def nature_per_month_axis(queryset, nats):
 	for nat in nats:
 		xaxis, yaxis = get_axis(
 						count_months(
-							queryset.filter(natureza__icontains=nat)))
+							queryset.filter(naturezas=nat)))
 		context_dct[nat] = {'x': xaxis, 'y': yaxis}
 	return context_dct
 
@@ -417,22 +436,26 @@ def return_naturezas_axis(qs):
 	Takes a queryset and filters it for each item in NATUREZAS.
 	Returns the natures capitalized, along with a list of their counts.
 	"""
-	labels = map(lambda n: n.capitalize(), NATUREZAS)
-	values = map(lambda n: qs.filter(natureza__icontains=n).count(), 
+	labels = lmap(lambda n: n.nome, NATUREZAS)
+	values = lmap(lambda n: qs.filter(naturezas=n).count(),
 				 NATUREZAS)
 	return labels, values
 
 
-def append_axis(tags, data_lst, names):
+def append_axis(data_lst, names):
+	"""
+	`data_list` is a dict of keys `tag`, `a` data and `b` data
+	`names` is a dict of keys `a` tag and `b` tag
+	"""
 	context_dct = OrderedDict()
-	for tag, data in zip(tags, data_lst):
+	for data in data_lst:
+		tag = data['tag']
 		xaxis1, yaxis1 = get_axis(data['a'])
 		xaxis2, yaxis2 = get_axis(data['b'])
 		context_dct[tag] = [
-			{'x': list(xaxis1), 'y': list(yaxis1), 'id': 'id_%s_graph' % tag,
+			{'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
 			'color': 'rgb(255,0,0)', 'name': names['a']},
-			{'x': list(xaxis2), 'y': list(yaxis2), 'id': 'id_%s_graph' % tag,
+			{'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
 			'color': 'rgb(255,255,0)', 'name': names['b']},
 		]
 	return context_dct
-

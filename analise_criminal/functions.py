@@ -11,8 +11,7 @@ from unicodedata import normalize
 from collections import OrderedDict
 
 from setup_app.models import Ocorrencia
-from .collections import WEEKDAYS, Struct
-from .report import get_values
+from .utils import WEEKDAYS, Struct
 
 
 def make_weekdays(objs):
@@ -33,7 +32,7 @@ def process_map_arguments(form, form_advanced):
 	hora_final = form_advanced.cleaned_data['hora_final']
 	bairro = normalize('NFKD', form_advanced.cleaned_data['bairro'])
 	via = normalize('NFKD', form_advanced.cleaned_data['via'])
-	
+
 	if natureza == 'todas':
 		qs = Ocorrencia.objects.filter(
 			data__gte=data_inicial, data__lte=data_final)
@@ -94,7 +93,7 @@ def make_graph(func, queryset, fields, plot, title, color=''):
 
 def make_days_graph(queryset, plot, title, color=''):
 	"""
-	Returnes a Graph object with the necessary properties 
+	Returnes a Graph object with the necessary properties
 	to make a Plotly graph with days.
 	"""
 	return make_graph(func=fetch_graph_data, queryset=queryset,
@@ -102,7 +101,7 @@ def make_days_graph(queryset, plot, title, color=''):
 
 def make_neighborhood_graph(queryset, plot, title, color=''):
 	"""
-	Returnes a Graph object with the necessary properties 
+	Returnes a Graph object with the necessary properties
 	to make a Plotly graph with days.
 	"""
 	return make_graph(func=fetch_graph_data, queryset=queryset,
@@ -110,7 +109,7 @@ def make_neighborhood_graph(queryset, plot, title, color=''):
 
 def make_street_graph(queryset, plot, title, color=''):
 	"""
-	Returnes a Graph object with the necessary properties 
+	Returnes a Graph object with the necessary properties
 	to make a Plotly graph with days.
 	"""
 	return make_graph(func=fetch_graph_data, queryset=queryset,
@@ -118,7 +117,7 @@ def make_street_graph(queryset, plot, title, color=''):
 
 def make_nature_graph(queryset, plot, title, color=''):
 	"""
-	Returnes a Graph object with the necessary properties 
+	Returnes a Graph object with the necessary properties
 	to make a Plotly graph with days.
 	"""
 	return make_graph(func=fetch_graph_data, queryset=queryset,
@@ -126,7 +125,7 @@ def make_nature_graph(queryset, plot, title, color=''):
 
 def make_hours_graph(queryset, plot, title, color=''):
 	"""
-	Returnes a Graph object with the necessary properties 
+	Returnes a Graph object with the necessary properties
 	to make a Plotly graph with hours.
 	"""
 	return make_graph(func=fetch_graph_hour, queryset=queryset,
@@ -158,6 +157,3 @@ def fetch_graph_hour(objs, fields):
 	field = [hora for hora in container.keys()]
 	occurrences = [val for val in container.values()]
 	return field, occurrences
-
-
-

@@ -1,8 +1,11 @@
-def update(x, **entries):
+def lmap(fn, *iterable):
+	return list(map(fn, *iterable))
+
+def update(x, keyvals):
 	if isinstance(x, dict):
-		x.update(entries)
+		x.update(keyvals)
 	else:
-		x.__dict__.update(entries)
+		x.__dict__.update(keyvals)
 	return x
 
 class Struct:

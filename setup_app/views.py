@@ -31,6 +31,7 @@ def insert_records(request):
 	if request.method == 'POST':
 		form = RecordsFileForm(request.POST, request.FILES)
 		if form.is_valid():
+			# TODO: normalize data before insertion #
 			csv_data = process_file(request.FILES["arquivo"])
 			result = populate_db(csv_data, form.cleaned_data['cidade'], 
 						date_format='br', verbose=True)
