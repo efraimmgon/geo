@@ -36,6 +36,7 @@ class Ocorrencia(models.Model):
 	naturezas = models.ForeignKey(Natureza, related_name='naturezas', null=True, default=None)
 	natureza = models.CharField(max_length=200, null=True, default=None)
 	hora = models.TimeField(default=None, null=True)
+	periodo = models.CharField(max_length=200, null=True, default=None)
 
 	def __str__(self):
 		return ', '.join([self.naturezas.nome, str(self.data)])
@@ -45,4 +46,3 @@ class Ocorrencia(models.Model):
 
 	def weekday(self):
 		return WEEKDAYS[ self.data.weekday() ]
-

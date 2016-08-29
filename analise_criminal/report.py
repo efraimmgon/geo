@@ -26,6 +26,7 @@ NATUREZAS_ID = reduce(lambda acc, n: update(acc, {n.pk: n.nome}),
 					  NATUREZAS, {})
 NATUREZAS_ID_ALL = reduce(lambda acc, n: update(acc, {n.pk: n.nome}),
 					   Natureza.objects.all(), {})
+PERIODOS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
 
 
 def process_report_arguments(form_report, form_filter):
@@ -105,7 +106,6 @@ def process_report_arguments(form_report, form_filter):
 			'color': 'rgb(255,255,0)', 'name': 'Período B'},
 		]
 
-
 		def map_helper(qs, id):
 			labels, values = return_naturezas_axis(qs)
 			return {'labels': labels, 'values': values, 'id': id}
@@ -130,6 +130,7 @@ def process_report_arguments(form_report, form_filter):
 		]
 	# End of General Analysis + Graphs
 
+	# Analysis of specific Naturezas
 	if form_filter.cleaned_data['naturezas']:
 		context['filtro'] = {}
 		for natureza in form_filter.cleaned_data['naturezas']:
@@ -151,6 +152,7 @@ def process_report_arguments(form_report, form_filter):
 					for key in current[i].keys():
 						current[i][key] += [values[i]]
 
+	# Analysis of a specific neighborhood
 	if form_filter.cleaned_data['bairro']:
 		bairro = normalize('NFKD', form_filter.cleaned_data['bairro'])
 		(naturezas1, _, vias1, _, weekdays1), _, horarios1 = process_args(
@@ -220,48 +222,28 @@ def process_args(qs, compare=False):
 	"""
 	qs_for_naturezas = qs.select_related('cidade', 'naturezas')
 	naturezas = get_qslist(qs_for_naturezas, 'naturezas')
+
 	qs_for_bairros = qs.exclude(bairro=None).select_related('cidade')
 	bairros = get_qslist(qs_for_bairros, 'bairro')
+
 	qs_for_vias = qs.exclude(via=None).select_related('cidade')
 	vias = get_qslist(qs_for_vias, 'via')
+
 	qs_for_local = qs.exclude(bairro=None).exclude(via=None)
-	locais = get_qslist(qs_for_local, 'bairro', 'via')
+	locais = get_qslist(qs_for_local.select_related('cidade'), 'bairro', 'via')
+
 	weekdays = get_weekdays(qs)
+
+	qs_for_periodo = qs.exclude(periodo=None).select_related('cidade')
+	periods = get_qslist(qs_for_periodo, 'periodo')
 
 	# data fluctuation of a in relation to b, and vice-versa
 	comparison = []
 	if compare:
 		comparison = lmap(lambda n: get_comparison_data(qs, n),
 						 NATUREZAS)
-
-	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	## TODO: create a field `periodos` in the `Ocorrencia` model
-	periods = [
-		{'field':tag, 'num':len(horario), 'type':'Horário'}
-		for horario, tag in zip(get_time(list(qs)), TAGS)]
-#	periods = [
-#		Response(field=tag, num=len(horario), type='Horário')
-#		for horario, tag in zip(get_time(list(qs)), TAGS) ]
-
 	return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
-
-### Specialized DB parameter fetching functions; return ints
-
-def get_natures(queryset, limit=5):
-	return get_values(queryset, ['natureza'], limit=limit)
-
-def get_neighborhoods(queryset, limit=5):
-	return get_values(queryset.exclude(bairro=None), ['bairro'], limit=limit)
-
-def get_routes(queryset, limit=5):
-	return get_values(queryset.exclude(via=None), ['via'], limit=limit)
-
-def get_spots(queryset, limit=5):
-	return get_values(
-		queryset.exclude(bairro=None).exclude(via=None),
-		['bairro', 'via'], limit=limit
-	)
 
 def get_weekdays(queryset):
 	"""
@@ -270,19 +252,9 @@ def get_weekdays(queryset):
 	"""
 	return count_objs(
 		queryset, delimitor=range(1, 8), type="Dia da semana",
-		funcqs=lambda qs, i: qs.filter(data__week_day=i),
+		qs_filtering_fn=lambda qs, i: qs.filter(data__week_day=i),
 		## fill in the respective descriptive weekday name
-		funcfield=lambda qs: WEEKDAYS[qs[0].data.weekday()])
-
-def get_horaries(queryset):
-	"""
-	Takes a queryset.
-	Returns a dict, with 'field', 'num', and 'type' keys.
-	"""
-	TAGS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
-	return [ dict(field=tag, num=len(horary), type='Horário')
-				for horary, tag in zip(get_time(list(queryset)), TAGS) ]
-
+		field_name_fn=lambda qs: WEEKDAYS[qs[0].data.weekday()])
 
 ### Other functions
 
@@ -341,42 +313,24 @@ def get_comparison_data(queryset, param):
 
 ### Count occurrences of specific objects
 
-def get_time(querylst):
+def count_objs(queryset, delimitor, type, qs_filtering_fn, field_name_fn):
 	"""
-	Takes a querylist and use datetime.time to sort it out
-	by time periods, which are then returned.
-	"""
-	madrugada, matutino, vespertino, noturno = [], [], [], []
-	for ocorrencia in querylst:
-		if ocorrencia.hora is None:
-			continue
-		if ocorrencia.hora < time(6):
-			madrugada.append(ocorrencia)
-		elif ocorrencia.hora < time(12):
-			matutino.append(ocorrencia)
-		elif ocorrencia.hora < time(18):
-			vespertino.append(ocorrencia)
-		else:
-			noturno.append(ocorrencia)
-	return madrugada, matutino, vespertino, noturno
-
-def count_objs(queryset, delimitor, type, funcqs, funcfield):
-	"""
+	Used for getting the records per month and week.
 	Returns a dict, containing a field, num, and type keys.
 
 	INPUTS
 	queryset: a queryset
 	delimitor: a delimiting range, serving as the iteration's index;
 	type: a type label for the dict response;
-	funcqs: a function that takes the queryset and index as input;
-	funcfield: a function that takes the queryset, prior to saving it in
+	qs_filtering_fn: a function that takes the queryset and index as input;
+	field_name_fn: a function that takes the queryset, prior to saving it in
 	field;
 	"""
 	acc = []
 	for i in delimitor:
-		qs = funcqs(queryset, i)
+		qs = qs_filtering_fn(queryset, i)
 		try:
-			acc.append(dict(field=funcfield(qs), num=qs.count(), type=type))
+			acc.append(dict(field=field_name_fn(qs), num=qs.count(), type=type))
 		except IndexError:
 			continue
 	return acc
@@ -388,8 +342,8 @@ def get_weekdays(queryset):
 	"""
 	return count_objs(
 		queryset, delimitor=range(1, 8), type="Dia da semana",
-		funcqs=lambda qs, i: qs.filter(data__week_day=i),
-		funcfield=lambda qs: WEEKDAYS[qs[0].data.weekday()])
+		qs_filtering_fn=lambda qs, i: qs.filter(data__week_day=i),
+		field_name_fn=lambda qs: WEEKDAYS[qs[0].data.weekday()])
 
 def count_months(queryset):
 	"""
@@ -398,8 +352,8 @@ def count_months(queryset):
 	"""
 	return count_objs(
 		queryset, delimitor=range(1, 13), type="Mês",
-		funcqs=lambda qs, i: qs.filter(data__month=i),
-		funcfield=lambda qs: MONTHNAMES[qs[0].data.month])
+		qs_filtering_fn=lambda qs, i: qs.filter(data__month=i),
+		field_name_fn=lambda qs: MONTHNAMES[qs[0].data.month])
 
 
 ### Ploting functions
