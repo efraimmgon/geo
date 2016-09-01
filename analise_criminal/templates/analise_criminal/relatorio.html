@@ -10,7 +10,7 @@
 <link rel="stylesheet" type="text/css" href="{% static 'css/min.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
 <style>
-	
+
 </style>
 
 <div class="page-header">
@@ -40,7 +40,7 @@
 <br />
 
 
-<form class="form-horizontal well" method='get' 
+<form class="form-horizontal well" method='get'
 	  action="{% url 'analise_criminal:gerar_relatorio' %}">
 	<div class="row">
 		<div class="col-md-6">
@@ -48,7 +48,7 @@
 				<legend>Períodos</legend>
 				{% for field in forms.report %}
 				<div class="form-group">
-					<label for="{{ field.id_for_label }}" 
+					<label for="{{ field.id_for_label }}"
 						class="control-label col-md-4">
 						{{ field.label|title }}
 					</label>
@@ -63,13 +63,13 @@
 				{% endfor %}
 			</fieldset>
 		</div>
-				
+
 		<div class="col-md-6">
 			<fieldset>
 				<legend>Filtros</legend>
 			{% for field in forms.filter %}
 			<div class="form-group">
-				<label for="{{ field.id_for_label }}" 
+				<label for="{{ field.id_for_label }}"
 					class="control-label col-md-3">
 					{{ field.label|title }}
 				</label>
@@ -83,7 +83,7 @@
 			</fieldset>
 		</div>
 	</div>
-				
+
 	<div class="form-group">
 		<div class="col-md-offset-2 col-md-10">
 			<button type="submit" class="btn btn-default">
@@ -110,8 +110,8 @@
 					</h2>
 				</div>
 			</div>
-		
-		{% if basico %}	
+
+		{% if basico %}
 			<div id="section-total">
 				<div class="row">
 					<div class="col-md-12">
@@ -146,7 +146,7 @@
 			{# naturezas, bairros, vias, locais, weekdays #}
 			{% include "analise_criminal/periods-two-columns.html" with context_obj=basico %}
 
-			<div id='section-graphs'> 
+			<div id='section-graphs'>
 				{% include "analise_criminal/graphs-single-column.html" with context_obj=axis %}
 			</div> <!-- #section-graphs -->
 
@@ -205,21 +205,21 @@
 		{% endif %} {# filtro #}
 
 		{% if detalhamento %}
-			{% for tag, instances in detalhamento.items %}
-			<div id="section-{{ tag|slugify }}"></div> <!-- scrollspy -->
-			{% for instance, rows in instances.items %}
-			<div id="section-{{ instance|slugify }}">
-				<h2 class="header">{{ instance|capfirst }}</h2>
-				{% include "analise_criminal/periods-two-columns.html" with context_obj=rows %}
+			{% for tipe_de_detalhamento, values in detalhamento.items %}
+			<div id="section-{{ tipe_de_detalhamento|slugify }}"></div> <!-- scrollspy -->
+			{% for weekday, keyvals in values.items %}
+			<div id="section-{{ weekday|slugify }}">
+				<h2 class="header">{{ weekday|capfirst }}</h2>
+				{% include "analise_criminal/periods-two-columns.html" with context_obj=keyvals %}
 			</div>
 			{% endfor %}
 			{% endfor %}
 		{% endif %} {# detalhamento #}
 		</div>
-		
+
 		<div class="col-md-2" id="myScrollspy">
 			<ul class="nav nav-tabs nav-stacked" data-spy="affix" data-offset-top="300">
-			{% if basico %}	
+			{% if basico %}
 				<li class="active"><a href="#section-total">Total</a></li>
 				<li><a href="#section-graphs">Gráficos</a></li>
 				<li><a href="#section-variacao">Total: Variação</a></li>
@@ -236,8 +236,8 @@
 				{% for tag, instances in detalhamento.items %}
 				<li><a href="#section-{{ tag|slugify }}">{{ tag|capfirst }}</a></li>
 				<ol>
-				{% for instance, rows in instances.items %}
-					<li><a href="#section-{{ instance|slugify }}">{{ instance|capfirst }}</a></li>
+				{% for weekday in instances.keys %}
+					<li><a href="#section-{{ weekday|slugify }}">{{ weekday|capfirst }}</a></li>
 				{% endfor %}
 				</ol>
 				{% endfor %}
