@@ -6,21 +6,13 @@ from collections import OrderedDict
 from functools import reduce
 
 from setup_app.models import Ocorrencia, Natureza
-from .utils import (
-    MONTHNAMES, WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, conj
-)
+from .utils import WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, conj
+from .plotting import get_axis, append_axis
+from .commons import count_objs
 
-## furto, roubo, uso, homicídio, tráfico; excluding associação
-nats = [
- (3, 'Furto'),
- (4, 'Homicídio Culposo'),
- (5, 'Homicídio Doloso'),
- (6, 'Roubo'),
- (7, 'Tráfico Ilícito de Drogas'),
- (8, 'Uso Ilícito de Drogas')
-]
 
-NATUREZAS = lmap(lambda n: Natureza.objects.get(pk=n[0]), nats)
+### Global vars
+from .commons import NATUREZAS
 NATUREZAS_ID = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
                       NATUREZAS, {})
 NATUREZAS_ID_ALL = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
@@ -338,78 +330,3 @@ def get_comparison_data(queryset, param):
         return {'natureza': param, 'num': sum(acc)}
     except IndexError:
         return {'natureza': param, 'num': 0}
-
-
-### Count occurrences of specific objects
-
-def count_objs(queryset, delimitor, type, qs_filtering_fn, field_name_fn):
-    """
-    Used for getting the records per month and week.
-    Returns a dict, containing a field, num, and type keys.
-
-    INPUTS
-    queryset: a queryset
-    delimitor: a delimiting range, serving as the iteration's index;
-    type: a type label for the dict response;
-    qs_filtering_fn: a function that takes the queryset and index as input;
-    field_name_fn: a function that takes the queryset, prior to saving it in
-    field;
-    """
-    acc = []
-    for i in delimitor:
-        qs = qs_filtering_fn(queryset, i)
-        try:
-            acc.append(dict(field=field_name_fn(qs), num=qs.count(), type=type))
-        except IndexError:
-            continue
-    return acc
-
-def count_months(queryset):
-    """
-    Takes a queryset; counts records by months and returns
-    them inside a dict.
-    """
-    return count_objs(
-        queryset, delimitor=range(1, 13), type="Mês",
-        qs_filtering_fn=lambda qs, i: qs.filter(data__month=i),
-        field_name_fn=lambda qs: MONTHNAMES[qs[0].data.month])
-
-
-### Ploting functions
-
-def get_axis(
-    objs, fn_x=lambda x: x.get('field'), fn_y=lambda y: y.get('num')):
-    """
-    Processes 'objs' inside a genexp as to get the x and y axis.
-    - Takes a list of objects and two functions that will be used to
-    define how the obj will be returned.
-    - The functions default to return x.field and y.num.
-    - Returns a tuple of lists of 'xaxis' and 'yaxis'.
-    """
-    xaxis = lmap(fn_x, objs)
-    yaxis = lmap(fn_y, objs)
-    return xaxis, yaxis
-
-def naturezas_pie(qs):
-    labels = lmap(lambda n: n.nome, NATUREZAS)
-    values = lmap(lambda n: qs.filter(naturezas=n).count(),
-                  NATUREZAS)
-    return labels, values
-
-def append_axis(data_lst, names):
-    """
-    `data_list` is a dict of keys `tag`, `a` data and `b` data
-    `names` is a dict of keys `a` tag and `b` tag
-    """
-    context_dct = OrderedDict()
-    for data in data_lst:
-        tag = data['tag']
-        xaxis1, yaxis1 = get_axis(data['a'])
-        xaxis2, yaxis2 = get_axis(data['b'])
-        context_dct[tag] = [
-            {'x': xaxis1, 'y': yaxis1, 'id': 'id_%s_graph' % tag,
-            'color': 'rgb(255,0,0)', 'name': names['a']},
-            {'x': xaxis2, 'y': yaxis2, 'id': 'id_%s_graph' % tag,
-            'color': 'rgb(255,255,0)', 'name': names['b']},
-        ]
-    return context_dct

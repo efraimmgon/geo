@@ -1,7 +1,7 @@
 from django import forms
 
 from setup_app.models import Ocorrencia, Cidade
-from .report import NATUREZAS
+from .commons import NATUREZAS
 
 
 class MapOptionForm(forms.Form):
@@ -30,11 +30,11 @@ class MapOptionForm(forms.Form):
 
 
 class AdvancedOptionsForm(forms.Form):
-	
+
 	bairro = forms.CharField(label='Bairro', required=False,
 		help_text="Campo opcional.",
 		widget=forms.TextInput(attrs={'class': 'form-control'}))
-	via = forms.CharField(label='Via', required=False, 
+	via = forms.CharField(label='Via', required=False,
 		help_text="Campo opcional.",
 		widget=forms.TextInput(attrs={'class': 'form-control'}))
 	hora_inicial = forms.TimeField(
@@ -84,7 +84,7 @@ class ReportForm(forms.Form):
 		('Não', 'Não'),
 	)
 
-	opts = forms.ChoiceField(required=False, 
+	opts = forms.ChoiceField(required=False,
 		label='Gerar análise principal?', choices=choices)
 
 class ReportFilterForm(forms.Form):

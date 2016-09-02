@@ -12,12 +12,10 @@ from .forms import (
     MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
     ReportForm, ReportFilterForm,
 )
-from .functions import (
-    process_map_arguments, make_days_graph, make_hours_graph,
-)
-from .report import (
-    process_report_arguments, count_months, get_axis, naturezas_pie,
-)
+from .functions import process_map_arguments
+from .report import process_report_arguments
+from .plotting import (
+    get_axis, naturezas_pie, count_months, make_days_graph, make_hours_graph)
 
 
 def index(request):
