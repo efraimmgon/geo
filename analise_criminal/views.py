@@ -16,7 +16,7 @@ from .functions import (
     process_map_arguments, make_days_graph, make_hours_graph,
 )
 from .report import (
-    process_report_arguments, count_months, get_axis, return_naturezas_axis, 
+    process_report_arguments, count_months, get_axis, naturezas_pie,
 )
 
 
@@ -37,13 +37,15 @@ def index(request):
         'x': list(xaxis), 'y': list(yaxis)
     }
 
+    ## TODO: allow the user to select the date range of the graph
+    ## TODO: allow the user to select the naturezas of the graph
     ## pie 2015
-    labels, values = return_naturezas_axis(qs2015)
+    labels, values = naturezas_pie(qs2015)
     context['axis']['Porcentagem Ocorrências - 2015'] = {
         'labels': labels, 'values': values
     }
     ## pie 2016
-    labels, values = return_naturezas_axis(qs2016)
+    labels, values = naturezas_pie(qs2016)
     context['axis']['Porcentagem Ocorrências - 2016'] = {
         'labels': labels, 'values': values
     }

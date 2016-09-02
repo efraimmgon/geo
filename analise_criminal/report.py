@@ -106,7 +106,9 @@ def process_report_arguments(form_report, form_filter):
         ]
 
         def map_helper(qs, id):
-            labels, values = return_naturezas_axis(qs)
+            labels = lmap(lambda n: n.nome, NATUREZAS)
+            values = lmap(lambda n: qs.filter(naturezas=n).count(),
+                          NATUREZAS)
             return {'labels': labels, 'values': values, 'id': id}
 
         context['axis']['pie'] = lmap(map_helper,
@@ -272,6 +274,7 @@ def process_args(qs, compare=False):
                          NATUREZAS)
     return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
+## unused
 def get_weekdays(queryset):
     """
     Takes a queryset.
@@ -293,7 +296,6 @@ def calculate_variation(a, b):
     if (b == 0):
         return 0
     return (abs(a - b) / b) * 100
-
 
 def get_percentage(a, b):
     """
@@ -362,16 +364,6 @@ def count_objs(queryset, delimitor, type, qs_filtering_fn, field_name_fn):
             continue
     return acc
 
-def get_weekdays(queryset):
-    """
-    Takes a queryset and counts the ocurrences of each weekday,
-    using count_objs and custom functions for funcqs and funcfield.
-    """
-    return count_objs(
-        queryset, delimitor=range(1, 8), type="Dia da semana",
-        qs_filtering_fn=lambda qs, i: qs.filter(data__week_day=i),
-        field_name_fn=lambda qs: WEEKDAYS[qs[0].data.weekday()])
-
 def count_months(queryset):
     """
     Takes a queryset; counts records by months and returns
@@ -398,30 +390,11 @@ def get_axis(
     yaxis = lmap(fn_y, objs)
     return xaxis, yaxis
 
-def nature_per_month_axis(queryset, nats):
-    """
-    Takes a queryset and a list of natures. Returns a dict of
-    natures (keys) per month (x, y axis).
-    """
-    context_dct = OrderedDict()
-    for nat in nats:
-        xaxis, yaxis = get_axis(
-                        count_months(
-                            queryset.filter(naturezas=nat)))
-        context_dct[nat] = {'x': xaxis, 'y': yaxis}
-    return context_dct
-
-
-def return_naturezas_axis(qs):
-    """
-    Takes a queryset and filters it for each item in NATUREZAS.
-    Returns the natures capitalized, along with a list of their counts.
-    """
+def naturezas_pie(qs):
     labels = lmap(lambda n: n.nome, NATUREZAS)
     values = lmap(lambda n: qs.filter(naturezas=n).count(),
-                 NATUREZAS)
+                  NATUREZAS)
     return labels, values
-
 
 def append_axis(data_lst, names):
     """
