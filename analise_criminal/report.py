@@ -8,15 +8,12 @@ from functools import reduce
 from setup_app.models import Ocorrencia, Natureza
 from .utils import WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, conj
 from .plotting import get_axis, append_axis
-from .commons import count_objs
 
 
 ### Global vars
-from .commons import NATUREZAS
+from .commons import NATUREZAS, NATUREZAS_ID_ALL, get_weekdays
 NATUREZAS_ID = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
                       NATUREZAS, {})
-NATUREZAS_ID_ALL = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
-                       Natureza.objects.all(), {})
 PERIODOS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
 
 
@@ -130,14 +127,14 @@ def process_report_arguments(form_report, form_filter):
         detail_keys = [TAGS['neighborhoods'], TAGS['roads'], TAGS['places'],
                        TAGS['weekdays'], TAGS['time']]
 
-        def loop_over_natureza(n, querysets, acc=tuple()):
+        def loop_over_natureza(n, querysets, acc=None):
+            acc = acc if acc is not None else list()
             if querysets:
                 qs = querysets[0]
                 result = process_args(qs.filter(naturezas__nome__icontains=n))
                 (naturezas, bairros, vias, locais, wd), _, horarios = result
                 vals = bairros, vias, locais, wd, horarios
-                return loop_over_natureza(n, querysets[1:],
-                                          acc=conj(acc, vals))
+                return loop_over_natureza(n, querysets[1:], conj(acc, vals))
             return acc
 
         def acc_naturezas(acc, n):
@@ -180,7 +177,8 @@ def process_report_arguments(form_report, form_filter):
             detail_keys = [TAGS['natures'], TAGS['neighborhoods'], TAGS['roads'],
                            TAGS['places'], TAGS['time']]
 
-            def loop_over_weekdays(index, querysets, acc=tuple()):
+            def loop_over_weekdays(index, querysets, acc=None):
+                acc = acc if acc is not None else list()
                 if querysets:
                     p = querysets[0]
                     (naturezas, bairros, vias, locais, wd), _, horarios = process_args(p.filter(data__week_day=index))
@@ -208,10 +206,11 @@ def process_report_arguments(form_report, form_filter):
             detail_keys = [TAGS['natures'], TAGS['neighborhoods'], TAGS['roads'],
                            TAGS['places'], TAGS['weekdays']]
 
-            def loop_over_periods(index, querysets, acc=tuple()):
+            def loop_over_periods(index, querysets, acc=None):
+                acc = acc if acc is not None else list()
                 if querysets:
-                    p = querysets[0]
-                    (naturezas, bairros, vias, locais, wd), _, horarios = process_args(p.filter(periodo=PERIODOS[index]))
+                    (naturezas, bairros, vias, locais, wd), _, horarios = process_args(
+                        querysets[0].filter(periodo=PERIODOS[index]))
                     vals = naturezas, bairros, vias, locais, wd
                     return loop_over_periods(index, querysets[1:], acc=conj(acc, vals))
                 return acc
@@ -266,18 +265,6 @@ def process_args(qs, compare=False):
                          NATUREZAS)
     return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
-## unused
-def get_weekdays(queryset):
-    """
-    Takes a queryset.
-    Returns a dict, with 'field', 'num', and 'type' keys.
-    """
-    return count_objs(
-        queryset, delimitor=range(1, 8), type="Dia da semana",
-        qs_filtering_fn=lambda qs, i: qs.filter(data__week_day=i),
-        ## fill in the respective descriptive weekday name
-        field_name_fn=lambda qs: WEEKDAYS[qs[0].data.weekday()])
-
 ### Other functions
 
 def calculate_variation(a, b):
@@ -310,15 +297,15 @@ def get_qslist(qs, *fields, limit=5):
     def helper(field, row):
         ## returns the pk of naturezas, so we need to map it to its name
         if field == 'naturezas':
-            return NATUREZAS_ID_ALL.get(row.get(field))
-        return row.get(field)
+            return NATUREZAS_ID_ALL[row[field]]
+        return row[field]
 
     return lmap(lambda row: {
-        #"field": " | ".join(fields),
-        "field": ", ".join(lmap(lambda f: helper(f, row), fields)),
-        "num": row.get("num"),
-        "type": " & ".join(fields)
-        },
+            #"field": " | ".join(fields),
+            "field": ", ".join(lmap(lambda f: helper(f, row), fields)),
+            "num": row.get("num"),
+            "type": " & ".join(fields)
+            },
         ## returns a list of dicts with the keys `id` and the ones on `fields`
         qs)
 

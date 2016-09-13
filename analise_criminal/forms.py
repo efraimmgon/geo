@@ -2,6 +2,46 @@ from django import forms
 
 from setup_app.models import Ocorrencia, Cidade
 from .commons import NATUREZAS
+from .utils import lmap
+
+CITIES = Cidade.objects.all()
+
+class PlottingForm(forms.Form):
+
+	choices_tipo = [('bar', 'Coluna'),
+					('pie', 'Pizza'),
+					('scatter', 'Ponto')]
+
+	choices_campo = [
+		('naturezas', 'Natureza'),
+		('bairro', 'Bairro'),
+		('via', 'Via'),
+		('dia da semana', 'Dia da Semana'),
+		('dia', 'Dia'),
+		('mês', 'Mês'),
+	]
+
+	tipo = forms.ChoiceField(
+		label="Tipo de Gráfico", choices=choices_tipo, required=True)
+	campo = forms.ChoiceField(choices=choices_campo, required=True)
+	data_inicial = forms.DateField(
+		label='Data inicial',
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+	data_final = forms.DateField(
+		label='Data final',
+		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,
+		widget=forms.DateInput(
+			attrs={'placeholder': 'dd/mm/aaaa', 'class': 'form-control'}))
+
+	# natureza = forms.ModelChoiceField(queryset)
+	# bairro
+	# rua
+	# dia_da_semana
+	# dia
+	# mes
+	# ano
 
 
 class MapOptionForm(forms.Form):
@@ -13,8 +53,9 @@ class MapOptionForm(forms.Form):
 		("homic", "Homicídio"),
 	]
 
-	choices += list( map(lambda n: (n.nome, n.nome), NATUREZAS) )
+	choices += lmap(lambda n: (n.nome, n.nome), NATUREZAS)
 
+	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)
 	natureza = forms.ChoiceField(
 		label='Natureza', choices=choices, required=True)
 	data_inicial = forms.DateField(
@@ -96,9 +137,7 @@ class ReportFilterForm(forms.Form):
 		('Homicídio', 'Homicídio'),
 	)
 
-	cities = Cidade.objects.all()
-
-	cidade = forms.ModelChoiceField(queryset=cities, required=True)
+	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)
 	naturezas = forms.MultipleChoiceField(required=False,
 		widget=forms.CheckboxSelectMultiple, choices=choices)
 	bairro = forms.CharField(label='Bairro', required=False,

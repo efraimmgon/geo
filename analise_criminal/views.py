@@ -10,12 +10,13 @@ from unicodedata import normalize
 from setup_app.models import Ocorrencia
 from .forms import (
     MapOptionForm, AdvancedOptionsForm, MapMarkerStyleForm,
-    ReportForm, ReportFilterForm,
+    ReportForm, ReportFilterForm, PlottingForm
 )
 from .functions import process_map_arguments
 from .report import process_report_arguments
 from .plotting import (
-    get_axis, naturezas_pie, count_months, make_days_graph, make_hours_graph)
+    naturezas_pie, count_months, make_days_graph, make_hours_graph,
+    plot_function)
 
 
 def index(request):
@@ -24,13 +25,13 @@ def index(request):
     context['axis'] = OrderedDict()
     ## scatter 2015
     qs2015 = Ocorrencia.objects.filter(data__year=2015)
-    xaxis, yaxis = get_axis(count_months(qs2015))
+    xaxis, yaxis = count_months(qs2015)
     context['axis']['todas as ocorrências - 2015'] = {
         'x': list(xaxis), 'y': list(yaxis)
     }
     ## scatter 2016
     qs2016 = Ocorrencia.objects.filter(data__year=2016)
-    xaxis, yaxis = get_axis(count_months(qs2016))
+    xaxis, yaxis = count_months(qs2016)
     context['axis']['todas as ocorrências - 2016'] = {
         'x': list(xaxis), 'y': list(yaxis)
     }
@@ -52,25 +53,42 @@ def index(request):
 def lab(request):
     context = {}
     context['axis'] = OrderedDict()
+    form = PlottingForm()
 
-    qs_days = Ocorrencia.objects.filter(data__gte='2016-01-01')
-    context['axis']['dias'] = make_days_graph(queryset=qs_days,
-        plot='bar', title='Registros por Dia', color='rgb(255,0,0)')
+    # TODO: pie plotting isn't working
+    # TODO: exclude None from qs
 
-    qs = Ocorrencia.objects.filter(data__month=11)
-    context['axis']['horas-nov'] = make_hours_graph(queryset=qs,
-        plot='bar', title='Registros por hora Nov/15', color='rgb(0,255,0)')
+    if 'data_inicial' in request.GET:
+        form = PlottingForm(request.GET)
+        if form.is_valid():
+            field = form.cleaned_data['campo']
+            ## get the function
+            plotting_fn = plot_function[field]
+            qs = Ocorrencia.objects.filter(
+                data__gte=form.cleaned_data['data_inicial'],
+                data__lte=form.cleaned_data['data_final'])
+            context['axis']['user_plotting'] = plotting_fn(
+                qs=qs,
+                plot=form.cleaned_data['tipo'],
+                title='Registros por %s' % field)
 
-    qs = Ocorrencia.objects.filter(data__lte='2016-01-01', data__gte='2015-12-01')
-    context['axis']['horas-dez'] = make_hours_graph(queryset=qs,
-        plot='bar', title='Registros por hora Dez/15', color='rgb(0,0,255)')
+    qs_days = Ocorrencia.objects.filter(data__year=2015)
+    context['axis']['dias-15'] = make_days_graph(qs=qs_days,
+        plot='bar', title='Registros por Dia 2015', color='rgb(255,0,0)')
 
-    qs = Ocorrencia.objects.filter(data__gte='2016-01-01')
-    context['axis']['horas-jan'] = make_hours_graph(queryset=qs,
-        plot='bar', title='Registros por hora Jan/16', color='rgb(255,255,0)')
+    qs_days = Ocorrencia.objects.filter(data__year=2016)
+    context['axis']['dias-16'] = make_days_graph(qs=qs_days,
+        plot='bar', title='Registros por Dia 2016', color='rgb(255,0,0)')
 
-    lst = [()]
+    qs = Ocorrencia.objects.filter(data__year=2015)
+    context['axis']['horas-15'] = make_hours_graph(qs=qs,
+        plot='bar', title='Registros por hora 2015', color='rgb(0,255,0)')
 
+    qs = Ocorrencia.objects.filter(data__year=2016)
+    context['axis']['horas-16'] = make_hours_graph(qs=qs,
+        plot='bar', title='Registros por hora 2016', color='rgb(0,0,255)')
+
+    context['form'] = form
     return render(request, 'analise_criminal/lab.html', context)
 
 @login_required

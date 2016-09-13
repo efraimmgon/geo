@@ -6,6 +6,17 @@
 
 {% block body %}
 
+<link rel="stylesheet" type="text/css" href="{% static 'analise_criminal/jquery.datetimepicker.min.css' %}" />
+
+<h3>Gerar Gráficos</h3>
+
+<form method="GET" action="{% url 'analise_criminal:lab' %}">
+	<table>
+	{{ form }}
+	</table>
+	<input type="submit" class="btn btn-default" />
+</form>
+
 <script src="{% static 'js/plotly.min.js' %}"></script>
 
 		{% for key, values in axis.items %}
@@ -40,6 +51,38 @@
 				Plotly.plot(TESTER, data, layout);
 			});
 			</script>
+			<hr />
 		{% endfor %} {# axis.values #}
+
+
+<script src="{% static 'analise_criminal/jquery.datetimepicker.full.min.js' %}"></script>
+<script type="text/javascript">
+
+$('document').ready(function() {
+	jQuery.datetimepicker.setLocale('pt');
+
+	var months = [
+		'Janeiro', 'Fevereiro', 'Março', 'Abril',
+		'Maio', 'Junho', 'Julho', 'Agosto',
+		'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+	]
+
+	var daysOfWeek = [
+		'Dom', 'Seg', 'Ter', 'Qua',
+		'Qui', 'Sex', 'Sab',
+	]
+
+	$('#id_data_inicial, #id_data_final').datetimepicker({
+		i18n: {
+			pt: {
+				months: months,
+				daysOfWeek: daysOfWeek
+			}
+		},
+		timepicker: false,
+		format: 'd/m/Y'
+	});
+});
+</script>
 
 {% endblock %} {# body #}

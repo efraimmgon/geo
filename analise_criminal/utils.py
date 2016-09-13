@@ -1,68 +1,6 @@
-def lmap(fn, *iterable):
-	return list(map(fn, *iterable))
+from functools import reduce
 
-def lfilter(fn, iterable):
-	return list(filter(fn, iterable))
-
-def conj(coll, *vals):
-	"conj(oin); like Clojure's"
-	if isinstance(coll, list):
-		append(coll, *vals)
-	elif isinstance(coll, tuple):
-		coll += vals
-	elif isinstance(coll, dict):
-		coll.update(vals[0])
-	else: # for objects
-		coll.__dict__.update(vals[0])
-	return coll
-
-def append(coll, *vals):
-	if isinstance(coll, list) and vals:
-		coll.append(vals[0])
-		return append(coll, *vals[1:])
-	elif isinstance(coll, tuple):
-		coll += vals
-	return coll
-
-def update(x, keyvals):
-	if isinstance(x, dict):
-		x.update(keyvals)
-	else:
-		x.__dict__.update(keyvals)
-	return x
-
-class Struct:
-	"A generic container for simple data structures."
-
-	def __init__(self, **entries):
-		self.__dict__.update(entries)
-
-	def __repr__(self):
-		args = ['%s=%r' % (k, v) for k, v in vars(self).items()]
-		return '<Struct(%s)>' % ', '.join(args)
-
-
-class Response:
-	def __init__(self, field, num, type):
-		self.field = field
-		self.num   = num
-		self.type  = type
-
-
-class BarGraph:
-	def __init__(self, x, y, plot_type, title, color):
-		self.x = x
-		self.y = y
-		self.type = plot_type
-		self.title = title
-		self.color = color
-
-class Graph:
-	def __init__(self, plot, title, color):
-		self.type = plot
-		self.title = title
-		self.color = color
-
+### vars
 MONTHNAMES = {
 	1: 'Janeiro',  2: 'Fevereiro', 3: 'Março',     4: 'Abril',
 	5: 'Maio',	   6: 'Junho', 	   7: 'Julho', 	   8: 'Agosto',
@@ -82,3 +20,55 @@ WEEKDAYS_DJANGO = {
 	3: 'Terça-feira',  4: 'Quarta-feira',
 	5: 'Quinta-feira', 6: 'Sexta-feira', 7: 'Sábado'
 }
+
+
+### functions
+
+def lmap(fn, *iterable):
+	return list(map(fn, *iterable))
+
+def lfilter(fn, iterable):
+	return list(filter(fn, iterable))
+
+def conj(coll, *vals):
+	"conj(oin); like Clojure's"
+	if isinstance(coll, list) or isinstance(coll, tuple):
+		conj_vals(coll, *vals)
+	else: # for objects and dicts
+		conj_keyvals(coll, *vals)
+	return coll
+
+def conj_vals(coll, *vals):
+	if isinstance(coll, list):
+		def accumulate(acc, v):
+			acc.append(v)
+			return acc
+		reduce(accumulate, vals, coll)
+	elif isinstance(coll, tuple):
+		coll += vals
+	return coll
+
+def conj_keyvals(dct, *keyvals):
+	if isinstance(dct, dict):
+		def accumulate(acc, kv):
+			acc.update(kv)
+			return acc
+		reduce(accumulate, keyvals, dct)
+	else:
+		def accumulate(acc, kv):
+			acc.__dict__.update(kv)
+			return acc
+		reduce(accumulate, keyvals, dct)
+	return dct
+
+### Classes
+
+class Struct:
+	"A generic container for simple data structures."
+
+	def __init__(self, **entries):
+		self.__dict__.update(entries)
+
+	def __repr__(self):
+		args = ['%s=%r' % (k, v) for k, v in vars(self).items()]
+		return '<Struct(%s)>' % ', '.join(args)

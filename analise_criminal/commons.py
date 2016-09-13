@@ -1,5 +1,6 @@
+from functools import reduce
 from setup_app.models import Natureza
-from .utils import lmap
+from .utils import lmap, conj, WEEKDAYS_DJANGO
 
 ## furto, roubo, uso, homicídio, tráfico; excluding associação
 nats = [
@@ -15,27 +16,16 @@ nats = [
 
 NATUREZAS = lmap(lambda n: Natureza.objects.get(pk=n[0]), nats)
 
+NATUREZAS_ID_ALL = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
+                          Natureza.objects.all(), {})
 
-### Functions
-
-def count_objs(queryset, delimitor, type, qs_filtering_fn, field_name_fn):
+def get_weekdays(qs):
     """
-    Used for getting the records per month and week.
-    Returns a dict, containing a field, num, and type keys.
-
-    INPUTS
-    queryset: a queryset
-    delimitor: a delimiting range, serving as the iteration's index;
-    type: a type label for the dict response;
-    qs_filtering_fn: a function that takes the queryset and index as input;
-    field_name_fn: a function that takes the queryset, prior to saving it in
-    field;
+    Takes a queryset.
+    Returns a dict, with 'field', 'num', and 'type' keys.
     """
-    acc = []
-    for i in delimitor:
-        qs = qs_filtering_fn(queryset, i)
-        try:
-            acc.append(dict(field=field_name_fn(qs), num=qs.count(), type=type))
-        except IndexError:
-            continue
-    return acc
+    return reduce(lambda acc, i: \
+                  conj(acc, {'field': WEEKDAYS_DJANGO[i],
+                             'num': qs.filter(data__week_day=i).count(),
+                             'type': "Dia da semana"}),
+                  range(1, 8), [])

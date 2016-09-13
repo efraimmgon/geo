@@ -10,8 +10,8 @@ import json
 from unicodedata import normalize
 from collections import OrderedDict
 
-from setup_app.models import Ocorrencia
-from .utils import WEEKDAYS, Struct
+from setup_app.models import Ocorrencia, Natureza
+from .utils import WEEKDAYS, lmap
 
 
 def make_weekdays(objs):
@@ -25,6 +25,7 @@ def process_map_arguments(form, form_advanced):
 	Uses the user's selections to decide which objects
 	from Ocorrencia to return.
 	"""
+	cidade = form.cleaned_data['cidade']
 	natureza = form.cleaned_data['natureza']
 	data_inicial = form.cleaned_data['data_inicial']
 	data_final = form.cleaned_data['data_final']
@@ -33,12 +34,17 @@ def process_map_arguments(form, form_advanced):
 	bairro = normalize('NFKD', form_advanced.cleaned_data['bairro'])
 	via = normalize('NFKD', form_advanced.cleaned_data['via'])
 
+	qs = Ocorrencia.objects.filter(data__gte=data_inicial,
+								   data__lte=data_final)
 	if natureza == 'todas':
-		qs = Ocorrencia.objects.filter(
-			data__gte=data_inicial, data__lte=data_final)
+		pass # no need to filter the records by natureza
+	## get all the records that have that string in their name
+	elif natureza in ("drogas", "homic"):
+		qs = qs.filter(
+			naturezas__in=Natureza.objects.filter(nome__icontains=natureza))
 	else:
-		qs = Ocorrencia.objects.filter(
-			natureza__icontains=natureza, data__gte=data_inicial, data__lte=data_final)
+		qs = qs.filter(
+			naturezas=Natureza.objects.get(nome=natureza))
 
 	if bairro:
 		qs = qs.filter(bairro__icontains=bairro)
@@ -48,8 +54,10 @@ def process_map_arguments(form, form_advanced):
 		qs = qs.filter(hora__gte=hora_inicial)
 	if hora_final:
 		qs = qs.filter(hora__lte=hora_final)
+	qs = qs.select_related('cidade', 'naturezas').filter(cidade=cidade)
 
 	## prepare data for returning
+	## TODO: find a default value for no latitude
 	return format_data(qs.exclude(latitude=None).exclude(latitude=0.0))
 
 def format_data(queryset):
@@ -60,19 +68,16 @@ def format_data(queryset):
 	and street.
 	Returns a list of dicts.
 	"""
-	struct = []
-	for obj in queryset:
-		dct = {
-			'pk': obj.id,
-			'natureza': obj.natureza,
-			'bairro': obj.bairro,
-			'via': obj.via,
-			'numero': obj.numero,
-			'formatted_date': obj.date2string(),
-			'weekday': obj.weekday(),
-			'hora': str(obj.hora)[:-3] if obj.hora else None,
-			'latitude': obj.latitude,
-			'longitude': obj.longitude
-		}
-		struct.append(dct)
-	return struct
+	return lmap(lambda obj: {
+ 			'pk': obj.id,
+ 			'natureza': obj.naturezas.nome,
+ 			'bairro': obj.bairro,
+ 			'via': obj.via,
+ 			'numero': obj.numero,
+ 			'formatted_date': obj.date2string(),
+ 			'weekday': obj.weekday(),
+ 			'hora': str(obj.hora)[:-3] if obj.hora else None,
+ 			'latitude': obj.latitude,
+ 			'longitude': obj.longitude
+ 		},
+		 queryset)
