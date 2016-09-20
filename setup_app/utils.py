@@ -1,6 +1,6 @@
 import csv
 from datetime import date, time
-from setup_app.models import Ocorrencia
+from setup_app.models import Ocorrencia, Natureza, Cidade
 from django.db import transaction
 
 
@@ -12,19 +12,21 @@ def populate_db(csv_data, city, date_format, verbose=False):
 		0) incident; 1) neighborhood; 2) venue; 3) number; 4) time;
 		5) date
 	- If no date or time are available, the fields must be empty.
+	- hour must be in hh:mm format
 	- date must be in dd/mm/yyyy format
 	"""
 	result = []
 	with transaction.atomic():
 		for row in csv_data:
+			natureza = Natureza.objects.get(nome=row[0])
 			obj = Ocorrencia(
-				natureza=val_or_none(row[0]), 
-				bairro= val_or_none(row[1]), 
-				via=	val_or_none(row[2]),
-				numero= val_or_none(row[3]), 
-				hora=	resolve_time(row[4]),
-				data=	resolve_date(row[5], date_format), 
-				cidade=	city,
+				naturezas=natureza,
+				bairro=val_or_none(row[1]),
+				via=val_or_none(row[2]),
+				numero=val_or_none(row[3]),
+				hora=resolve_time(row[4]),
+				data=resolve_date(row[5], date_format),
+				cidade=city,
 			)
 			obj.save()
 			if verbose:

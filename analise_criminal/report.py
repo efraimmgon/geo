@@ -47,9 +47,9 @@ def process_report_arguments(form_report, form_filter):
 
     city = form_filter.cleaned_data['cidade']
 
-    o1 = Ocorrencia.objects.select_related('cidade').filter(
+    o1 = Ocorrencia.objects.filter(
         data__gte=A.start, data__lte=A.end, cidade=city)
-    o2 = Ocorrencia.objects.select_related('cidade').filter(
+    o2 = Ocorrencia.objects.filter(
         data__gte=B.start, data__lte=B.end, cidade=city)
 
     total_a, total_b = o1.count(), o2.count()

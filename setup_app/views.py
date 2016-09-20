@@ -6,7 +6,7 @@ from django import forms
 import json, csv
 from io import StringIO
 
-from setup_app.models import Ocorrencia, Cidade
+from setup_app.models import Ocorrencia, Cidade, Natureza
 from setup_app.functions import dump_object
 from setup_app.utils import populate_db
 
@@ -19,7 +19,7 @@ def index(request):
 def ajaxTest(request):
 	queryset = Ocorrencia.objects.filter(latitude=0.0)[:20]
 	if queryset.count() > 0:
-		data = serializers.serialize('json', queryset)	
+		data = serializers.serialize('json', queryset)
 	else:
 		data = json.dumps({'end': 'Não existem mais lat e lng nulos.'})
 	return HttpResponse(data, content_type='application/json')
@@ -32,12 +32,13 @@ def insert_records(request):
 		form = RecordsFileForm(request.POST, request.FILES)
 		if form.is_valid():
 			# TODO: normalize data before insertion #
-			csv_data = process_file(request.FILES["arquivo"])
-			result = populate_db(csv_data, form.cleaned_data['cidade'], 
-						date_format='br', verbose=True)
+			result = populate_db(
+				read_csv_file(request.FILES["arquivo"]),
+				Cidade.objects.get(pk=form.cleaned_data['cidade']),
+				date_format='br', verbose=True)
 			# TODO: redirect
 			context["result"] = result
-	context["form"] = form
+	context.update({"form": form, "naturezas": Natureza.objects.all()})
 	return render(request, 'setup_app/inserir-ocorrencias.html', context)
 
 
@@ -49,11 +50,11 @@ def get_address(request):
 	"Fetches Ocorrencia objects; returns them as json."
 	queryset = Ocorrencia.objects.filter(latitude=0.0)[:100]
 	if queryset.count() > 0:
-		data = serializers.serialize('json', queryset)	
+		data = serializers.serialize('json', queryset)
 	else:
 		data = json.dumps({'end': 'Não existem mais lat e lng nulos.'})
 	return HttpResponse(data, content_type='application/json')
-	
+
 
 def update_db(request):
 	"/setup/update_db/ || Updates the Ocorrencia model."
@@ -77,19 +78,16 @@ def update_db(request):
 
 ### helper functions
 
-def process_file(f):
-	csv_data = csv.reader(
-		StringIO(
-			f.read().decode("utf-8")),
-		delimiter=",")
-	return csv_data
+def read_csv_file(f):
+
+	return csv.reader(StringIO(f.read().decode("utf-8")),
+					  delimiter=",")
 
 
 ### Forms
 
 class RecordsFileForm(forms.Form):
-	cities = Cidade.objects.all()
+	CITIES = Cidade.objects.all()
 
-	cidade = forms.ModelChoiceField(queryset=cities, required=True)
+	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)
 	arquivo = forms.FileField(required=True)
-

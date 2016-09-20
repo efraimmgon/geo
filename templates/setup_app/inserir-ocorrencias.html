@@ -11,6 +11,32 @@
 	<br />
 	Selecione também a cidade de referência das ocorrências a serem inseridas.
 </p>
+
+Observações:
+
+<ul>
+	<li>Os campos devem estar organizados na seguinte ordem:
+		<ol>
+			<li>Natureza</li>
+			<li>Bairro</li>
+			<li>Via (rua, avenida, etc)</li>
+			<li>Número</li>
+			<li>Hora</li>
+			<li>Data</li>
+		</ol>
+	</li>
+	<li>Se a ocorrência não possuir data ou hora, os respectivos campos devem estar em branco.</li>
+	<li>A hora deve estar no formato hh:mm.</li>
+	<li>A data deve estar no formato dd/mm/aaaa.</li>
+	<li>As seguintes naturezas estão disponíveis para inserção:
+		<ul>
+			{% for natureza in naturezas %}
+			<li>{{ natureza.nome }}</li>
+			{% endfor %}
+		</ul>
+	</li>
+</ul>
+
 <form method="POST" enctype="multipart/form-data" action="{% url 'setup:insert_records' %}">
 	{% csrf_token %}
 	<table>
