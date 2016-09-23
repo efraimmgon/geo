@@ -1,8 +1,10 @@
 from django import forms
 
 from setup_app.models import Ocorrencia, Cidade
-from .commons import NATUREZAS
-from .utils import lmap
+from .commons import (
+	NATUREZAS, NATUREZAS_ID_ALL, ROUBO, FURTO, TRAFICO, HOMICIDIO,
+	DROGAS)
+from .utils import lmap, lfilter
 
 CITIES = Cidade.objects.all()
 
@@ -49,11 +51,11 @@ class MapOptionForm(forms.Form):
 	choices = [
 		("", "Selecione"),
 		("todas", "Todas"),
-		("drogas", "Entorpecentes"),
-		("homic", "Homicídio"),
+		(DROGAS, "Entorpecentes"),
+		(HOMICIDIO, "Homicídio"),
 	]
 
-	choices += lmap(lambda n: (n.nome, n.nome), NATUREZAS)
+	choices += lmap(lambda n: (n.pk, n.nome), NATUREZAS)
 
 	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)
 	natureza = forms.ChoiceField(
@@ -131,10 +133,10 @@ class ReportForm(forms.Form):
 class ReportFilterForm(forms.Form):
 
 	choices = (
-		('Roubo', 'Roubo'),
-		('Furto', 'Furto'),
-		('Tráfico Ilícito de Drogas', 'Tráfico'),
-		('Homicídio', 'Homicídio'),
+		(ROUBO, 'Roubo'),
+		(FURTO, 'Furto'),
+		(TRAFICO, 'Tráfico'),
+		(HOMICIDIO, 'Homicídio'),
 	)
 
 	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)

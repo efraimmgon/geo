@@ -5,8 +5,9 @@ from django.db.models import Count
 from .utils import MONTHNAMES, lmap, lfilter, conj
 from .commons import NATUREZAS, NATUREZAS_ID_ALL, get_weekdays
 
-def get_axis(
-    objs, fn_x=lambda x: x.get('field'), fn_y=lambda y: y.get('num')):
+def get_axis(objs,
+             fn_x=lambda x: x.get('field'),
+             fn_y=lambda y: y.get('num')):
     """
     Processes 'objs' inside a genexp as to get the x and y axis.
     - Takes a list of objects and two functions that will be used to

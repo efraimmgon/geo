@@ -24,6 +24,12 @@ WEEKDAYS_DJANGO = {
 
 ### functions
 
+def str_to_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        pass
+
 def lmap(fn, *iterable):
 	return list(map(fn, *iterable))
 

@@ -6,12 +6,13 @@ from collections import OrderedDict
 from functools import reduce
 
 from setup_app.models import Ocorrencia, Natureza
-from .utils import WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, conj
+from .utils import (WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, lfilter, conj,
+                    str_to_int)
 from .plotting import get_axis, append_axis
-
+from .commons import count_objs, count_weekdays
 
 ### Global vars
-from .commons import NATUREZAS, NATUREZAS_ID_ALL, get_weekdays
+from .commons import NATUREZAS, NATUREZAS_ID_ALL
 NATUREZAS_ID = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
                       NATUREZAS, {})
 PERIODOS = ('00:00 - 05:59', '06:00 - 11:59', '12:00 - 17:59', '18:00 - 23:59')
@@ -94,14 +95,14 @@ def process_report_arguments(form_report, form_filter):
             'color': 'rgb(255,255,0)', 'name': 'Período B'},
         ]
 
-        def map_helper(qs, id):
-            labels = lmap(lambda n: n.nome, NATUREZAS)
-            values = lmap(lambda n: qs.filter(naturezas=n).count(),
-                          NATUREZAS)
-            return {'labels': labels, 'values': values, 'id': id}
+        # naturezas pie
+        def helper(qs, id):
+            dct = count_objs(qs.filter(naturezas__in=NATUREZAS), "naturezas")
+            return {"labels": lmap(lambda k: NATUREZAS_ID_ALL[k].nome, dct),
+                    "values": [v for k, v in dct.items()],
+                    "id": id}
 
-        context['axis']['pie'] = lmap(map_helper,
-                                    [o1, o2], ['pie_a', 'pie_b'])
+        context['axis']['pie'] = lmap(helper, [o1, o2], ['pie_a', 'pie_b'])
 
         # Percentage fluctuation from A to B
         context['comparison'] = lmap(lambda a, b: \
@@ -123,6 +124,13 @@ def process_report_arguments(form_report, form_filter):
     # Analysis of specific Naturezas
     ## TODO: refactor code to stop repetition of code
     if form_filter.cleaned_data['naturezas']:
+        ## the input gets here represented as a string of a list of ints
+        form_naturezas_input = lmap(
+             lambda item: \
+                ## the input has chars that cannot be mapped to int, hence:
+                lfilter(lambda x: x is not None,
+                        map(str_to_int, list(item))),
+             form_filter.cleaned_data['naturezas'])
 
         detail_keys = [TAGS['neighborhoods'], TAGS['roads'], TAGS['places'],
                        TAGS['weekdays'], TAGS['time']]
@@ -131,7 +139,7 @@ def process_report_arguments(form_report, form_filter):
             acc = acc if acc is not None else list()
             if querysets:
                 qs = querysets[0]
-                result = process_args(qs.filter(naturezas__nome__icontains=n))
+                result = process_args(qs.filter(naturezas__in=n))
                 (naturezas, bairros, vias, locais, wd), _, horarios = result
                 vals = bairros, vias, locais, wd, horarios
                 return loop_over_natureza(n, querysets[1:], conj(acc, vals))
@@ -146,13 +154,18 @@ def process_report_arguments(form_report, form_filter):
             ## accumulate the keys populating it with data
             result = reduce(keys_to_values,
                             zip(detail_keys, zip(vals1, vals2)), OrderedDict())
-            ## pair the result to its natureza
-            return conj(acc, {n: result})
+            ## pair the result to its natureza and get the
+            ## general name of the records
+            key = NATUREZAS_ID_ALL[n[0]].nome.split(" ")[0]
+            if "Assoc" in key:
+                key = "Entorpecentes"
+            return conj(acc, {key: result})
 
         r = reduce(acc_naturezas,
-                   map(lambda n: normalize('NFKD', n),
-                       form_filter.cleaned_data['naturezas']),
-                   OrderedDict())
+                   form_naturezas_input, OrderedDict())
+                #    map(lambda n: normalize('NFKD', n),
+                #        form_filter.cleaned_data['naturezas']),
+                #   OrderedDict())
         context['filtro'] = r
 
     # Analysis of a specific neighborhood
@@ -253,7 +266,10 @@ def process_args(qs, compare=False):
     qs_for_local = qs.exclude(bairro=None).exclude(via=None)
     locais = get_qslist(qs_for_local.select_related('cidade'), 'bairro', 'via')
 
-    weekdays = get_weekdays(qs)
+    weekdays = [{'field': WEEKDAYS[k],
+                 'num': v,
+                 'type': "Dia da semana"}
+                for k,v in count_weekdays(qs).items()]
 
     qs_for_periodo = qs.exclude(periodo=None).select_related('cidade')
     periods = get_qslist(qs_for_periodo, 'periodo')
@@ -261,8 +277,10 @@ def process_args(qs, compare=False):
     # data fluctuation of a in relation to b, and vice-versa
     comparison = []
     if compare:
-        comparison = lmap(lambda n: get_comparison_data(qs, n),
-                         NATUREZAS)
+        comparison = [{"natureza": NATUREZAS_ID_ALL[key],
+                       "num": val}
+                      for key, val in count_objs(qs, "naturezas", 5).items()]
+
     return [(naturezas, bairros, vias, locais, weekdays), comparison, periods]
 
 ### Other functions
@@ -287,7 +305,7 @@ def get_percentage(a, b):
     return calculate_variation(b, a)
 
 def get_qslist(qs, *fields, limit=5):
-    qs = qs.select_related("cidade").values(*fields).annotate(num=Count("id"))
+    qs = qs.values(*fields).annotate(num=Count("id"))
     ## pass only as many as specified in `limit`
     qs = qs.order_by('-num')[:limit]
     ## pass only the pre-selected naturezas
@@ -297,7 +315,7 @@ def get_qslist(qs, *fields, limit=5):
     def helper(field, row):
         ## returns the pk of naturezas, so we need to map it to its name
         if field == 'naturezas':
-            return NATUREZAS_ID_ALL[row[field]]
+            return NATUREZAS_ID_ALL[row[field]].nome
         return row[field]
 
     return lmap(lambda row: {
@@ -308,12 +326,3 @@ def get_qslist(qs, *fields, limit=5):
             },
         ## returns a list of dicts with the keys `id` and the ones on `fields`
         qs)
-
-def get_comparison_data(queryset, param):
-    try:
-        data = queryset.filter(naturezas=param).values(
-            'naturezas').annotate(num=Count('id'))
-        acc = lmap(lambda row: row['num'], data)
-        return {'natureza': param, 'num': sum(acc)}
-    except IndexError:
-        return {'natureza': param, 'num': 0}
