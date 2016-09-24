@@ -92,18 +92,16 @@ def lab(request):
     return render(request, 'analise_criminal/lab.html', context)
 
 @login_required
-def map(request):
+def geo(request):
     """/analise_criminal/mapa/"""
     ## range of dates available for searching
     queryset = Ocorrencia.objects.all()
     mindate = queryset.aggregate(Min('data'))['data__min']
     maxdate = queryset.aggregate(Max('data'))['data__max']
     context = {
-        'forms': {
-            'basic_options': MapOptionForm(),
-            'advanced_options': AdvancedOptionsForm(),
-            'marker_styles': MapMarkerStyleForm()
-        },
+        'forms': {'basic_options': MapOptionForm(),
+                  'advanced_options': AdvancedOptionsForm(),
+                  'marker_styles': MapMarkerStyleForm()},
         'min': mindate.strftime('%d/%m/%Y'),
         'max': maxdate.strftime('%d/%m/%Y'),
     }

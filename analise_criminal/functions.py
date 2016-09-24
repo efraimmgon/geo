@@ -1,8 +1,3 @@
-"""
-General purpose functions from the analise_criminal module.
-"""
-
-from django.core import serializers
 from django.db.models import Count
 
 from datetime import date
@@ -13,12 +8,6 @@ from collections import OrderedDict
 from setup_app.models import Ocorrencia, Natureza
 from .utils import WEEKDAYS, lmap
 
-
-def make_weekdays(objs):
-	o = objs[:]
-	for obj in o:
-		obj.weekday = WEEKDAYS[ obj.data.weekday() ]
-	return o
 
 def process_map_arguments(form, form_advanced):
 	"""
@@ -37,14 +26,14 @@ def process_map_arguments(form, form_advanced):
 	qs = Ocorrencia.objects.filter(data__gte=data_inicial,
 								   data__lte=data_final)
 	if natureza == 'todas':
-		pass # no need to filter the records by natureza
+		# no need to filter the records by natureza
+		pass
 	## get all the records that have that string in their name
-	elif natureza in ("drogas", "homic"):
-		qs = qs.filter(
-			naturezas__in=Natureza.objects.filter(nome__icontains=natureza))
+	# elif natureza in ("drogas", "homic"):
+	# 	qs = qs.filter(
+	# 		naturezas__in=Natureza.objects.filter(nome__icontains=natureza))
 	else:
-		qs = qs.filter(
-			naturezas=Natureza.objects.get(nome=natureza))
+		qs = qs.filter(naturezas__in=natureza)
 
 	if bairro:
 		qs = qs.filter(bairro__icontains=bairro)

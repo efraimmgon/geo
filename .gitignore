@@ -1,5 +1,8 @@
-local_settings.py
-__pycache__
 *.pyc
-*.sqlite3
-.ipynb_checkpoints
+*.pyo
+*.db
+.DS_Store
+.coverage
+local_settings.py
+/static
+venv

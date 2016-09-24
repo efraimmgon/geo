@@ -48,18 +48,18 @@ class PlottingForm(forms.Form):
 
 class MapOptionForm(forms.Form):
 
-	choices = [
+	CHOICES = [
 		("", "Selecione"),
 		("todas", "Todas"),
 		(DROGAS, "Entorpecentes"),
 		(HOMICIDIO, "Homicídio"),
 	]
 
-	choices += lmap(lambda n: (n.pk, n.nome), NATUREZAS)
+	CHOICES += lmap(lambda n: (n.pk, n.nome), NATUREZAS)
 
 	cidade = forms.ModelChoiceField(queryset=CITIES, required=True)
 	natureza = forms.ChoiceField(
-		label='Natureza', choices=choices, required=True)
+		label='Natureza', choices=CHOICES, required=True)
 	data_inicial = forms.DateField(
 		label='Data inicial',
 		input_formats=['%d/%m/%Y', '%d/%m/%y'], required=True,

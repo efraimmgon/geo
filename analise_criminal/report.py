@@ -147,6 +147,8 @@ def process_report_arguments(form_report, form_filter):
 
         def acc_naturezas(acc, n):
             ## get the data for each natureza
+            ## TODO: the code queries the DB for natureza in -- is there
+            ## a way to avoid this?
             vals1, vals2 = loop_over_natureza(n, (o1, o2))
             def keys_to_values(acc, keyvals):
                 key, vals = keyvals
@@ -161,12 +163,8 @@ def process_report_arguments(form_report, form_filter):
                 key = "Entorpecentes"
             return conj(acc, {key: result})
 
-        r = reduce(acc_naturezas,
-                   form_naturezas_input, OrderedDict())
-                #    map(lambda n: normalize('NFKD', n),
-                #        form_filter.cleaned_data['naturezas']),
-                #   OrderedDict())
-        context['filtro'] = r
+        context['filtro'] = reduce(acc_naturezas,
+                                   form_naturezas_input, OrderedDict())
 
     # Analysis of a specific neighborhood
     if form_filter.cleaned_data['bairro']:
