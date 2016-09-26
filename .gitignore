@@ -6,4 +6,3 @@ local_settings.py
 /static
 venv
 .ipynb_checkpoints/
-staticfiles

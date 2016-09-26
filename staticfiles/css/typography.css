@@ -1,0 +1,140 @@
+* {
+	box-sizing: border-box;
+}
+
+/* 
+ * TYPOGRAPHIC ELEMENTS 
+ */
+
+body {
+	font-size: 16px;
+	font-family: helvetica;
+	color: RGB(59,59,59);
+	width: 100%;
+	max-width: 1500px;
+	margin: 0 auto;
+}
+
+h1,h2,h3,h4,h5,h6 {
+	color: #fff;
+	background-color: #1E1782;
+	padding: 5px;
+}
+
+a {
+	text-decoration: none;
+	color: rgb(59,59,59);
+}
+
+a:hover {
+	color: RGB(51,51,51);
+}
+
+/* INPUT TYPES */
+        	
+input, select, button {
+	background-color: #fff;
+	height: 30px;
+	font-size: 14px;
+	color: #5a5854;
+	border: 1px solid #bdbdbd;
+	border-radius: 5px;
+	padding: 5px 5px 5px 5px;
+	margin-bottom: 10px;
+}
+
+textarea {
+	background-color: #fff;
+	font-size: 14px;
+	color: #5a5854;
+	border: 1px solid #bdbdbd;
+	border-radius: 5px;
+	padding: 5px 5px 5px 5px;
+	margin-bottom: 10px;
+}
+
+input:focus {
+	background-color: #fff;
+	border: 1px solid #b1e1e4;
+}
+
+input[type='submit'], button {
+	border-bottom: 2px solid #bdbdbd;
+	text-shadow: 0 1px 1px #bdbdbd;
+	background-color: #fff;
+	color: black;
+}
+		
+input[type='submit']:hover, button:hover { 
+	background-color: rgb(245,245,245);
+}
+
+input[type='number'] {
+	background-color: #fff;        		
+	height: 30px;
+	width: 130px;
+	border-radius: 5px;
+	text-align: left;
+}
+
+input[type='radio'], input[type='checkbox'] {        		
+	height: inherit;
+}
+
+input[type='file'] {
+	border: none;
+}
+
+/* FORM TYPES */
+
+label {
+	padding: 5px;
+}
+
+fieldset {
+	border-top: 1px solid #dcdcdc; 
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
+	padding: 20px;
+	margin-bottom: 10px
+}
+		
+legend {
+	border: none;
+	font-weight: bold;
+	color: #1E1782;
+	border-radius: 10px;
+	padding: 10px 20px;
+	text-transform: uppercase;
+}
+
+table {
+	margin-top: 20px;
+	margin-bottom: 10px
+}
+
+th,td {
+	padding: 5px 10px 5px 10px;
+}
+
+th {
+	text-transform: uppercase;
+	border-bottom: 2px solid #111111;
+	border-top: 1px solid #999;
+	text-align: left;
+}
+
+tr.even {
+    background-color: #efefef;
+}
+
+tr:hover {
+    background-color: #c3e6e5;
+}
+
+th:hover {
+	background-color: #1E1782;
+	color: white;
+	cursor: pointer;
+}

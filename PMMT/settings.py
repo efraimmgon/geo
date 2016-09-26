@@ -116,6 +116,9 @@ PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'static'))
+STATICFILES_DIRS = (
+    os.path.abspath(os.path.join(BASE_DIR, 'staticfiles')),
+)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -149,8 +152,3 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 f = os.path.join(PROJECT_APP_PATH, "local_settings.py")
 if os.path.exists(f):
     from .local_settings import *
-
-if DEBUG:
-    STATICFILES_DIRS = (
-        os.path.abspath(os.path.join(BASE_DIR, 'staticfiles')),
-    )
