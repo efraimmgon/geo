@@ -109,14 +109,15 @@ USE_TZ = True
 
 PROJECT_APP_PATH = os.path.dirname(os.path.abspath(__file__))
 PROJECT_APP = os.path.basename(PROJECT_APP_PATH)
+PROJECT_ROOT = BASE_DIR = os.path.dirname(PROJECT_APP_PATH)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, '../static'))
+STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'static'))
 STATICFILES_DIRS = (
-    os.path.abspath(os.path.join(BASE_DIR, 'static')),
+    os.path.abspath(os.path.join(BASE_DIR, 'staticfiles')),
 )
 
 MEDIA_URL = '/media/'
@@ -124,6 +125,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/analise_criminal/'
+
+##########
+# HEROKU #
+##########
+
+# Database Configuration
+# import dj_database_url
+# db_from_env = dj_database_url.config(conn_max_age=500)
+# DATABASES['default'].update(db_from_env)
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 ##################
 # LOCAL SETTINGS #
@@ -133,5 +149,6 @@ LOGIN_REDIRECT_URL = '/analise_criminal/'
 # ignored in your version control system allowing for settings to be
 # defined per machine.
 
-from .local_settings import *
-
+f = os.path.join(PROJECT_APP_PATH, "local_settings.py")
+if os.path.exists(f):
+    from .local_settings import *
