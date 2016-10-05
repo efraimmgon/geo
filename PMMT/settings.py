@@ -137,8 +137,6 @@ LOGIN_REDIRECT_URL = '/analise_criminal/'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
-
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 ##################
