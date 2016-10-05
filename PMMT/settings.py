@@ -137,6 +137,7 @@ LOGIN_REDIRECT_URL = '/analise_criminal/'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 ##################
