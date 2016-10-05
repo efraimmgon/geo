@@ -87,7 +87,7 @@
 	<div class="form-group">
 		<div class="col-md-offset-2 col-md-10">
 			<button type="submit" class="btn btn-default">
-				<span class="glyphicon glyphicon-search"></span> Buscar
+				Buscar
 			</button>
 		</div>
 	</div>
@@ -127,11 +127,11 @@
 								<td>{{ b.total }}</td>
 								{% if a.total < b.total %}
 								<td class="bg-danger">
-									<span class="glyphicon glyphicon-arrow-up"></span> {{ variation|floatformat }}%
+									{{ variation|floatformat }}%
 								</td>
 								{% elif a.total > b.total %}
 								<td class="bg-success">
-									<span class="glyphicon glyphicon-arrow-down"></span> {{ variation|floatformat }}%
+									{{ variation|floatformat }}%
 								</td>
 								{% else %}
 								<td>Sem alteração.</td>
@@ -172,11 +172,11 @@
 								<td>{{ row.b.num }}</td>
 								{% if row.a.num < row.b.num %}
 								<td class="bg-danger">
-									<span class="glyphicon glyphicon-arrow-up"></span> {{ row.variation|floatformat }}%
+									{{ row.variation|floatformat }}%
 								</td>
 								{% elif row.a.num > row.b.num %}
 								<td class="bg-success">
-									<span class="glyphicon glyphicon-arrow-down"></span> {{ row.variation|floatformat }}%
+									{{ row.variation|floatformat }}%
 								</td>
 								{% else %}
 								<td>Sem alteração.</td>

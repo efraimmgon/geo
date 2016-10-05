@@ -13,6 +13,7 @@ def biblioteca(request):
 	context = {
 		'sources': ExternalSource.objects.all(),
 		'tags': Tag.objects.all(),
+		'tags_and_sources': ExternalSource.objects.filter(tags__in=Tag.objects.all())
 	}
 	return render(request, 'biblioteca.html', context)
 
