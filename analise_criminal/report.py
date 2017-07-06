@@ -11,7 +11,8 @@ from .utils import (WEEKDAYS, WEEKDAYS_DJANGO, Struct, lmap, lfilter, conj,
 from .plotting import get_axis, append_axis
 from .commons import count_objs, count_weekdays
 
-### Global vars
+# Global vars ----------------------------------------------------------
+
 from .commons import NATUREZAS, NATUREZAS_ID_ALL
 NATUREZAS_ID = reduce(lambda acc, n: conj(acc, {n.pk: n.nome}),
                       NATUREZAS, {})
@@ -66,7 +67,8 @@ def process_report_arguments(form_report, form_filter):
         'total': total_b
     }
 
-    # GENERAL ANALYSIS + GRAPHS
+    # GENERAL ANALYSIS + GRAPHS ---------------------------------------
+
     if form_report.cleaned_data['opts'] == 'Sim':
         a, comparison1, horarios1 = process_args(o1, compare=True)
         naturezas1, bairros1, vias1, locais1, weekdays1 = a
@@ -74,7 +76,8 @@ def process_report_arguments(form_report, form_filter):
         b, comparison2, horarios2 = process_args(o2, compare=True)
         naturezas2, bairros2, vias2, locais2, weekdays2 = b
 
-        # GRAPHS
+        ## GRAPHS ------------------------------------------------------
+
         context['axis'] = OrderedDict()
         context['axis'].update(
             append_axis(
@@ -95,7 +98,8 @@ def process_report_arguments(form_report, form_filter):
             'color': 'rgb(255,255,0)', 'name': 'Período B'},
         ]
 
-        # naturezas pie
+        ## naturezas pie ------------------------------------------------
+
         def helper(qs, id):
             dct = count_objs(qs.filter(naturezas__in=NATUREZAS), "naturezas")
             return {"labels": lmap(lambda k: NATUREZAS_ID_ALL[k].nome, dct),
@@ -210,6 +214,7 @@ def process_report_arguments(form_report, form_filter):
                 ## map the int to a str with the respective name
                 return conj(acc, {WEEKDAYS_DJANGO[i]: result})
 
+            # loop over qs mapping reports to their weekday
             r = reduce(acc_weekdays, range(1, 8), OrderedDict())
             context['detalhamento']['semana'] = r
 

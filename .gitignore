@@ -6,3 +6,11 @@ local_settings.py
 /static
 venv
 .ipynb_checkpoints/
+
+# dev
+
+*.sqlite3
+escala
+libs
+terminal_tests.py
+export_db.py

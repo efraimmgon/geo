@@ -1,18 +1,95 @@
 $(function() {
+	// GLOBAL STATE ------------------------------------------------
+
+	var app_state = {
 	// Important: identifies the place where the lat lng wiil be taken
-	var region = "Sinop - MT"; 
-	var count = 0; 
+		region: "Sinop - MT",
+		count: 0,
+		$feedback: $('#id_feedback'),
+		$responseData: $('#id_response_data')
+	};
 
-	var $feedback = $('#id_feedback');
-	var $responseData = $('#id_response_data');
+	// Helper
 
-	getLatLng();
+	// destructive
+	var partition = function partition(arr, n) {
+		if (arr.length) {
+			return [arr.splice(0, n)].concat(partition(arr, n));
+		} else {
+			return [];
+		}
+	};
 
-	updateForm();
+	// Functions ---------------------------------------------------
 
-	function getLatLng() {
-	/* Fetches the data from the DB, finds its lat lng, and updates the info */
-		// a hack to get the html to be uploaded
+	var geocode = function (ponto, address, id) {
+		"Find a lat and lng based on the given address."
+		var geocoder = new google.maps.Geocoder(),
+			latitude,
+			longitude,
+			response = {address: address, id: id}
+
+		geocoder.geocode({'address': ponto}, function(results, status) {
+			if (status === google.maps.GeocoderStatus.OK) {
+				latitude = results[0].geometry.location.lat();
+				longitude = results[0].geometry.location.lng();
+	// latitude === -11.8608456 & longitude === -55.50954509999997
+	// seem to be the default location for Sinop
+				return response.OK = {lat: latitude, lng: longitude};
+			} else {
+				return response.ERROR = {status: status};
+			}
+
+	var render_result = function (response) {
+		if (response.OK) {
+			var $item = $("<p></p>").append(
+				"<input name='" + response.id + "' type='text' value='" +
+				response.OK.lat + " " + response.OK.lng + "' />" +
+				 "<br />" + response.address
+			);
+			app_state.$feedback.append($item);
+		} else {
+			app_state.$feedback.append(
+				$('<p>' + response.id + ': ' + response.address + ': ' +
+				  response.ERROR.status + '</p>')
+			);
+		}
+	};
+
+	var render_item = function (item) {
+		var id = item.pk,
+			natureza = item.fields.natureza,
+			bairro = item.fields.bairro,
+			via = item.fields.via,
+			numero = item.fields.numero,
+			ponto;
+
+		// format args for visual inspection
+		via = via ? (via + ", ") : "";
+		numero = numero ? ("nº " + numero + " - ") : "";
+		bairro = bairro ? (bairro + " - ") : "";
+
+		addrs = via + numero + bairro;
+		ponto = addrs + region;
+
+		response = geocode(ponto, addrs, id);
+		render_result(response);
+	};
+
+	var process_json = function process_json(items) {
+		if (!items.length) {
+			return alert("Done");
+		}
+
+		var next_items = items[0],
+			remaining_items = items.slice(1);
+
+		next_items.map(render_item);
+
+		setTimeout(process_json, (20 * 1000), remaining_items);
+	};
+
+	var getLatLng = function () {
 		var $request = $.ajax({
 			url: '/setup/get-address/'
 		})
@@ -20,83 +97,13 @@ $(function() {
 			alert("Request failed: " + textStatus + ', ' + errorThrown);
 		})
 		.done( function(json) {
-			process_json(json);
-		}); // .done()
-	}; // getLatLng()
-
-	function process_json(json) {
-		/* Takes a json object, containing an address, and 
-		appends an input elt with the lat and lng based on the address*/
-		if (json.end) {
-			alert('No more!');
-			return;
-		}
-		if (count == json.length) {
-			alert('DONE');
-			return;
-		}
-		var id = json[count].pk;
-		var natureza = json[count].fields.natureza;
-		var bairro = json[count].fields.bairro;
-		var via = json[count].fields.via;
-		var numero = json[count].fields.numero;
-		if (via) 	via 	= via + ', ';			
-		else 	 	via 	= '';
-		if (numero) numero 	= 'nº ' + numero + ' - ';
-		else 		numero 	= '';
-		if (bairro == 'Centro') {
-			bairro = 'Setor Comercial';
-		}
-		if (bairro) bairro 	= bairro + ' - ';
-		else 		bairro 	= ''; 
-		var addrs = via + numero + bairro;
-		var ponto = addrs + region;
-
-		find_lat_lng(ponto, addrs, id);
-		count++;
-		if (count % 10 == 0) {
-			setTimeout(process_json, 20000, json);
-		} else {
-			process_json(json);
-		}
-	};
-
-	function find_lat_lng(ponto, address, id) {
-		/* Finds a lat and lng based on a given address. */
-		var geocoder = new google.maps.Geocoder();
-		geocoder.geocode({'address': ponto}, function(results, status) {
-			if (status === google.maps.GeocoderStatus.OK) { 
-				var latitude = results[0].geometry.location.lat();
-				var longitude = results[0].geometry.location.lng();
-				if (latitude == -11.8608456 && 
-					longitude == -55.50954509999997) {
-					latitude = null;
-					longitude = null;
-				}
-				$found = $("<p> <input name='"+ id +"' type='text' value='"+
-					latitude +' '+
-					longitude +"' /><br />"+
-					address +"</p>");
-				$feedback.append($found);
-			} /*else if (status == 'ZERO_RESULTS') {
-				var latitude = null;
-				var longitude = null;
-				$found = $("<p> <input name='"+ id +"' type='text' value='"+
-					latitude +' '+
-					longitude +"' /><br />"+
-					address +"</p>");
-				$feedback.append($found);
-			} */else {
-				$statusError = $(
-					'<p> '+ id +': '+ address +': '+ status +'</p>'
-				);
-				$feedback.append($statusError);
-			}
+			process_json(partition(json, 10));
 		});
 	};
 
-	function updateForm() {
+	var updateForm = function () {
 		var $form = $('#id_updateForm');
+
 		$form.on('submit', function(e) {
 			e.preventDefault();
 			var $request = $.ajax({
@@ -109,13 +116,30 @@ $(function() {
 					alert(json.errors);
 				}
 				if (json.OK) {
-					$responseData.append(json.OK);
+					app_state.$responseData.append(json.OK);
 				}
 			})
 			.fail( function(jqXHR, textStatus, errorThrown) {
 				alert("Request failed: "+ textStatus +', '+ errorThrown);
 			});
 		});
-	}; // updateForm()
+	};
+
+	// Execution ---------------------------------------------------
+
+	// Fetch data from the DB, find its lat & lng, and update the info
+	getLatLng();
+
+	// - Take a json object containing an address and
+	// - append an input elt with the lat and lng based on the address.
+	// Note:
+	We do this so we can catch some errors concerning the point
+	// and its address, although I believe this can be automated.
+	// If a point is not found based on the address then it falls
+	// back to a default point. All we have to do is select the rows
+	// and group them by latitude & longitude. The one with most
+	// occurrences is the default one, most likely. (We can later
+	// compare the lat and long with the address to find out)
+	updateForm();
 
 });	// IIAF
