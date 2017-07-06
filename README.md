@@ -62,3 +62,5 @@ Start the local server:
 ```
 $ python manage.py runserver
 ```
+
+*Note: `PMMT` stands to `Polícia Militar do Estado de Mato Grosso`*
