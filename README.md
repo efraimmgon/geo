@@ -39,7 +39,7 @@ his comprehension and decision making.
 
 Create and activate a virtualenv:
 
-```python
+```
 $ pip3 install virtualenv
 $ virtualenv venv
 $ source venv/bin/activate
@@ -47,18 +47,18 @@ $ source venv/bin/activate
 
 Install the requirements:
 
-```python
+```
 $ pip3 install -r requirements.txt
 ```
 
 Set the `settings.py` and `local settings.py` to your liking, and run the migratrions.
 
-```python
+```
 $ python manage.py migrate
 ```
 
 Start the local server:
 
-```python
+```
 $ python manage.py runserver
 ```
